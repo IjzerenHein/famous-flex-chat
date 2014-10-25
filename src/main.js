@@ -96,6 +96,7 @@ define(function(require) {
     var preferredMessageInputHeight = 30;
     function _createMessageInput() {
         var input = new TextareaSurface({
+            rows: 1,
             classes: ['message-input']
         });
 
@@ -103,8 +104,16 @@ define(function(require) {
         // If so, increase the height to accomodate for this.
         input.render = function() {
             if (this._currentTarget) {
-                preferredMessageInputHeight = this._currentTarget.scrollHeight;
-                _updateMessageBarHeight();
+                if (preferredMessageInputHeight !== this._currentTarget.scrollHeight) {
+                    var oldHeightStyle = this._currentTarget.style.height;
+                    this._currentTarget.style.height = (this._currentTarget.scrollHeight - 16) + 'px';
+                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
+                    //console.log('new height: ' + preferredMessageInputHeight);
+                    if (!_updateMessageBarHeight()) {
+                        this._currentTarget.style.height = oldHeightStyle;
+                    }
+                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
+                }
             }
             return this.id;
         }.bind(input);
@@ -116,12 +125,14 @@ define(function(require) {
     // was entered in the message text-area.
     //
     function _updateMessageBarHeight() {
-        var height = Math.min(preferredMessageInputHeight + 20, 100);
+        var height = Math.max(Math.min(preferredMessageInputHeight + 16, 200), 50);
         if (mainLayout.getLayoutOptions().footerHeight !== height) {
             mainLayout.setLayoutOptions({
                 footerHeight: height
             });
+            return true;
         }
+        return false;
     }
 
     function _createSendButton() {

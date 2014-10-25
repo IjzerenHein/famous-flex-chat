@@ -149,6 +149,7 @@
 	    var preferredMessageInputHeight = 30;
 	    function _createMessageInput() {
 	        var input = new TextareaSurface({
+	            rows: 1,
 	            classes: ['message-input']
 	        });
 
@@ -156,8 +157,16 @@
 	        // If so, increase the height to accomodate for this.
 	        input.render = function() {
 	            if (this._currentTarget) {
-	                preferredMessageInputHeight = this._currentTarget.scrollHeight;
-	                _updateMessageBarHeight();
+	                if (preferredMessageInputHeight !== this._currentTarget.scrollHeight) {
+	                    var oldHeightStyle = this._currentTarget.style.height;
+	                    this._currentTarget.style.height = (this._currentTarget.scrollHeight - 16) + 'px';
+	                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
+	                    //console.log('new height: ' + preferredMessageInputHeight);
+	                    if (!_updateMessageBarHeight()) {
+	                        this._currentTarget.style.height = oldHeightStyle;
+	                    }
+	                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
+	                }
 	            }
 	            return this.id;
 	        }.bind(input);
@@ -169,12 +178,14 @@
 	    // was entered in the message text-area.
 	    //
 	    function _updateMessageBarHeight() {
-	        var height = Math.min(preferredMessageInputHeight + 20, 100);
+	        var height = Math.max(Math.min(preferredMessageInputHeight + 16, 200), 50);
 	        if (mainLayout.getLayoutOptions().footerHeight !== height) {
 	            mainLayout.setLayoutOptions({
 	                footerHeight: height
 	            });
+	            return true;
 	        }
+	        return false;
 	    }
 
 	    function _createSendButton() {
@@ -621,7 +632,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
-		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n\n.message-back {\n  border-top: 1px solid #AAAAAA;\n  background-color: #DDDDDD;\n}\n\n.message-input {\n  border-radius: 7px;\n  border-color: #AAAAAA;\n  font-size: 16px;\n  padding: 6px 5px 10px 5px;\n}\n\n.message-send {\n  text-align: center;\n  line-height: 34px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
+		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n\n.message-back {\n  border-top: 1px solid #AAAAAA;\n  background-color: #DDDDDD;\n}\n\n.message-input {\n  border-radius: 7px;\n  border-color: #AAAAAA;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n}\n\n.message-send {\n  text-align: center;\n  line-height: 34px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
 
 /***/ },
 /* 6 */
@@ -1983,18 +1994,18 @@
 	    // import dependencies
 	    //var LayoutUtility = require('./LayoutUtility');
 	    var FlowLayoutController = __webpack_require__(13);
-	    var FlowLayoutNode = __webpack_require__(30);
-	    var LayoutNodeManager = __webpack_require__(31);
+	    var FlowLayoutNode = __webpack_require__(32);
+	    var LayoutNodeManager = __webpack_require__(30);
 	    var ContainerSurface = __webpack_require__(38);
 	    var Transform = __webpack_require__(22);
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var Group = __webpack_require__(39);
-	    var Vector = __webpack_require__(41);
-	    var PhysicsEngine = __webpack_require__(42);
-	    var Particle = __webpack_require__(43);
-	    var Drag = __webpack_require__(44);
-	    var Spring = __webpack_require__(45);
-	    var ScrollSync = __webpack_require__(46);
+	    var Vector = __webpack_require__(42);
+	    var PhysicsEngine = __webpack_require__(43);
+	    var Particle = __webpack_require__(44);
+	    var Drag = __webpack_require__(45);
+	    var Spring = __webpack_require__(46);
+	    var ScrollSync = __webpack_require__(47);
 
 	    /**
 	     * Boudary reached detection
@@ -3426,8 +3437,8 @@
 
 	    // import dependencies
 	    var LayoutController = __webpack_require__(14);
-	    var LayoutNodeManager = __webpack_require__(31);
-	    var FlowLayoutNode = __webpack_require__(33);
+	    var LayoutNodeManager = __webpack_require__(30);
+	    var FlowLayoutNode = __webpack_require__(31);
 	    var Transform = __webpack_require__(22);
 
 	    /**
@@ -3646,12 +3657,12 @@
 	    var Entity = __webpack_require__(40);
 	    var ViewSequence = __webpack_require__(19);
 	    var OptionsManager = __webpack_require__(34);
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var LayoutUtility = __webpack_require__(35);
-	    var LayoutNodeManager = __webpack_require__(31);
-	    var LayoutNode = __webpack_require__(30);
+	    var LayoutNodeManager = __webpack_require__(30);
+	    var LayoutNode = __webpack_require__(32);
 	    var Transform = __webpack_require__(22);
-	    __webpack_require__(47);
+	    __webpack_require__(41);
 
 	    /**
 	     * @class
@@ -4209,7 +4220,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutDockHelper = __webpack_require__(47);
+	    var LayoutDockHelper = __webpack_require__(41);
 
 	    // Layout function
 	    module.exports = function HeaderFooterLayout(context, options) {
@@ -4273,7 +4284,7 @@
 	     * @class Engine
 	     */
 	    var Context = __webpack_require__(36);
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var OptionsManager = __webpack_require__(34);
 
 	    var Engine = {};
@@ -7253,7 +7264,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var OptionsManager = __webpack_require__(34);
 	    var RenderNode = __webpack_require__(51);
 	    var Utility = __webpack_require__(24);
@@ -7373,123 +7384,6 @@
 	/*eslint no-use-before-define:0 */
 
 	/**
-	 * Internal LayoutNode class used by `LayoutController`.
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var Transform = __webpack_require__(22);
-	    var LayoutUtility = __webpack_require__(35);
-
-	    /**
-	     * @class
-	     * @param {Object} renderNode Render-node which this layout-node represents
-	     * @alias module:LayoutNode
-	     */
-	    function LayoutNode(renderNode, spec) {
-	        this.renderNode = renderNode;
-	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
-	        this._spec.renderNode = renderNode; // also store in spec
-	        this._invalidated = false;
-	        this._removing = false;
-	        //this.scrollLength = undefined;
-	        //this.trueSizeRequested = false;
-	    }
-
-	    /**
-	     * Called when the node is destroyed
-	     */
-	    LayoutNode.prototype.destroy = function() {
-	        // override to implement
-	    };
-
-	    /**
-	     * Reset the end-state. This function is called on all layout-nodes prior to
-	     * calling the layout-function. So that the layout-function starts with a clean slate.
-	     */
-	    LayoutNode.prototype.reset = function() {
-	        this._invalidated = false;
-	        this.trueSizeRequested = false;
-	    };
-
-	    /**
-	     * Set the spec of the node
-	     *
-	     * @param {Object} spec
-	     */
-	    LayoutNode.prototype.setSpec = function(spec) {
-	        this._spec.align = spec.align;
-	        this._spec.origin = spec.origin;
-	        this._spec.size = spec.size;
-	        this._spec.transform = spec.transform;
-	        this._spec.opacity = spec.opacity;
-	    };
-
-	    /**
-	     * Set the content of the node
-	     *
-	     * @param {Object} set
-	     */
-	    LayoutNode.prototype.set = function(set, size) {
-	        this._invalidated = true;
-	        this._removing = false;
-	        var spec = this._spec;
-	        spec.opacity = set.opacity;
-	        spec.size = set.size;
-	        spec.origin = set.origin;
-	        spec.align = set.align;
-	        if (set.translate || set.skew || set.rotate || set.scale) {
-	            this._spec.transform = Transform.build({
-	                translate: set.translate || [0, 0, 0],
-	                skew: set.skew || [0, 0, 0],
-	                scale: set.scale || [1, 1, 1],
-	                rotate: set.rotate || [0, 0, 0]
-	            });
-	        }
-	        else {
-	            this._spec.transform = undefined;
-	        }
-	        this.scrollLength = set.scrollLength;
-	    };
-
-	    /**
-	     * Creates the render-spec
-	     */
-	    LayoutNode.prototype.getSpec = function() {
-	        return this._invalidated ? this._spec : undefined;
-	    };
-
-	    /**
-	     * Marks the node for removal
-	     */
-	    LayoutNode.prototype.remove = function(removeSpec) {
-	        this._removing = true;
-	    };
-
-	    module.exports = LayoutNode;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 31 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
 	 * LayoutNodeManager is a private class used internally by the LayoutControllers and
 	 * ScrollViews. It manages the layout-nodes that are rendered and exposes the layout-context
 	 * which is passed along to the layout-function.
@@ -7506,7 +7400,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutNode = __webpack_require__(30);
+	    var LayoutNode = __webpack_require__(32);
 	    var LayoutContext = __webpack_require__(52);
 	    var LayoutUtility = __webpack_require__(35);
 
@@ -8079,219 +7973,7 @@
 
 
 /***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(53);
-
-	    /**
-	     * EventHandler forwards received events to a set of provided callback functions.
-	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
-	     *
-	     * @class EventHandler
-	     * @extends EventEmitter
-	     * @constructor
-	     */
-	    function EventHandler() {
-	        EventEmitter.apply(this, arguments);
-
-	        this.downstream = []; // downstream event handlers
-	        this.downstreamFn = []; // downstream functions
-
-	        this.upstream = []; // upstream event handlers
-	        this.upstreamListeners = {}; // upstream listeners
-	    }
-	    EventHandler.prototype = Object.create(EventEmitter.prototype);
-	    EventHandler.prototype.constructor = EventHandler;
-
-	    /**
-	     * Assign an event handler to receive an object's input events.
-	     *
-	     * @method setInputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
-	        object.trigger = handler.trigger.bind(handler);
-	        if (handler.subscribe && handler.unsubscribe) {
-	            object.subscribe = handler.subscribe.bind(handler);
-	            object.unsubscribe = handler.unsubscribe.bind(handler);
-	        }
-	    };
-
-	    /**
-	     * Assign an event handler to receive an object's output events.
-	     *
-	     * @method setOutputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
-	        if (handler instanceof EventHandler) handler.bindThis(object);
-	        object.pipe = handler.pipe.bind(handler);
-	        object.unpipe = handler.unpipe.bind(handler);
-	        object.on = handler.on.bind(handler);
-	        object.addListener = object.on;
-	        object.removeListener = handler.removeListener.bind(handler);
-	    };
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.emit = function emit(type, event) {
-	        EventEmitter.prototype.emit.apply(this, arguments);
-	        var i = 0;
-	        for (i = 0; i < this.downstream.length; i++) {
-	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
-	        }
-	        for (i = 0; i < this.downstreamFn.length; i++) {
-	            this.downstreamFn[i](type, event);
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for emit
-	     * @method addListener
-	     */
-	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    EventHandler.prototype.pipe = function pipe(target) {
-	        if (target.subscribe instanceof Function) return target.subscribe(this);
-
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index < 0) downstreamCtx.push(target);
-
-	        if (target instanceof Function) target('pipe', null);
-	        else if (target.trigger) target.trigger('pipe', null);
-
-	        return target;
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     *   Undoes work of "pipe".
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    EventHandler.prototype.unpipe = function unpipe(target) {
-	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
-
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index >= 0) {
-	            downstreamCtx.splice(index, 1);
-	            if (target instanceof Function) target('unpipe', null);
-	            else if (target.trigger) target.trigger('unpipe', null);
-	            return target;
-	        }
-	        else return false;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.on = function on(type, handler) {
-	        EventEmitter.prototype.on.apply(this, arguments);
-	        if (!(type in this.upstreamListeners)) {
-	            var upstreamListener = this.trigger.bind(this, type);
-	            this.upstreamListeners[type] = upstreamListener;
-	            for (var i = 0; i < this.upstream.length; i++) {
-	                this.upstream[i].on(type, upstreamListener);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for "on"
-	     * @method addListener
-	     */
-	    EventHandler.prototype.addListener = EventHandler.prototype.on;
-
-	    /**
-	     * Listen for events from an upstream event handler.
-	     *
-	     * @method subscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.subscribe = function subscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index < 0) {
-	            this.upstream.push(source);
-	            for (var type in this.upstreamListeners) {
-	                source.on(type, this.upstreamListeners[type]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Stop listening to events from an upstream event handler.
-	     *
-	     * @method unsubscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index >= 0) {
-	            this.upstream.splice(index, 1);
-	            for (var type in this.upstreamListeners) {
-	                source.removeListener(type, this.upstreamListeners[type]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    module.exports = EventHandler;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 33 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -8317,11 +7999,11 @@
 	    // import dependencies
 	    var OptionsManager = __webpack_require__(34);
 	    var Transform = __webpack_require__(22);
-	    var Vector = __webpack_require__(41);
-	    var Particle = __webpack_require__(43);
-	    var Spring = __webpack_require__(45);
-	    var PhysicsEngine = __webpack_require__(42);
-	    var LayoutNode = __webpack_require__(30);
+	    var Vector = __webpack_require__(42);
+	    var Particle = __webpack_require__(44);
+	    var Spring = __webpack_require__(46);
+	    var PhysicsEngine = __webpack_require__(43);
+	    var LayoutNode = __webpack_require__(32);
 	    var Transitionable = __webpack_require__(48);
 
 	    /**
@@ -8708,6 +8390,335 @@
 
 
 /***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * Internal LayoutNode class used by `LayoutController`.
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var Transform = __webpack_require__(22);
+	    var LayoutUtility = __webpack_require__(35);
+
+	    /**
+	     * @class
+	     * @param {Object} renderNode Render-node which this layout-node represents
+	     * @alias module:LayoutNode
+	     */
+	    function LayoutNode(renderNode, spec) {
+	        this.renderNode = renderNode;
+	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
+	        this._spec.renderNode = renderNode; // also store in spec
+	        this._invalidated = false;
+	        this._removing = false;
+	        //this.scrollLength = undefined;
+	        //this.trueSizeRequested = false;
+	    }
+
+	    /**
+	     * Called when the node is destroyed
+	     */
+	    LayoutNode.prototype.destroy = function() {
+	        // override to implement
+	    };
+
+	    /**
+	     * Reset the end-state. This function is called on all layout-nodes prior to
+	     * calling the layout-function. So that the layout-function starts with a clean slate.
+	     */
+	    LayoutNode.prototype.reset = function() {
+	        this._invalidated = false;
+	        this.trueSizeRequested = false;
+	    };
+
+	    /**
+	     * Set the spec of the node
+	     *
+	     * @param {Object} spec
+	     */
+	    LayoutNode.prototype.setSpec = function(spec) {
+	        this._spec.align = spec.align;
+	        this._spec.origin = spec.origin;
+	        this._spec.size = spec.size;
+	        this._spec.transform = spec.transform;
+	        this._spec.opacity = spec.opacity;
+	    };
+
+	    /**
+	     * Set the content of the node
+	     *
+	     * @param {Object} set
+	     */
+	    LayoutNode.prototype.set = function(set, size) {
+	        this._invalidated = true;
+	        this._removing = false;
+	        var spec = this._spec;
+	        spec.opacity = set.opacity;
+	        spec.size = set.size;
+	        spec.origin = set.origin;
+	        spec.align = set.align;
+	        if (set.translate || set.skew || set.rotate || set.scale) {
+	            this._spec.transform = Transform.build({
+	                translate: set.translate || [0, 0, 0],
+	                skew: set.skew || [0, 0, 0],
+	                scale: set.scale || [1, 1, 1],
+	                rotate: set.rotate || [0, 0, 0]
+	            });
+	        }
+	        else {
+	            this._spec.transform = undefined;
+	        }
+	        this.scrollLength = set.scrollLength;
+	    };
+
+	    /**
+	     * Creates the render-spec
+	     */
+	    LayoutNode.prototype.getSpec = function() {
+	        return this._invalidated ? this._spec : undefined;
+	    };
+
+	    /**
+	     * Marks the node for removal
+	     */
+	    LayoutNode.prototype.remove = function(removeSpec) {
+	        this._removing = true;
+	    };
+
+	    module.exports = LayoutNode;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventEmitter = __webpack_require__(53);
+
+	    /**
+	     * EventHandler forwards received events to a set of provided callback functions.
+	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
+	     *
+	     * @class EventHandler
+	     * @extends EventEmitter
+	     * @constructor
+	     */
+	    function EventHandler() {
+	        EventEmitter.apply(this, arguments);
+
+	        this.downstream = []; // downstream event handlers
+	        this.downstreamFn = []; // downstream functions
+
+	        this.upstream = []; // upstream event handlers
+	        this.upstreamListeners = {}; // upstream listeners
+	    }
+	    EventHandler.prototype = Object.create(EventEmitter.prototype);
+	    EventHandler.prototype.constructor = EventHandler;
+
+	    /**
+	     * Assign an event handler to receive an object's input events.
+	     *
+	     * @method setInputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
+	        object.trigger = handler.trigger.bind(handler);
+	        if (handler.subscribe && handler.unsubscribe) {
+	            object.subscribe = handler.subscribe.bind(handler);
+	            object.unsubscribe = handler.unsubscribe.bind(handler);
+	        }
+	    };
+
+	    /**
+	     * Assign an event handler to receive an object's output events.
+	     *
+	     * @method setOutputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
+	        if (handler instanceof EventHandler) handler.bindThis(object);
+	        object.pipe = handler.pipe.bind(handler);
+	        object.unpipe = handler.unpipe.bind(handler);
+	        object.on = handler.on.bind(handler);
+	        object.addListener = object.on;
+	        object.removeListener = handler.removeListener.bind(handler);
+	    };
+
+	    /**
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
+	     *
+	     * @method emit
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.emit = function emit(type, event) {
+	        EventEmitter.prototype.emit.apply(this, arguments);
+	        var i = 0;
+	        for (i = 0; i < this.downstream.length; i++) {
+	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
+	        }
+	        for (i = 0; i < this.downstreamFn.length; i++) {
+	            this.downstreamFn[i](type, event);
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for emit
+	     * @method addListener
+	     */
+	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    EventHandler.prototype.pipe = function pipe(target) {
+	        if (target.subscribe instanceof Function) return target.subscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index < 0) downstreamCtx.push(target);
+
+	        if (target instanceof Function) target('pipe', null);
+	        else if (target.trigger) target.trigger('pipe', null);
+
+	        return target;
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     *   Undoes work of "pipe".
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    EventHandler.prototype.unpipe = function unpipe(target) {
+	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index >= 0) {
+	            downstreamCtx.splice(index, 1);
+	            if (target instanceof Function) target('unpipe', null);
+	            else if (target.trigger) target.trigger('unpipe', null);
+	            return target;
+	        }
+	        else return false;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.on = function on(type, handler) {
+	        EventEmitter.prototype.on.apply(this, arguments);
+	        if (!(type in this.upstreamListeners)) {
+	            var upstreamListener = this.trigger.bind(this, type);
+	            this.upstreamListeners[type] = upstreamListener;
+	            for (var i = 0; i < this.upstream.length; i++) {
+	                this.upstream[i].on(type, upstreamListener);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for "on"
+	     * @method addListener
+	     */
+	    EventHandler.prototype.addListener = EventHandler.prototype.on;
+
+	    /**
+	     * Listen for events from an upstream event handler.
+	     *
+	     * @method subscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.subscribe = function subscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index < 0) {
+	            this.upstream.push(source);
+	            for (var type in this.upstreamListeners) {
+	                source.on(type, this.upstreamListeners[type]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Stop listening to events from an upstream event handler.
+	     *
+	     * @method unsubscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index >= 0) {
+	            this.upstream.splice(index, 1);
+	            for (var type in this.upstreamListeners) {
+	                source.removeListener(type, this.upstreamListeners[type]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    module.exports = EventHandler;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
 /* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -8721,7 +8732,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 
 	    /**
 	     *  A collection of methods for setting options which can be extended
@@ -9208,7 +9219,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var RenderNode = __webpack_require__(51);
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var ElementAllocator = __webpack_require__(54);
 	    var Transform = __webpack_require__(22);
 	    var Transitionable = __webpack_require__(48);
@@ -9447,7 +9458,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Entity = __webpack_require__(40);
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var Transform = __webpack_require__(22);
 
 	    var usePrefix = !('transform' in document.documentElement.style);
@@ -10104,6 +10115,256 @@
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+
+	/**
+	 * LayoutDockHelper helps positioning nodes using docking principles.
+	 *
+	 * **Example:**
+	 *
+	 * ```javascript
+	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
+	 *
+	 * function HeaderFooterLayout(context, options) {
+	 *   var dock = new LayoutDockHelper(context);
+	 *   dock.top('header', options.headerHeight);
+	 *   dock.bottom('footer', options.footerHeight);
+	 *   dock.fill('content');
+	 * };
+	 * ```
+	 *
+	 * You can also use layout-literals to create layouts using docking semantics:
+	 *
+	 * ```javascript
+	 * var layoutController = new LayoutController({
+	 *   layout: {dock: [
+	 *     ['top', 'header', 40],
+	 *     ['bottom', 'footer', 40, 1], // z-index +1
+	 *     ['fill', 'content']
+	 *   ]},
+	 *   dataSource: {
+	 *     header: new Surface({content: 'header'}),
+	 *     footer: new Surface({content: 'footer'}),
+	 *     content: new Surface({content: 'content'}),
+	 *   }
+	 * });
+	 * ```
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var LayoutUtility = __webpack_require__(35);
+
+	    /**
+	     * @class
+	     * @param {LayoutContext} context layout-context
+	     * @param {Object} [options] additional options
+	     * @param {Object} [options.margins] margins to start out with (default: 0px)
+	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
+	     * @alias module:LayoutDockHelper
+	     */
+	    function LayoutDockHelper(context, options) {
+	        var size = context.size;
+	        this._size = size;
+	        this._context = context;
+	        this._options = options;
+	        this._z = (options && options.translateZ) ? options.translateZ : 0;
+	        if (options && options.margins) {
+	            var margins = LayoutUtility.normalizeMargins(options.margins);
+	            this._left = margins[3];
+	            this._top = margins[0];
+	            this._right = size[0] - margins[1];
+	            this._bottom = size[1] - margins[2];
+	        }
+	        else {
+	            this._left = 0;
+	            this._top = 0;
+	            this._right = size[0];
+	            this._bottom = size[1];
+	        }
+	    }
+
+	    /**
+	     * Parses the layout-rules based on a JSON data object.
+	     * The object should be an array with the following syntax:
+	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
+	     *
+	     * **Example:**
+	     *
+	     * ```JSON
+	     * [
+	     *   ['top': 'header', 50],
+	     *   ['bottom': 'footer', 50, 10], // z-index: 10
+	     *   ['fill', 'content']
+	     * ]
+	     * ```
+	     *
+	     * @param {Object} data JSON object
+	     */
+	    LayoutDockHelper.prototype.parse = function(data) {
+	        for (var i = 0; i < data.length; i++) {
+	            var rule = data[i];
+	            var value = (data.length >= 3) ? rule[2] : undefined;
+	            if (rule[0] === 'top') {
+	                this.top(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'left') {
+	                this.left(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'right') {
+	                this.right(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'bottom') {
+	                this.bottom(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'fill') {
+	                this.fill(rule[1], (data.length >=3) ? rule[2] : undefined);
+	            }
+	        }
+	    };
+
+	    /**
+	     * Dock the node to the top.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.top = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._top += height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the left
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.left = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (width === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            width = size[0];
+	        }
+	        this._context.set(node, {
+	            size: [width, this._bottom - this._top],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._left += width;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the bottom
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 1],
+	            align: [0, 1],
+	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+	        });
+	        this._bottom -= height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the right.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.right = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (node) {
+	            if (width === undefined) {
+	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	                width = size[0];
+	            }
+	            this._context.set(node, {
+	                size: [width, this._bottom - this._top],
+	                origin: [1, 0],
+	                align: [1, 0],
+	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+	            });
+	        }
+	        if (width) {
+	            this._right -= width;
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Fills the node to the remaining content.
+	     *
+	     * @param {LayoutNode|String} node layout-node to dock
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.fill = function(node, z) {
+	        this._context.set(node, {
+	            size: [this._right - this._left, this._bottom - this._top],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        return this;
+	    };
+
+	    // Register the helper
+	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
+
+	    module.exports = LayoutDockHelper;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10487,7 +10748,7 @@
 
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10498,7 +10759,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 
 	    /**
 	     * The Physics Engine is responsible for mediating bodies with their
@@ -11016,7 +11277,7 @@
 
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11029,9 +11290,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(41);
+	    var Vector = __webpack_require__(42);
 	    var Transform = __webpack_require__(22);
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var Integrator = __webpack_require__(58);
 
 	    /**
@@ -11409,7 +11670,7 @@
 
 
 /***/ },
-/* 44 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11534,7 +11795,7 @@
 
 
 /***/ },
-/* 45 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11550,7 +11811,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Force = __webpack_require__(55);
-	    var Vector = __webpack_require__(41);
+	    var Vector = __webpack_require__(42);
 
 	    /**
 	     *  A force that moves a physics body to a location with a spring motion.
@@ -11807,7 +12068,7 @@
 
 
 /***/ },
-/* 46 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11819,7 +12080,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(33);
 	    var Engine = __webpack_require__(18);
 	    var OptionsManager = __webpack_require__(34);
 
@@ -12006,256 +12267,6 @@
 	    };
 
 	    module.exports = ScrollSync;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 47 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-
-	/**
-	 * LayoutDockHelper helps positioning nodes using docking principles.
-	 *
-	 * **Example:**
-	 *
-	 * ```javascript
-	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
-	 *
-	 * function HeaderFooterLayout(context, options) {
-	 *   var dock = new LayoutDockHelper(context);
-	 *   dock.top('header', options.headerHeight);
-	 *   dock.bottom('footer', options.footerHeight);
-	 *   dock.fill('content');
-	 * };
-	 * ```
-	 *
-	 * You can also use layout-literals to create layouts using docking semantics:
-	 *
-	 * ```javascript
-	 * var layoutController = new LayoutController({
-	 *   layout: {dock: [
-	 *     ['top', 'header', 40],
-	 *     ['bottom', 'footer', 40, 1], // z-index +1
-	 *     ['fill', 'content']
-	 *   ]},
-	 *   dataSource: {
-	 *     header: new Surface({content: 'header'}),
-	 *     footer: new Surface({content: 'footer'}),
-	 *     content: new Surface({content: 'content'}),
-	 *   }
-	 * });
-	 * ```
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var LayoutUtility = __webpack_require__(35);
-
-	    /**
-	     * @class
-	     * @param {LayoutContext} context layout-context
-	     * @param {Object} [options] additional options
-	     * @param {Object} [options.margins] margins to start out with (default: 0px)
-	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
-	     * @alias module:LayoutDockHelper
-	     */
-	    function LayoutDockHelper(context, options) {
-	        var size = context.size;
-	        this._size = size;
-	        this._context = context;
-	        this._options = options;
-	        this._z = (options && options.translateZ) ? options.translateZ : 0;
-	        if (options && options.margins) {
-	            var margins = LayoutUtility.normalizeMargins(options.margins);
-	            this._left = margins[3];
-	            this._top = margins[0];
-	            this._right = size[0] - margins[1];
-	            this._bottom = size[1] - margins[2];
-	        }
-	        else {
-	            this._left = 0;
-	            this._top = 0;
-	            this._right = size[0];
-	            this._bottom = size[1];
-	        }
-	    }
-
-	    /**
-	     * Parses the layout-rules based on a JSON data object.
-	     * The object should be an array with the following syntax:
-	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
-	     *
-	     * **Example:**
-	     *
-	     * ```JSON
-	     * [
-	     *   ['top': 'header', 50],
-	     *   ['bottom': 'footer', 50, 10], // z-index: 10
-	     *   ['fill', 'content']
-	     * ]
-	     * ```
-	     *
-	     * @param {Object} data JSON object
-	     */
-	    LayoutDockHelper.prototype.parse = function(data) {
-	        for (var i = 0; i < data.length; i++) {
-	            var rule = data[i];
-	            var value = (data.length >= 3) ? rule[2] : undefined;
-	            if (rule[0] === 'top') {
-	                this.top(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'left') {
-	                this.left(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'right') {
-	                this.right(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'bottom') {
-	                this.bottom(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'fill') {
-	                this.fill(rule[1], (data.length >=3) ? rule[2] : undefined);
-	            }
-	        }
-	    };
-
-	    /**
-	     * Dock the node to the top.
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.top = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._top += height;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the left
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.left = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (width === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            width = size[0];
-	        }
-	        this._context.set(node, {
-	            size: [width, this._bottom - this._top],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._left += width;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the bottom
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 1],
-	            align: [0, 1],
-	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
-	        });
-	        this._bottom -= height;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the right.
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.right = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (node) {
-	            if (width === undefined) {
-	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	                width = size[0];
-	            }
-	            this._context.set(node, {
-	                size: [width, this._bottom - this._top],
-	                origin: [1, 0],
-	                align: [1, 0],
-	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
-	            });
-	        }
-	        if (width) {
-	            this._right -= width;
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Fills the node to the remaining content.
-	     *
-	     * @param {LayoutNode|String} node layout-node to dock
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.fill = function(node, z) {
-	        this._context.set(node, {
-	            size: [this._right - this._left, this._bottom - this._top],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        return this;
-	    };
-
-	    // Register the helper
-	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
-
-	    module.exports = LayoutDockHelper;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -13394,8 +13405,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(41);
-	    var EventHandler = __webpack_require__(32);
+	    var Vector = __webpack_require__(42);
+	    var EventHandler = __webpack_require__(33);
 
 	    /**
 	     * Force base class.
