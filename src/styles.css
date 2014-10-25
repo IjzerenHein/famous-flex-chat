@@ -1,0 +1,36 @@
+body, div {
+    font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: normal;
+}
+body {
+  background: white;
+}
+
+
+.message-back {
+  border-top: 1px solid #AAAAAA;
+  background-color: #DDDDDD;
+}
+
+.message-input {
+  border-radius: 7px;
+  border-color: #AAAAAA;
+  font-size: 16px;
+  padding: 6px 5px 10px 5px;
+}
+
+.message-send {
+  text-align: center;
+  line-height: 34px;
+}
+
+
+/*.pull-to-refresh {
+  z-index: 0;
+  background-image: url(reload.gif);
+  background-repeat: no-repeat no-repeat;
+  -background-position: center top 20px;
+  background-position: center center;
+  background-size: 40px auto;
+}
+*/
