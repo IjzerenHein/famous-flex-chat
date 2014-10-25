@@ -1,12 +1,18 @@
-famous-flex-tablelayout
+famous-flex-chat
 ==========
 
-iOS inspired TableView-layout with sticky headers.
+Chat-demo for famo.us using the famous-flex ScrollView. This project demonstrates how to create
+a cross-platform native feeling chat application using web technologies.
 
-The demo consists of a famous-flex ScrollView and the TableLayout
-as provided in this repository. 
+The following features are demonstrated:
 
-[View the live demo here](https://rawgit.com/IjzerenHein/famous-flex-tablelayout/master/example/dist/index.html)
+-	True-size chat-bubbles using famous-flex/ScrollView
+-	Resizable text-area input
+-	Pull to refresh
+-	Sticky headers showing the messages-day
+-	Responsive design principles using famous-flex
+
+[View the live demo here](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html)
 
 
 ## Content
