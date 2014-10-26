@@ -67,30 +67,30 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 
 	    //<webpack>
-	    __webpack_require__(3);
-	    __webpack_require__(16);
 	    __webpack_require__(4);
+	    __webpack_require__(17);
 	    __webpack_require__(6);
+	    __webpack_require__(5);
 	    //</webpack>
 
 	    // Fast-click
-	    var FastClick = __webpack_require__(10);
+	    var FastClick = __webpack_require__(11);
 	    FastClick.attach(document.body);
 
 	    // import dependencies
-	    var TextareaSurface = __webpack_require__(23);
-	    var Firebase = __webpack_require__(11);
-	    var Engine = __webpack_require__(18);
-	    var ViewSequence = __webpack_require__(19);
-	    var Surface = __webpack_require__(20);
-	    var Modifier = __webpack_require__(21);
-	    var Transform = __webpack_require__(22);
-	    var ScrollView = __webpack_require__(12);
+	    var Firebase = __webpack_require__(12);
+	    var Engine = __webpack_require__(19);
+	    var ViewSequence = __webpack_require__(20);
+	    var Surface = __webpack_require__(21);
+	    var Modifier = __webpack_require__(22);
+	    var Transform = __webpack_require__(23);
+	    var ScrollView = __webpack_require__(13);
 	    var ChatLayout = __webpack_require__(2);
-	    var HeaderFooterLayout = __webpack_require__(15);
-	    var FlowLayoutController = __webpack_require__(13);
-	    var LayoutController = __webpack_require__(14);
-	    var Lagometer = __webpack_require__(8);
+	    var HeaderFooterLayout = __webpack_require__(16);
+	    var FlowLayoutController = __webpack_require__(14);
+	    var LayoutController = __webpack_require__(15);
+	    var Lagometer = __webpack_require__(9);
+	    var AutosizeTextareaSurface = __webpack_require__(3);
 
 	    // Initialize
 	    var mainContext = Engine.createContext();
@@ -146,31 +146,14 @@
 	    //
 	    // Message-input
 	    //
-	    var preferredMessageInputHeight = 30;
+	    var messageInputTextArea;
 	    function _createMessageInput() {
-	        var input = new TextareaSurface({
+	        messageInputTextArea = new AutosizeTextareaSurface({
 	            rows: 1,
 	            classes: ['message-input']
 	        });
-
-	        // Detect if the content of the text-area exceeds the available space.
-	        // If so, increase the height to accomodate for this.
-	        input.render = function() {
-	            if (this._currentTarget) {
-	                if (preferredMessageInputHeight !== this._currentTarget.scrollHeight) {
-	                    var oldHeightStyle = this._currentTarget.style.height;
-	                    this._currentTarget.style.height = (this._currentTarget.scrollHeight - 16) + 'px';
-	                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
-	                    //console.log('new height: ' + preferredMessageInputHeight);
-	                    if (!_updateMessageBarHeight()) {
-	                        this._currentTarget.style.height = oldHeightStyle;
-	                    }
-	                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
-	                }
-	            }
-	            return this.id;
-	        }.bind(input);
-	        return input;
+	        messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
+	        return messageInputTextArea;
 	    }
 
 	    //
@@ -178,7 +161,7 @@
 	    // was entered in the message text-area.
 	    //
 	    function _updateMessageBarHeight() {
-	        var height = Math.max(Math.min(preferredMessageInputHeight + 16, 200), 50);
+	        var height = Math.max(Math.min(messageInputTextArea.getScrollHeight() + 16, 200), 50);
 	        if (mainLayout.getLayoutOptions().footerHeight !== height) {
 	            mainLayout.setLayoutOptions({
 	                footerHeight: height
@@ -245,7 +228,7 @@
 	    //
 	    // Create a chat-bubble
 	    //
-	    var chatBubbleTemplate = __webpack_require__(7);
+	    var chatBubbleTemplate = __webpack_require__(8);
 	    function _createChatBubble(data) {
 	        return new Surface({
 	            size: [undefined, true],
@@ -609,18 +592,181 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(25);
-	__webpack_require__(26);
-	__webpack_require__(27);
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0*/
+
+	/**
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    'use strict';
+
+	    // import dependencies
+	    var TextareaSurface = __webpack_require__(25);
+
+	    /**
+	     * @class
+	     * @extends TextareaSurface
+	     * @param {Object} [options] Configuration options
+	     */
+	    function AutosizeTextareaSurface(options) {
+	        _createHiddenSurface.call(this);
+	        TextareaSurface.apply(this, arguments);
+	    }
+	    AutosizeTextareaSurface.prototype = Object.create(TextareaSurface.prototype);
+	    AutosizeTextareaSurface.prototype.constructor = AutosizeTextareaSurface;
+
+	    /**
+	     * Create the hidden text-area surface
+	     */
+	    function _createHiddenSurface() {
+	        this._preferredScrollHeight = 0;
+	        this._hiddenTextarea = new TextareaSurface({});
+	        this.setProperties({});
+	    }
+
+	    /**
+	     * Checks whether the scroll-height has changed and when so
+	     * emits an event about the preferred height.
+	     */
+	    AutosizeTextareaSurface.prototype.render = function render() {
+	        if (this._currentTarget) {
+	            if (this._scrollHeightCache !== this._currentTarget.scrollHeight) {
+	                this._scrollHeightCache = this._currentTarget.scrollHeight;
+	                this._hiddenTextarea._currentTarget.value = this.getValue();
+	                this._hiddenTextarea._currentTarget.style.height = '10px';
+	                var preferredScrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
+	                if (preferredScrollHeight !== this._preferredScrollHeight) {
+	                    this._preferredScrollHeight = preferredScrollHeight;
+	                    //console.log('scrollHeight changed: ' + this._preferredScrollHeight);
+	                    this._eventOutput.emit('scrollHeightChanged', this._preferredScrollHeight);
+	                }
+	            }
+	        }
+
+	        // Return render-spec of both this textArea and the hidden
+	        // text-area so that they are both rendered.
+	        return [this.id, this._hiddenTextarea.id];
+	    };
+
+	    /**
+	     * Get the height of the scrollable content.
+	     */
+	    AutosizeTextareaSurface.prototype.getScrollHeight = function() {
+	        return this._preferredScrollHeight;
+	    };
+
+	    /**
+	     * Copy set properties to hidden text-area and ensure that it stays hidden.
+	     */
+	    var oldSetProperties = AutosizeTextareaSurface.prototype.setProperties;
+	    AutosizeTextareaSurface.prototype.setProperties = function setProperties(properties) {
+	        properties = properties || {};
+	        var hiddenProperties = {};
+	        for (var key in properties) {
+	            hiddenProperties[key] = properties[key];
+	        }
+	        hiddenProperties.visibility = 'hidden';
+	        this._hiddenTextarea.setProperties(hiddenProperties);
+	        return oldSetProperties.call(this, properties);
+	    };
+
+	    /**
+	     * Override methods and forward to hidden text-area, so that they use the
+	     * same settings.
+	     */
+	    var oldSetAttributes = AutosizeTextareaSurface.prototype.setAttributes;
+	    AutosizeTextareaSurface.prototype.setAttributes = function setAttributes(attributes) {
+	        this._hiddenTextarea.setAttributes(attributes);
+	        return oldSetAttributes.call(this, attributes);
+	    };
+	    var oldAddClass = AutosizeTextareaSurface.prototype.addClass;
+	    AutosizeTextareaSurface.prototype.addClass = function addClass(className) {
+	        this._hiddenTextarea.addClass(className);
+	        return oldAddClass.call(this, className);
+	    };
+	    var oldRemoveClass = AutosizeTextareaSurface.prototype.removeClass;
+	    AutosizeTextareaSurface.prototype.removeClass = function removeClass(className) {
+	        this._hiddenTextarea.removeClass(className);
+	        return oldRemoveClass.call(this, className);
+	    };
+	    var oldToggleClass = AutosizeTextareaSurface.prototype.toggleClass;
+	    AutosizeTextareaSurface.prototype.toggleClass = function toggleClass(className) {
+	        this._hiddenTextarea.toggleClass(className);
+	        return oldToggleClass.call(this, className);
+	    };
+	    var oldSetClasses = AutosizeTextareaSurface.prototype.setClasses;
+	    AutosizeTextareaSurface.prototype.setClasses = function setClasses(classList) {
+	        this._hiddenTextarea.setClasses(classList);
+	        return oldSetClasses.call(this, classList);
+	    };
+	    var oldSetContent = AutosizeTextareaSurface.prototype.setContent;
+	    AutosizeTextareaSurface.prototype.setContent = function setContent(content) {
+	        this._hiddenTextarea.setContent(content);
+	        return oldSetContent.call(this, content);
+	    };
+	    var oldSetOptions = AutosizeTextareaSurface.prototype.setOptions;
+	    AutosizeTextareaSurface.prototype.setOptions = function setOptions(options) {
+	        this._hiddenTextarea.setOptions(options);
+	        return oldSetOptions.call(this, options);
+	    };
+	    var oldSetValue = AutosizeTextareaSurface.prototype.setValue;
+	    AutosizeTextareaSurface.prototype.setValue = function setValue(str) {
+	        this._hiddenTextarea.setValue(str);
+	        return oldSetValue.call(this, str);
+	    };
+	    var oldSetWrap = AutosizeTextareaSurface.prototype.setWrap;
+	    AutosizeTextareaSurface.prototype.setWrap = function setWrap(str) {
+	        this._hiddenTextarea.setWrap(str);
+	        return oldSetWrap.call(this, str);
+	    };
+	    var oldSetColumns = AutosizeTextareaSurface.prototype.setColumns;
+	    AutosizeTextareaSurface.prototype.setColumns = function setColumns(num) {
+	        this._hiddenTextarea.setColumns(num);
+	        return oldSetColumns.call(this, num);
+	    };
+	    var oldSetRows = AutosizeTextareaSurface.prototype.setRows;
+	    AutosizeTextareaSurface.prototype.setRows = function setRows(num) {
+	        this._hiddenTextarea.setRows(num);
+	        return oldSetRows.call(this, num);
+	    };
+
+	    module.exports = AutosizeTextareaSurface;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
 
 /***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
+	__webpack_require__(26);
+	__webpack_require__(27);
+	__webpack_require__(28);
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__.p + "index.html"
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// style-loader: Adds some css to the DOM by adding a <style> tag
-	var dispose = __webpack_require__(9)
+	var dispose = __webpack_require__(10)
 		// The css code:
-		(__webpack_require__(5));
+		(__webpack_require__(7));
 	// Hot Module Replacement
 	if(false) {
 		module.hot.accept();
@@ -628,23 +774,17 @@
 	}
 
 /***/ },
-/* 5 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
 		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n\n.message-back {\n  border-top: 1px solid #AAAAAA;\n  background-color: #DDDDDD;\n}\n\n.message-input {\n  border-radius: 7px;\n  border-color: #AAAAAA;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n}\n\n.message-send {\n  text-align: center;\n  line-height: 34px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
 
 /***/ },
-/* 6 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "index.html"
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(50).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(51).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "";
@@ -654,7 +794,7 @@
 	  });
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -674,9 +814,9 @@
 	    'use strict';
 
 	    // import dependencies
-	    var Engine = __webpack_require__(18);
-	    var CanvasSurface = __webpack_require__(28);
-	    var View = __webpack_require__(29);
+	    var Engine = __webpack_require__(19);
+	    var CanvasSurface = __webpack_require__(29);
+	    var View = __webpack_require__(30);
 
 	    /**
 	     * @class Lagometer
@@ -910,7 +1050,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -937,7 +1077,7 @@
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -1764,7 +1904,7 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*! @license Firebase v1.1.2 - License: https://www.firebase.com/terms/terms-of-service.html */ (function() {var k,ba=this;function l(a){return void 0!==a}function ca(){}function da(a){a.ib=function(){return a.Ld?a.Ld:a.Ld=new a}}
@@ -1967,7 +2107,7 @@
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -1992,14 +2132,14 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    //var LayoutUtility = require('./LayoutUtility');
-	    var FlowLayoutController = __webpack_require__(13);
+	    var LayoutUtility = __webpack_require__(31);
+	    var FlowLayoutController = __webpack_require__(14);
 	    var FlowLayoutNode = __webpack_require__(32);
-	    var LayoutNodeManager = __webpack_require__(30);
-	    var ContainerSurface = __webpack_require__(38);
-	    var Transform = __webpack_require__(22);
-	    var EventHandler = __webpack_require__(33);
-	    var Group = __webpack_require__(39);
+	    var LayoutNodeManager = __webpack_require__(33);
+	    var ContainerSurface = __webpack_require__(34);
+	    var Transform = __webpack_require__(23);
+	    var EventHandler = __webpack_require__(35);
+	    var Group = __webpack_require__(36);
 	    var Vector = __webpack_require__(42);
 	    var PhysicsEngine = __webpack_require__(43);
 	    var Particle = __webpack_require__(44);
@@ -2018,21 +2158,6 @@
 	    };
 
 	    /**
-	     * Source of the spring
-	     */
-	    var SpringSource = {
-	        NONE: 'none',
-	        NEXTBOUNDS: 'next-bounds', // top
-	        PREVBOUNDS: 'prev-bounds', // bottom
-	        MINSIZE: 'minimal-size',
-	        GOTOSEQUENCE: 'goto-sequence',
-	        GOTOPREVDIRECTION: 'goto-prev-direction',
-	        GOTONEXTDIRECTION: 'goto-next-direction',
-	        SNAPPREV: 'snap-prev', // paginated: true
-	        SNAPNEXT: 'snap-next'  // paginated: true
-	    };
-
-	    /**
 	     * @class
 	     * @param {Object} options Options.
 	     * @alias module:ScrollView
@@ -2046,6 +2171,7 @@
 	        // Scrolling
 	        this._scroll = {
 	            activeTouches: [],
+	            scrollDelta: 0,
 	            // physics-engine to use for scrolling
 	            pe: new PhysicsEngine(),
 	            // particle that represents the scroll-offset
@@ -2058,18 +2184,15 @@
 	            springValue: undefined,
 	            springForce: new Spring(this.options.scrollSpring),
 	            springEndState: new Vector([0, 0, 0]),
-	            // group
-	            groupStart: 0,
-	            // delta
-	            scrollDelta: 0,
-	            normalizedScrollDelta: 0,
-	            scrollForce: 0,
-	            scrollForceCount: 0
+	            // window
+	            windowStart: undefined,
+	            groupStart: undefined
 	        };
 
 	        // Diagnostics
 	        this._debug = {
-	            layoutCount: 0
+	            layoutCount: 0,
+	            logging: false
 	        };
 
 	        // Create groupt for faster rendering
@@ -2121,7 +2244,6 @@
 	    }
 	    ScrollView.prototype = Object.create(FlowLayoutController.prototype);
 	    ScrollView.prototype.constructor = ScrollView;
-	    ScrollView.Bounds = Bounds;
 
 	    ScrollView.DEFAULT_OPTIONS = {
 	        //insertSpec: undefined,
@@ -2141,29 +2263,7 @@
 	        paginated: false,
 	        //paginationEnergyThresshold: 0.001,
 	        reverse: false,
-	        touchMoveDirectionThresshold: undefined, // 0..1
-	        logging: false,
-	        scrollCallback: undefined //function(offset, force)
-	    };
-
-	    var oldSetOptions = ScrollView.prototype.setOptions;
-	    /**
-	     * Patches the ScrollView instance's options with the passed-in ones.
-	     *
-	     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
-	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
-	     * @return {FlowLayoutController} this
-	     */
-	    ScrollView.prototype.setOptions = function(options) {
-	        oldSetOptions.call(this, options);
-	        // todo - all other options
-	        return this;
+	        touchMoveDirectionThresshold: undefined // 0..1
 	    };
 
 	    /**
@@ -2190,7 +2290,7 @@
 	     * Helper function for logging debug statements to the console.
 	     */
 	    function _log(args) {
-	        if (!this.options.logging) {
+	        if (!this._debug.logging) {
 	            return;
 	        }
 	        var message = this._debug.layoutCount + ': ';
@@ -2214,6 +2314,9 @@
 	        if ((scrollOffset !== undefined) && isNaN(scrollOffset)) {
 	            throw 'invalid scrollOffset: ' + scrollOffset + phase;
 	        }
+	        if ((this._scroll.scrollDelta !== undefined) && isNaN(this._scroll.scrollDelta)) {
+	            throw 'invalid scrollDelta: ' + this._scroll.scrollDelta + phase;
+	        }
 	        if (isNaN(this._scroll.particle.getVelocity1D(0))) {
 	            throw 'invalid particle velocity: ' + this._scroll.particle.getVelocity1D(0) + phase;
 	        }
@@ -2225,14 +2328,13 @@
 	    /**
 	     * Sets the value for the spring, or set to `undefined` to disable the spring
 	     */
-	    function _updateSpring() {
-	        var springValue = this._scroll.scrollForceCount ? undefined : this._scroll.springPosition;
-	        if (springValue !== undefined) {
-	            springValue = _roundScrollOffset.call(this, springValue);
+	    function _setSpring(value) {
+	        if (value !== undefined) {
+	            value = _roundScrollOffset.call(this, value);
 	        }
-	        if (this._scroll.springValue !== springValue) {
-	            this._scroll.springValue = springValue;
-	            if (springValue === undefined) {
+	        if (this._scroll.springValue !== value) {
+	            this._scroll.springValue = value;
+	            if (value === undefined) {
 	                if (this._scroll.springForceId !== undefined) {
 	                    this._scroll.pe.detach(this._scroll.springForceId);
 	                    this._scroll.springForceId = undefined;
@@ -2243,9 +2345,9 @@
 	                if (this._scroll.springForceId === undefined) {
 	                    this._scroll.springForceId = this._scroll.pe.attach(this._scroll.springForce, this._scroll.particle);
 	                }
-	                this._scroll.springEndState.set1D(springValue);
+	                this._scroll.springEndState.set1D(value);
 	                this._scroll.pe.wake();
-	                _log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
+	                _log.call(this, 'setting spring to: ', value);
 	            }
 	        }
 	    }
@@ -2256,7 +2358,10 @@
 	     */
 	    function _touchStart(event) {
 	        //_log.call(this, 'touchStart');
-	        //this._eventOutput.emit('touchstart', event);
+	        this._eventOutput.emit('touchstart', event);
+
+	        // Reset any programmatic scrollTo request when the user is doing stuff
+	        this._scroll.scrollToSequence = undefined;
 
 	        // Remove any touches that are no longer active
 	        var oldTouchesCount = this._scroll.activeTouches.length;
@@ -2307,12 +2412,10 @@
 
 	        // The first time a touch new touch gesture has arrived, emit event
 	        if (!oldTouchesCount && this._scroll.activeTouches.length) {
-	            this.applyScrollForce(0);
-	            this._scroll.touchDelta = 0;
-	            if (this.options.scrollCallback) {
-	                this.options.scrollCallback(0, 1);
-	            }
-	            //this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
+	            _setParticle.call(this, undefined, 0, 'touchStart'); // reset particle velocity
+	            this._scroll.moveToStartPosition = this._scroll.particle.getPosition1D();
+	            this._scroll.moveToPosition = this._scroll.moveToStartPosition;
+	            this._eventOutput.emit('scrollstart', this._scroll.activeTouches[0]);
 	        }
 	    }
 
@@ -2322,7 +2425,10 @@
 	     */
 	    function _touchMove(event) {
 	        //_log.call(this, 'touchMove');
-	        //this._eventOutput.emit('touchmove', event);
+	        this._eventOutput.emit('touchmove', event);
+
+	        // Reset any programmatic scrollTo request when the user is doing stuff
+	        this._scroll.scrollToSequence = undefined;
 
 	        // Process the touch event
 	        var primaryTouch;
@@ -2354,12 +2460,9 @@
 	        // Update move offset and emit event
 	        if (primaryTouch) {
 	            var delta = primaryTouch.current[this._direction] - primaryTouch.start[this._direction];
-	            if (this.options.scrollCallback) {
-	                delta = this.options.scrollCallback(delta, 2);
-	            }
-	            this.updateScrollForce(this._scroll.touchDelta, delta);
-	            this._scroll.touchDelta = delta;
-	            //this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
+	            this._scroll.moveToPosition = this._scroll.moveToStartPosition + delta;
+	            this._eventOutput.emit('scrollmove', this._scroll.activeTouches[0]);
+	            _verifyIntegrity.call(this, 'touchMove');
 	        }
 	    }
 
@@ -2371,7 +2474,10 @@
 	     */
 	    function _touchEnd(event) {
 	        //_log.call(this, 'touchEnd');
-	        //this._eventOutput.emit('touchend', event);
+	        this._eventOutput.emit('touchend', event);
+
+	        // Reset any programmatic scrollTo request when the user is doing stuff
+	        this._scroll.scrollToSequence = undefined;
 
 	        // Remove touch
 	        var primaryTouch = this._scroll.activeTouches.length ? this._scroll.activeTouches[0] : undefined;
@@ -2409,18 +2515,17 @@
 	            velocity = diffOffset / diffTime;
 	        }
 
-	        // Execute callback
-	        var delta = this._scroll.touchDelta;
-	        if (this.options.scrollCallback) {
-	            delta = this.options.scrollCallback(delta, 3, velocity);
-	        }
+	        // Update particle
+	        var scrollOffset = _calcScrollOffset.call(this);
+	        _setParticle.call(this, scrollOffset, velocity, 'moveEnd');
+	        this._scroll.pe.wake();
 
-	        // Release scroll force
-	        this.releaseScrollForce(delta, velocity);
-	        this._scroll.touchDelta = 0;
+	        // Stop the move operation
+	        this._scroll.moveToStartPosition = undefined;
+	        this._scroll.moveToPosition = undefined;
 
 	        // Emit end event
-	        //this._eventOutput.emit('scrollend', primaryTouch);
+	        this._eventOutput.emit('scrollend', primaryTouch);
 	    }
 
 	    /**
@@ -2428,11 +2533,12 @@
 	     * scroll wheel or a track-pad.
 	     */
 	    function _scrollUpdate(event) {
-	        var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-	        if (this.options.scrollCallback) {
-	            offset = this.options.scrollCallback(offset, 0);
-	        }
-	        this.scroll(offset);
+
+	        // Reset any programmatic scrollTo request when the user is doing stuff
+	        this._scroll.scrollToSequence = undefined;
+
+	        // Store the scroll delta
+	        this._scroll.scrollDelta += Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
 	    }
 
 	    /**
@@ -2447,58 +2553,54 @@
 	     * Updates the scroll offset particle.
 	     */
 	    function _setParticle(position, velocity, phase) {
+	        phase = phase ? ' (' + phase + ')' : '';
 	        if (position !== undefined) {
 	            var oldPosition = this._scroll.particle.getPosition1D();
 	            this._scroll.particle.setPosition1D(position);
-	            _log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
+	            _log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ')', phase);
 	        }
 	        if (velocity !== undefined) {
 	            var oldVelocity = this._scroll.particle.getVelocity1D();
-	            if (oldVelocity !== velocity) {
-	                this._scroll.particle.setVelocity1D(velocity);
-	                _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ', phase: ', phase, ')');
-	            }
+	            this._scroll.particle.setVelocity1D(velocity);
+	            _log.call(this, 'setParticle.velocity: ', velocity, ' (old: ', oldVelocity, ', delta: ', velocity - oldVelocity, ')', phase);
 	        }
 	    }
 
 	    /**
 	     * Get the in-use scroll-offset.
 	     */
-	    function _calcScrollOffset(normalize) {
+	    function _calcScrollOffset() {
 
 	        // When moving using touch-gestures, make the offset stick to the
 	        // finger. When the bounds is exceeded, decrease the scroll distance
 	        // by two.
 	        var scrollOffset = this._scroll.particle.getPosition1D();
-
-	        if (this._scroll.scrollDelta || this._scroll.normalizedScrollDelta) {
-	            scrollOffset += this._scroll.scrollDelta + this._scroll.normalizedScrollDelta;
+	        if (this._scroll.moveToPosition !== undefined) {
+	            if (this._scroll.springPosition !== undefined) {
+	                scrollOffset = (this._scroll.moveToPosition + this._scroll.springPosition) / 2.0;
+	            }
+	            else {
+	                scrollOffset = this._scroll.moveToPosition;
+	            }
+	        } else if (this._scroll.scrollDelta) {
+	            scrollOffset += this._scroll.scrollDelta;
 	            if (((this._scroll.boundsReached & Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) ||
 	               ((this._scroll.boundsReached & Bounds.NEXT) && (scrollOffset < this._scroll.springPosition)) ||
 	               (this._scroll.boundsReached === Bounds.BOTH)) {
 	                scrollOffset = this._scroll.springPosition;
 	            }
-	            if (normalize) {
-	                if (!this._scroll.scrollDelta) {
-	                    this._scroll.normalizedScrollDelta = 0;
-	                    _setParticle.call(this, scrollOffset, undefined, '_calcScrollOffset');
-	                }
-	                this._scroll.normalizedScrollDelta += this._scroll.scrollDelta;
-	                this._scroll.scrollDelta = 0;
-	            }
 	        }
-
-	        if (this._scroll.scrollForceCount) {
-	            if (this._scroll.springPosition !== undefined) {
-	                scrollOffset = (scrollOffset + this._scroll.scrollForce + this._scroll.springPosition) / 2.0;
-	            }
-	            else {
-	                scrollOffset += this._scroll.scrollForce;
-	            }
-	        }
-
-	        //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
 	        return _roundScrollOffset.call(this, scrollOffset);
+	    }
+
+	    /**
+	     * Integrates the scroll delta into the particle position.
+	     */
+	    function _integrateScrollDelta(scrollOffset) {
+	        if (this._scroll.scrollDelta) {
+	            this._scroll.scrollDelta = 0;
+	            _setParticle.call(this, scrollOffset, undefined, 'integrateScrollDelta');
+	        }
 	    }
 
 	    /**
@@ -2549,20 +2651,18 @@
 	        // 1. Check whether primary boundary has been reached
 	        if (this.options.reverse) {
 	            nextHeight = _calcNextHeight.call(this);
-	            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])) {
+	            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) < size[this._direction])) {
 	                this._scroll.boundsReached = Bounds.NEXT;
 	                this._scroll.springPosition = size[this._direction] - nextHeight;
-	                this._scroll.springSource = SpringSource.NEXTBOUNDS;
 	                return;
 	            }
 	            prevHeight = _calcPrevHeight.call(this);
 	        }
 	        else {
 	            prevHeight = _calcPrevHeight.call(this);
-	            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
+	            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) > 0)) {
 	                this._scroll.boundsReached = Bounds.PREV;
 	                this._scroll.springPosition = prevHeight;
-	                this._scroll.springSource = SpringSource.PREVBOUNDS;
 	                return;
 	            }
 	            nextHeight = _calcNextHeight.call(this);
@@ -2574,27 +2674,24 @@
 	        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
 	            totalHeight = prevHeight + nextHeight;
 	        }
-	        if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
+	        if ((totalHeight !== undefined) && (totalHeight < size[this._direction])) {
 	            this._scroll.boundsReached = Bounds.BOTH;
 	            this._scroll.springPosition = this.options.reverse ? size[this._direction] - nextHeight : prevHeight;
-	            this._scroll.springSource = SpringSource.MINSIZE;
 	            return;
 	        }
 
 	        // 3. Check if secondary bounds has been reached
 	        if (this.options.reverse) {
-	            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
+	            if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) > 0)) {
 	                this._scroll.boundsReached = Bounds.PREV;
 	                this._scroll.springPosition = prevHeight;
-	                this._scroll.springSource = SpringSource.PREVBOUNDS;
 	                return;
 	            }
 	        }
 	        else {
-	            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= size[this._direction])){
+	            if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) < size[this._direction])){
 	                this._scroll.boundsReached = Bounds.NEXT;
 	                this._scroll.springPosition = size[this._direction] - nextHeight;
-	                this._scroll.springSource = SpringSource.NEXTBOUNDS;
 	                return;
 
 	            }
@@ -2603,7 +2700,6 @@
 	        // No bounds reached
 	        this._scroll.boundsReached = Bounds.NONE;
 	        this._scroll.springPosition = undefined;
-	        this._scroll.springSource = SpringSource.NONE;
 	    }
 
 	    /**
@@ -2650,18 +2746,15 @@
 	        }
 	        if (foundNode) {
 	            this._scroll.springPosition = scrollToOffset;
-	            this._scroll.springSource = SpringSource.GOTOSEQUENCE;
 	            return;
 	        }
 
 	        // 3. When node not found, set the spring to a position into that direction
 	        if (this._scroll.scrollToDirection) {
 	            this._scroll.springPosition = scrollOffset - size[this._direction];
-	            this._scroll.springSource = SpringSource.GOTOPREVDIRECTION;
 	        }
 	        else {
 	            this._scroll.springPosition = scrollOffset + size[this._direction];
-	            this._scroll.springSource = SpringSource.GOTONEXTDIRECTION;
 	        }
 	    }
 
@@ -2673,7 +2766,6 @@
 
 	        // Check whether pagination is active
 	        if (!this.options.paginated ||
-	            this._scroll.scrollForceCount ||
 	            (Math.abs(this._scroll.particle.getEnergy()) > this.options.paginationEnergyThresshold) ||
 	            (this._scroll.springPosition !== undefined)) {
 	            return;
@@ -2721,22 +2813,13 @@
 
 	        // Determine snap spring-position
 	        var boundOffset = pageOffset - bound;
-	        var snapSpringPosition;
 	        if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
-	            snapSpringPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
-	            if (snapSpringPosition !== this._scroll.springPosition) {
-	                //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
-	                this._scroll.springPosition = snapSpringPosition;
-	                this._scroll.springSource = SpringSource.SNAPPREV;
-	            }
+	            this._scroll.springPosition = (scrollOffset - pageOffset) + (this.options.reverse ? size[this._direction] : 0);
+	            _log.call(this, 'setting snap-spring to #1: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
 	        }
 	        else {
-	            snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
-	            if (snapSpringPosition !== this._scroll.springPosition) {
-	                //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
-	                this._scroll.springPosition = snapSpringPosition;
-	                this._scroll.springSource = SpringSource.SNAPNEXT;
-	            }
+	            this._scroll.springPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.reverse ? size[this._direction] : 0);
+	            _log.call(this, 'setting snap-spring to #2: ', this._scroll.springPosition, ', scrollOffset: ' + scrollOffset);
 	        }
 	    }
 
@@ -2744,8 +2827,6 @@
 	     * Normalizes the view-sequence node so that the view-sequence is near to 0.
 	     */
 	    function _normalizePrevViewSequence(size, scrollOffset, baseOffset) {
-	        var normalizedCount = 0;
-	        var normalizedLength = 0;
 	        this._nodes.forEach(function(node) {
 	            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
 	                return true;
@@ -2755,18 +2836,12 @@
 	            }
 	            this._viewSequence = node._viewSequence;
 	            scrollOffset -= node.scrollLength;
-	            normalizedLength -= node.scrollLength;
-	            normalizedCount++;
+	            _log.call(this, 'normalized prev node with length: ', node.scrollLength, ', scrollOffset: ', scrollOffset);
 	        }.bind(this), false);
-	        if (normalizedCount) {
-	            _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
-	        }
 	        return scrollOffset;
 	    }
 	    function _normalizeNextViewSequence(size, scrollOffset, baseOffset) {
 	        var prevScrollLength;
-	        var normalizedCount = 0;
-	        var normalizedLength = 0;
 	        this._nodes.forEach(function(node) {
 	            if ((node.scrollLength === undefined) || node.trueSizeRequested) {
 	                return true;
@@ -2777,14 +2852,10 @@
 	                }
 	                this._viewSequence = node._viewSequence;
 	                scrollOffset += prevScrollLength;
-	                normalizedLength += prevScrollLength;
-	                normalizedCount++;
+	                _log.call(this, 'normalized next node with length: ', prevScrollLength, ', scrollOffset: ', scrollOffset);
 	            }
 	            prevScrollLength = node.scrollLength;
 	        }.bind(this), true);
-	        if (normalizedCount) {
-	            _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedLength, ', scrollOffset: ', scrollOffset);
-	        }
 	        return scrollOffset;
 	    }
 	    function _normalizeViewSequence(size, scrollOffset) {
@@ -2796,8 +2867,8 @@
 	            return scrollOffset;
 	        }
 
-	        // Don't normalize when forces are at work
-	        if (this._scroll.scrollForceCount) {
+	        // Don't normalize when moving
+	        if (this._scroll.moveToStartPosition !== undefined) {
 	            return scrollOffset;
 	        }
 
@@ -2839,10 +2910,14 @@
 	                this._scroll.springPosition += delta;
 	            }
 
-	            // Adjust group offset
-	            if (this._layout.capabilities.sequentialScrollingOptimized) {
-	                this._scroll.groupStart -= delta;
+	            // Adjust move position
+	            if (this._scroll.moveToStartPosition !== undefined) {
+	                this._scroll.moveToStartPosition += delta;
 	            }
+
+	            // Adjust group offset
+	            this._scroll.windowStart -= delta;
+	            this._scroll.groupStart -= delta;
 	        }
 	        return normalizedScrollOffset;
 	    }
@@ -2909,22 +2984,23 @@
 	    function _scrollToSequence(viewSequence, next) {
 	        this._scroll.scrollToSequence = viewSequence;
 	        this._scroll.scrollToDirection = next;
-	        this._scroll.scrollDirty = true;
+	        this._scroll.scrollToDirty = true;
 	    }
 
 	    /**
 	     * Moves to the next node in the viewSequence.
 	     *
 	     * @param {Number} [amount] Amount of nodes to move
+	     * @return {ScrollView} this
 	     */
-	    function _goToPage(amount) {
+	    ScrollView.prototype.scroll = function(amount) {
 
 	        // Get current scroll-position. When a previous call was made to
 	        // `scroll' or `scrollTo` and that node has not yet been reached, then
 	        // the amount is accumalated onto that scroll target.
 	        var viewSequence = this._scroll.scrollToSequence || this.getFirstVisibleItem() || this._viewSequence;
 	        if (!viewSequence) {
-	            return;
+	            return this;
 	        }
 
 	        // When the first renderable is partially shown, then treat `-1` (previous)
@@ -2944,169 +3020,16 @@
 	            }
 	        }
 	        _scrollToSequence.call(this, viewSequence, amount >= 0);
-	    }
-
-	    /**
-	     * Halts all scrolling going on. In essence this function sets
-	     * the velocity to 0 and cancels any `goToXxx` operation that
-	     * was applied.
-	     *
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.halt = function() {
-	        this._scroll.scrollToSequence = undefined;
-	        _setParticle.call(this, undefined, 0, 'halt');
-	        return this;
-	    };
-
-	    /**
-	     * Applies a permanent scroll-force (offset) until it is released.
-	     * When the cumulative scroll-offset lies outside the allowed bounds
-	     * a strech effect is used, and the offset beyond the bounds is
-	     * substracted by halve. This function should always be accompanied
-	     * by a call to `releaseScrollForce`.
-	     *
-	     * This method is used for instance when using touch gestures to move
-	     * the scroll offset and corresponds to the `touchstart` event.
-	     *
-	     * @param {Number} offset Scroll offset to add to the current
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.applyScrollForce = function(offset) {
-	        this.halt();
-	        this._scroll.scrollForceCount++;
-	        this._scroll.scrollForce += offset;
-	        return this;
-	    };
-
-	    /**
-	     * Updates a existing scroll-force previously applied by calling
-	     * `applyScrollForce`.
-	     *
-	     * This method is used for instance when using touch gestures to move
-	     * the scroll offset and corresponds to the `touchmove` event.
-	     *
-	     * @param {Number} [prevOffset] Previous offset
-	     * @param {Number} [newOffset] New offset
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.updateScrollForce = function(prevOffset, newOffset) {
-	        this.halt();
-	        newOffset -= prevOffset;
-	        this._scroll.scrollForce += newOffset;
-	        return this;
-	    };
-
-	    /**
-	     * Releases a scroll-force and sets the velocity.
-	     *
-	     * This method is used for instance when using touch gestures to move
-	     * the scroll offset and corresponds to the `touchend` event.
-	     *
-	     * @param {Number} offset Scroll offset to release
-	     * @param {Number} [velocity] Velocity to apply after which the view keeps scrolling
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.releaseScrollForce = function(offset, velocity) {
-	        this.halt();
-	        if (this._scroll.scrollForceCount === 1) {
-	            var scrollOffset = _calcScrollOffset.call(this);
-	            _setParticle.call(this, scrollOffset, velocity, 'releaseScrollForce');
-	            this._scroll.pe.wake();
-	            this._scroll.scrollForce = 0;
-	            this._scroll.scrollDirty = true;
-	        }
-	        else {
-	            this._scroll.scrollForce -= offset;
-	        }
-	        this._scroll.scrollForceCount--;
-	        return this;
-	    };
-
-	    /**
-	     * Checks whether the scrollview can scroll the given offset.
-	     * When the scrollView can scroll the whole offset, then
-	     * the return value is the same as the offset. If it cannot
-	     * scroll the entire offset, the return value is the number of
-	     * pixels that can be scrolled.
-	     *
-	     * @return {Number} number of pixels the view can scroll or offset
-	     */
-	    ScrollView.prototype.canScroll = function(offset) {
-
-	        // Calculate height in both directions
-	        var scrollOffset = _calcScrollOffset.call(this);
-	        var prevHeight = _calcPrevHeight.call(this);
-	        var nextHeight = _calcNextHeight.call(this);
-
-	        // When the rendered height is smaller than the total height,
-	        // then no scrolling whatsover is allowed.
-	        var totalHeight;
-	        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
-	            totalHeight = prevHeight + nextHeight;
-	        }
-	        if ((totalHeight !== undefined) && (totalHeight <= this._contextSizeCache[this._direction])) {
-	            return 0; // no scrolling at all allowed
-	        }
-
-	        // Determine the offset that we can scroll
-	        if ((offset < 0) && (nextHeight !== undefined)) {
-	            var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
-	            return Math.min(nextOffset, offset);
-	        } else if ((offset > 0) && (prevHeight !== undefined)) {
-	            var prevOffset = -(scrollOffset - prevHeight);
-	            return Math.min(prevOffset, offset);
-	        }
-	        return offset;
-	    };
-
-	    /**
-	     * Scrolls the view by the specified offset.
-	     *
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.scroll = function(offset) {
-	        this.halt();
-	        this._scroll.scrollDelta += offset;
-	        return this;
-	    };
-
-	    /**
-	     * Checks whether any boundaries have been reached.
-	     *
-	     * @return {ScrollView.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
-	     */
-	    ScrollView.prototype.getBoundsReached = function() {
-	        return this._scroll.boundsReached;
-	    };
-
-	    /**
-	     * Scroll to the previous page, making it visible.
-	     *
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.goToPreviousPage = function() {
-	        _goToPage.call(this, -1);
-	        return this;
-	    };
-
-	    /**
-	     * Scroll to the next page, making it visible.
-	     *
-	     * @return {ScrollView} this
-	     */
-	    ScrollView.prototype.goToNextPage = function() {
-	        _goToPage.call(this, 1);
 	        return this;
 	    };
 
 	    /**
 	     * Scroll to the given renderable in the datasource.
 	     *
-	     * @param {RenderNode} node renderable to scroll to
+	     * @param {RenderNode} [node] renderable to scroll to
 	     * @return {ScrollView} this
 	     */
-	    ScrollView.prototype.goToRenderNode = function(node) {
+	    ScrollView.prototype.scrollTo = function(node) {
 
 	        // Verify arguments and state
 	        if (!this._viewSequence || !node) {
@@ -3115,8 +3038,7 @@
 
 	        // Check current node
 	        if (this._viewSequence.get() === node) {
-	            var next = _calcScrollOffset.call(this) >= 0;
-	            _scrollToSequence.call(this, this._viewSequence, next);
+	            _scrollToSequence.call(this, this._viewSequence, true);
 	            return this;
 	        }
 
@@ -3143,6 +3065,52 @@
 	    };
 
 	    /**
+	     * Prepares the layout for the layout-function.
+	     * Determines the scrollStart and scrollEnd positions so that the layout-function
+	     * renders the same renderables as much as possible to reduce insert/remove into
+	     * the DOM as much as possible.
+	     */
+	    function _prepareLayout(size, scrollOffset) {
+
+	        // Determine current window-size
+	        var windowSize = size[this._direction] * 5;
+
+	        // Initialize window start position
+	        if (this._scroll.windowStart === undefined) {
+	            this._scroll.windowStart = -size[this._direction];
+	            this._scroll.groupStart = this._scroll.windowStart;
+	        }
+
+	        // Normalize window-start in case renderables outside the
+	        // window should be displayed.
+	        var scrollStart = scrollOffset + this._scroll.windowStart;
+	        if (scrollStart >= 0) {
+	            _log.call(this, 'normalizing window #1, scrollStart: ' + scrollStart);
+	            this._scroll.windowStart = scrollOffset - size[this._direction];
+	            scrollStart = scrollOffset - this._scroll.windowStart;
+	            //console.log('norm #1: scrollStart: ' + scrollStart + ', windowStart:' + this._scroll.windowStart);
+	        } else if ((scrollStart + windowSize) <= size[this._direction]) {
+	            _log.call(this, 'normalizing window #2, scrollStart: ' + scrollStart);
+	            this._scroll.windowStart = scrollOffset - size[this._direction];
+	            scrollStart = scrollOffset - this._scroll.windowStart;
+	            //console.log('norm #2: scrollStart: ' + scrollStart + ', windowStart:' + this._scroll.windowStart);
+	        }
+
+	        // Prepare for layout
+	        //_log.call(this, 'scrollStart: ' + scrollStart + ', offset: ' + scrollOffset + ', end: ' + (scrollStart + windowSize) + ', windowStart: ' + this._scroll.windowStart);
+	        return this._nodes.prepareForLayout(
+	            this._viewSequence,     // first node to layout
+	            this._nodesById, {      // so we can do fast id lookups
+	                size: size,
+	                direction: this._direction,
+	                scrollOffset: scrollOffset,
+	                scrollStart: scrollStart,
+	                scrollEnd: scrollStart + windowSize
+	            }
+	        );
+	    }
+
+	    /**
 	     * Executes the layout and updates the state of the scrollview.
 	     */
 	    function _layout(size, scrollOffset, nested) {
@@ -3150,19 +3118,10 @@
 
 	        // Track the number of times the layout-function was executed
 	        this._debug.layoutCount++;
-	        //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D());
+	        //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D(), ', scrollDelta: ', this._scroll.scrollDelta);
 
-	        // Prepare for layout
-	        var layoutContext = this._nodes.prepareForLayout(
-	            this._viewSequence,     // first node to layout
-	            this._nodesById, {      // so we can do fast id lookups
-	                size: size,
-	                direction: this._direction,
-	                scrollOffset: scrollOffset,
-	                scrollStart: scrollOffset - size[this._direction],
-	                scrollEnd: scrollOffset +  (size[this._direction] * 2)
-	            }
-	        );
+	        // Normalize the group
+	        var layoutContext = _prepareLayout.call(this, size, scrollOffset);
 	        _verifyIntegrity.call(this, 'prepareLayout');
 
 	        // Layout objects
@@ -3182,17 +3141,10 @@
 	        _calcBounds.call(this, size, scrollOffset);
 	        _verifyIntegrity.call(this, 'calcBounds', scrollOffset);
 
-	        // Update scroll-to spring
-	        _calcScrollToOffset.call(this, size, scrollOffset);
-	        _verifyIntegrity.call(this, 'calcScrollToOffset', scrollOffset);
-
-	        // When pagination is enabled, snap to page
-	        _snapToPage.call(this, size, scrollOffset);
-	        _verifyIntegrity.call(this, 'snapToPage', scrollOffset);
-
 	        // If the bounds have changed, and the scroll-offset would be different
 	        // than before, then re-layout entirely using the new offset.
-	        var newScrollOffset = _calcScrollOffset.call(this, true);
+	        var newScrollOffset = _calcScrollOffset.call(this);
+	        _integrateScrollDelta.call(this, newScrollOffset);
 	        if (!nested && (newScrollOffset !== scrollOffset)) {
 	            _log.call(this, 'offset changed, re-layouting... (', scrollOffset, ' != ', newScrollOffset, ')');
 	            return _layout.call(this, size, newScrollOffset, true);
@@ -3208,6 +3160,14 @@
 	            });
 	        }
 
+	        // Update scroll-to spring
+	        _calcScrollToOffset.call(this, size, scrollOffset);
+	        _verifyIntegrity.call(this, 'calcScrollToOffset', scrollOffset);
+
+	        // When pagination is enabled, snap to page
+	        _snapToPage.call(this, size, scrollOffset);
+	        _verifyIntegrity.call(this, 'snapToPage', scrollOffset);
+
 	        // Normalize scroll offset so that the current viewsequence node is as close to the
 	        // top as possible and the layout function will need to process the least amount
 	        // of renderables.
@@ -3215,7 +3175,7 @@
 	        _verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
 
 	        // Update spring
-	        _updateSpring.call(this);
+	        _setSpring.call(this, this._scroll.springPosition);
 	        _verifyIntegrity.call(this, 'setSpring', scrollOffset);
 
 	        return scrollOffset;
@@ -3243,53 +3203,37 @@
 	     * Inner render function of the Group
 	     */
 	    function _innerRender() {
-	        var specs;
-	        var i;
-
-	        // When sequential scrolling is optimized, translate the spec back
-	        // to a sequential position so that the matrix is unchanged and
-	        // famo.s doesn't have to update the matrix in the DOM.
-	        if (this._layout.capabilities.sequentialScrollingOptimized) {
-	            specs = [];
-	            var scrollOffset = this._scrollOffsetCache;
-	            var translate = [0, 0, 0];
-	            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
-	            for (i = 0; i < this._specs.length; i++) {
-	                var spec = this._specs[i];
-	                var transform = Transform.thenMove(spec.transform, translate);
-	                /*var newSpec = spec._windowSpec;
-	                if (!newSpec) {
-	                    newSpec = {};
-	                    spec._windowSpec = newSpec;
-	                }*/
-	                var newSpec = {};
-	                newSpec.origin = spec.origin;
-	                newSpec.align = spec.align;
-	                newSpec.opacity = spec.opacity;
-	                newSpec.size = spec.size;
-	                newSpec.transform = transform;
-	                newSpec.target = spec.renderNode.render();
-	                newSpec.scrollOffset = scrollOffset;
-	                /*if (spec._translatedSpec) {
-	                    if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
-	                        var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
-	                        _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
-	                    }
+	        var specs = [];
+	        var scrollOffset = this._scrollOffsetCache;
+	        var translate = [0, 0, 0];
+	        translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+	        for (var i = 0; i < this._specs.length; i++) {
+	            var spec = this._specs[i];
+	            var transform = Transform.thenMove(spec.transform, translate);
+	            /*var newSpec = spec._windowSpec;
+	            if (!newSpec) {
+	                newSpec = {};
+	                spec._windowSpec = newSpec;
+	            }*/
+	            var newSpec = {};
+	            newSpec.origin = spec.origin;
+	            newSpec.align = spec.align;
+	            newSpec.opacity = spec.opacity;
+	            newSpec.size = spec.size;
+	            newSpec.transform = transform;
+	            newSpec.target = spec.renderNode.render();
+	            /*if (spec._translatedSpec) {
+	                if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
+	                    var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
+	                    _log.call(this, diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', windowOffset: ' + this._scroll.windowStart + ')');
 	                }
-	                else {
-	                    _log.call(this, 'new spec rendered');
-	                }*/
-	                spec._translatedSpec = newSpec;
-	                specs.push(newSpec);
 	            }
-	        }
-	        else {
-
-	            // Call render on all nodes
-	            specs = this._specs;
-	            for (i = 0; i < specs.length; i++) {
-	                specs[i].target = specs[i].renderNode.render();
-	            }
+	            else {
+	                _log.call(this, 'new spec rendered');
+	            }*/
+	            spec._translatedSpec = newSpec;
+	            newSpec.scrollOffset = scrollOffset;
+	            specs.push(newSpec);
 	        }
 	        return specs;
 	    }
@@ -3305,13 +3249,13 @@
 	     */
 	    ScrollView.prototype.commit = function commit(context) {
 	        var size = context.size;
-	        var scrollOffset = _calcScrollOffset.call(this, true);
+	        var scrollOffset = _calcScrollOffset.call(this);
 
 	        // When the size or layout function has changed, reflow the layout
 	        if (size[0] !== this._contextSizeCache[0] ||
 	            size[1] !== this._contextSizeCache[1] ||
 	            this._isDirty ||
-	            this._scroll.scrollDirty ||
+	            this._scroll.scrollToDirty ||
 	            this._nodes._trueSizeRequested ||
 	            this._scrollOffsetCache !== scrollOffset) {
 
@@ -3343,7 +3287,7 @@
 	            this._contextSizeCache[1] = size[1];
 	            this._scrollOffsetCache = scrollOffset;
 	            this._isDirty = false;
-	            this._scroll.scrollDirty = false;
+	            this._scroll.scrollToDirty = false;
 
 	            // Perform layout
 	            scrollOffset = _layout.call(this, size, scrollOffset);
@@ -3364,20 +3308,10 @@
 	            }
 	        }
 
-	        // When renderables are layed out sequentiall (e.g. a ListLayout or
-	        // CollectionLayout), then offset the renderables onto the Group
-	        // and move the group offset instead. This creates a very big performance gain
-	        // as the renderables don't have to be repositioned for every change
-	        // to the scrollOffset. For layouts that don't layout sequence, disable
-	        // this behavior as it will be decremental to the performance.
-	        var transform = context.transform;
-	        if (this._layout.capabilities.sequentialScrollingOptimized) {
-	            var windowOffset = scrollOffset + this._scroll.groupStart;
-	            transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
-	            transform = Transform.multiply(context.transform, transform);
-	        }
-
-	        // Return the spec
+	        // Translate the group
+	        var windowOffset = scrollOffset + this._scroll.groupStart;
+	        var transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
+	        transform = Transform.multiply(context.transform, transform);
 	        return {
 	            transform: transform,
 	            size: size,
@@ -3408,7 +3342,7 @@
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -3436,10 +3370,10 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutController = __webpack_require__(14);
-	    var LayoutNodeManager = __webpack_require__(30);
-	    var FlowLayoutNode = __webpack_require__(31);
-	    var Transform = __webpack_require__(22);
+	    var LayoutController = __webpack_require__(15);
+	    var LayoutNodeManager = __webpack_require__(33);
+	    var FlowLayoutNode = __webpack_require__(39);
+	    var Transform = __webpack_require__(23);
 
 	    /**
 	     * @class
@@ -3624,7 +3558,7 @@
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -3654,15 +3588,15 @@
 
 	    // import dependencies
 	    var Utility = __webpack_require__(24);
-	    var Entity = __webpack_require__(40);
-	    var ViewSequence = __webpack_require__(19);
-	    var OptionsManager = __webpack_require__(34);
-	    var EventHandler = __webpack_require__(33);
-	    var LayoutUtility = __webpack_require__(35);
-	    var LayoutNodeManager = __webpack_require__(30);
+	    var Entity = __webpack_require__(37);
+	    var ViewSequence = __webpack_require__(20);
+	    var OptionsManager = __webpack_require__(38);
+	    var EventHandler = __webpack_require__(35);
+	    var LayoutUtility = __webpack_require__(31);
+	    var LayoutNodeManager = __webpack_require__(33);
 	    var LayoutNode = __webpack_require__(32);
-	    var Transform = __webpack_require__(22);
-	    __webpack_require__(41);
+	    var Transform = __webpack_require__(23);
+	    __webpack_require__(48);
 
 	    /**
 	     * @class
@@ -4174,7 +4108,7 @@
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -4220,7 +4154,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutDockHelper = __webpack_require__(41);
+	    var LayoutDockHelper = __webpack_require__(48);
 
 	    // Layout function
 	    module.exports = function HeaderFooterLayout(context, options) {
@@ -4233,13 +4167,13 @@
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
-	var dispose = __webpack_require__(9)
+	var dispose = __webpack_require__(10)
 		// The css code:
-		(__webpack_require__(17));
+		(__webpack_require__(18));
 	// Hot Module Replacement
 	if(false) {
 		module.hot.accept();
@@ -4247,14 +4181,14 @@
 	}
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
 		"/* This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/.\n *\n * Owner: mark@famo.us\n * @license MPL 2.0\n * @copyright Famous Industries, Inc. 2014\n */\n\n.famous-root {\n    width: 100%;\n    height: 100%;\n    margin: 0px;\n    padding: 0px;\n    overflow: hidden;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n}\n\n.famous-container, .famous-group {\n    position: absolute;\n    top: 0px;\n    left: 0px;\n    bottom: 0px;\n    right: 0px;\n    overflow: visible;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n    -webkit-backface-visibility: visible;\n    backface-visibility: visible;\n    pointer-events: none;\n}\n\n.famous-group {\n    width: 0px;\n    height: 0px;\n    margin: 0px;\n    padding: 0px;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n}\n\n.famous-surface {\n    position: absolute;\n    -webkit-transform-origin: center center;\n    transform-origin: center center;\n    -webkit-backface-visibility: hidden;\n    backface-visibility: hidden;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    -webkit-tap-highlight-color: transparent;\n    pointer-events: auto;\n}\n\n.famous-container-group {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n";
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -4283,9 +4217,9 @@
 	     * @static
 	     * @class Engine
 	     */
-	    var Context = __webpack_require__(36);
-	    var EventHandler = __webpack_require__(33);
-	    var OptionsManager = __webpack_require__(34);
+	    var Context = __webpack_require__(41);
+	    var EventHandler = __webpack_require__(35);
+	    var OptionsManager = __webpack_require__(38);
 
 	    var Engine = {};
 
@@ -4640,7 +4574,7 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -4984,7 +4918,7 @@
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -4997,7 +4931,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var ElementOutput = __webpack_require__(37);
+	    var ElementOutput = __webpack_require__(40);
 
 	    /**
 	     * A base class for viewable content and event
@@ -5481,7 +5415,7 @@
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -5494,11 +5428,11 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transform = __webpack_require__(22);
+	    var Transform = __webpack_require__(23);
 
 	    /* TODO: remove these dependencies when deprecation complete */
-	    var Transitionable = __webpack_require__(48);
-	    var TransitionableTransform = __webpack_require__(49);
+	    var Transitionable = __webpack_require__(49);
+	    var TransitionableTransform = __webpack_require__(50);
 
 	    /**
 	     *
@@ -5921,7 +5855,7 @@
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -6609,7 +6543,7 @@
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -6622,7 +6556,134 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(20);
+	    /**
+	     * This namespace holds standalone functionality.
+	     *  Currently includes name mapping for transition curves,
+	     *  name mapping for origin pairs, and the after() function.
+	     *
+	     * @class Utility
+	     * @static
+	     */
+	    var Utility = {};
+
+	    /**
+	     * Table of direction array positions
+	     *
+	     * @property {object} Direction
+	     * @final
+	     */
+	    Utility.Direction = {
+	        X: 0,
+	        Y: 1,
+	        Z: 2
+	    };
+
+	    /**
+	     * Return wrapper around callback function. Once the wrapper is called N
+	     *   times, invoke the callback function. Arguments and scope preserved.
+	     *
+	     * @method after
+	     *
+	     * @param {number} count number of calls before callback function invoked
+	     * @param {Function} callback wrapped callback function
+	     *
+	     * @return {function} wrapped callback with coundown feature
+	     */
+	    Utility.after = function after(count, callback) {
+	        var counter = count;
+	        return function() {
+	            counter--;
+	            if (counter === 0) callback.apply(this, arguments);
+	        };
+	    };
+
+	    /**
+	     * Load a URL and return its contents in a callback
+	     *
+	     * @method loadURL
+	     *
+	     * @param {string} url URL of object
+	     * @param {function} callback callback to dispatch with content
+	     */
+	    Utility.loadURL = function loadURL(url, callback) {
+	        var xhr = new XMLHttpRequest();
+	        xhr.onreadystatechange = function onreadystatechange() {
+	            if (this.readyState === 4) {
+	                if (callback) callback(this.responseText);
+	            }
+	        };
+	        xhr.open('GET', url);
+	        xhr.send();
+	    };
+
+	    /**
+	     * Create a document fragment from a string of HTML
+	     *
+	     * @method createDocumentFragmentFromHTML
+	     *
+	     * @param {string} html HTML to convert to DocumentFragment
+	     *
+	     * @return {DocumentFragment} DocumentFragment representing input HTML
+	     */
+	    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
+	        var element = document.createElement('div');
+	        element.innerHTML = html;
+	        var result = document.createDocumentFragment();
+	        while (element.hasChildNodes()) result.appendChild(element.firstChild);
+	        return result;
+	    };
+
+	    /*
+	     *  Deep clone an object.
+	     *  @param b {Object} Object to clone
+	     *  @return a {Object} Cloned object.
+	     */
+	    Utility.clone = function clone(b) {
+	        var a;
+	        if (typeof b === 'object') {
+	            a = (b instanceof Array) ? [] : {};
+	            for (var key in b) {
+	                if (typeof b[key] === 'object' && b[key] !== null) {
+	                    if (b[key] instanceof Array) {
+	                        a[key] = new Array(b[key].length);
+	                        for (var i = 0; i < b[key].length; i++) {
+	                            a[key][i] = Utility.clone(b[key][i]);
+	                        }
+	                    }
+	                    else {
+	                      a[key] = Utility.clone(b[key]);
+	                    }
+	                }
+	                else {
+	                    a[key] = b[key];
+	                }
+	            }
+	        }
+	        else {
+	            a = b;
+	        }
+	        return a;
+	    };
+
+	    module.exports = Utility;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Surface = __webpack_require__(21);
 
 	    /**
 	     * A Famo.us surface in the form of an HTML textarea element.
@@ -6809,134 +6870,7 @@
 
 
 /***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * This namespace holds standalone functionality.
-	     *  Currently includes name mapping for transition curves,
-	     *  name mapping for origin pairs, and the after() function.
-	     *
-	     * @class Utility
-	     * @static
-	     */
-	    var Utility = {};
-
-	    /**
-	     * Table of direction array positions
-	     *
-	     * @property {object} Direction
-	     * @final
-	     */
-	    Utility.Direction = {
-	        X: 0,
-	        Y: 1,
-	        Z: 2
-	    };
-
-	    /**
-	     * Return wrapper around callback function. Once the wrapper is called N
-	     *   times, invoke the callback function. Arguments and scope preserved.
-	     *
-	     * @method after
-	     *
-	     * @param {number} count number of calls before callback function invoked
-	     * @param {Function} callback wrapped callback function
-	     *
-	     * @return {function} wrapped callback with coundown feature
-	     */
-	    Utility.after = function after(count, callback) {
-	        var counter = count;
-	        return function() {
-	            counter--;
-	            if (counter === 0) callback.apply(this, arguments);
-	        };
-	    };
-
-	    /**
-	     * Load a URL and return its contents in a callback
-	     *
-	     * @method loadURL
-	     *
-	     * @param {string} url URL of object
-	     * @param {function} callback callback to dispatch with content
-	     */
-	    Utility.loadURL = function loadURL(url, callback) {
-	        var xhr = new XMLHttpRequest();
-	        xhr.onreadystatechange = function onreadystatechange() {
-	            if (this.readyState === 4) {
-	                if (callback) callback(this.responseText);
-	            }
-	        };
-	        xhr.open('GET', url);
-	        xhr.send();
-	    };
-
-	    /**
-	     * Create a document fragment from a string of HTML
-	     *
-	     * @method createDocumentFragmentFromHTML
-	     *
-	     * @param {string} html HTML to convert to DocumentFragment
-	     *
-	     * @return {DocumentFragment} DocumentFragment representing input HTML
-	     */
-	    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
-	        var element = document.createElement('div');
-	        element.innerHTML = html;
-	        var result = document.createDocumentFragment();
-	        while (element.hasChildNodes()) result.appendChild(element.firstChild);
-	        return result;
-	    };
-
-	    /*
-	     *  Deep clone an object.
-	     *  @param b {Object} Object to clone
-	     *  @return a {Object} Cloned object.
-	     */
-	    Utility.clone = function clone(b) {
-	        var a;
-	        if (typeof b === 'object') {
-	            a = (b instanceof Array) ? [] : {};
-	            for (var key in b) {
-	                if (typeof b[key] === 'object' && b[key] !== null) {
-	                    if (b[key] instanceof Array) {
-	                        a[key] = new Array(b[key].length);
-	                        for (var i = 0; i < b[key].length; i++) {
-	                            a[key][i] = Utility.clone(b[key][i]);
-	                        }
-	                    }
-	                    else {
-	                      a[key] = Utility.clone(b[key]);
-	                    }
-	                }
-	                else {
-	                    a[key] = b[key];
-	                }
-	            }
-	        }
-	        else {
-	            a = b;
-	        }
-	        return a;
-	    };
-
-	    module.exports = Utility;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -7080,7 +7014,7 @@
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (!Function.prototype.bind) {
@@ -7109,7 +7043,7 @@
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// adds requestAnimationFrame functionality
@@ -7128,7 +7062,7 @@
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -7141,7 +7075,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(20);
+	    var Surface = __webpack_require__(21);
 
 	    /**
 	     * A surface containing an HTML5 Canvas element.
@@ -7251,7 +7185,7 @@
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -7264,9 +7198,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(33);
-	    var OptionsManager = __webpack_require__(34);
-	    var RenderNode = __webpack_require__(51);
+	    var EventHandler = __webpack_require__(35);
+	    var OptionsManager = __webpack_require__(38);
+	    var RenderNode = __webpack_require__(52);
 	    var Utility = __webpack_require__(24);
 
 	    /**
@@ -7367,7 +7301,403 @@
 
 
 /***/ },
-/* 30 */
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define, console*/
+	/*eslint no-console:0*/
+
+	/**
+	 * Utility class for famous-flex.
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    /**
+	     * @class
+	     * @alias module:LayoutUtility
+	     */
+	    function LayoutUtility() {
+	    }
+	    LayoutUtility.registeredHelpers = {};
+
+	    var Capabilities = {
+	        SEQUENCE: 1,
+	        DIRECTION_X: 2,
+	        DIRECTION_Y: 4,
+	        SCROLLING: 8
+	    };
+	    LayoutUtility.Capabilities = Capabilities;
+
+	    /**
+	     *  Normalizes the margins argument.
+	     *
+	     *  @param {Array.Number} margins
+	     */
+	    LayoutUtility.normalizeMargins = function(margins) {
+	        if (!margins) {
+	            return [0, 0, 0, 0];
+	        } else if (!Array.isArray(margins)) {
+	            return [margins, margins, margins, margins];
+	        } else if (margins.length === 0) {
+	            return [0, 0, 0, 0];
+	        } else if (margins.length === 1) {
+	            return [margins[0], margins[0], margins[0], margins[0]];
+	        } else if (margins.length === 2) {
+	            return [margins[0], margins[1], margins[0], margins[1]];
+	        }
+	        else {
+	            return margins;
+	        }
+	    };
+
+	    /**
+	     * Makes a (shallow) copy of a spec.
+	     *
+	     * @param {Spec} spec Spec to clone
+	     * @return {Spec} cloned spec
+	     */
+	    LayoutUtility.cloneSpec = function(spec) {
+	        var clone = {};
+	        if (spec.opacity !== undefined) {
+	            clone.opacity = spec.opacity;
+	        }
+	        if (spec.size !== undefined) {
+	            clone.size = spec.size.slice(0);
+	        }
+	        if (spec.transform !== undefined) {
+	            clone.transform = spec.transform.slice(0);
+	        }
+	        if (spec.origin !== undefined) {
+	            clone.origin = spec.origin.slice(0);
+	        }
+	        if (spec.align !== undefined) {
+	            clone.align = spec.align.slice(0);
+	        }
+	        return clone;
+	    };
+
+	    /**
+	     * Clears the contents of a spec.
+	     *
+	     * @param {Spec} spec Spec to clear
+	     * @return {Spec} spec
+	     */
+	    LayoutUtility.clearSpec = function(spec) {
+	        delete spec.opacity;
+	        delete spec.size;
+	        delete spec.transform;
+	        delete spec.origin;
+	        delete spec.align;
+	        return spec;
+	    };
+
+	    /**
+	     * Compares two arrays for equality.
+	     */
+	    function _isEqualArray(a, b) {
+	        if (a === b) {
+	            return true;
+	        }
+	        if ((a === undefined) || (b === undefined)) {
+	            return false;
+	        }
+	        var i = a.length;
+	        if (i !== b.length){
+	            return false;
+	        }
+	        while (i--) {
+	            if (a[i] !== b[i]) {
+	                return false;
+	            }
+	        }
+	        return true;
+	    }
+
+	    /**
+	     * Compares two specs for equality.
+	     *
+	     * @param {Spec} spec1 Spec to compare
+	     * @param {Spec} spec2 Spec to compare
+	     * @return {Boolean} true/false
+	     */
+	    LayoutUtility.isEqualSpec = function(spec1, spec2) {
+	        if (spec1.opacity !== spec2.opacity) {
+	            return false;
+	        }
+	        if (!_isEqualArray(spec1.size, spec2.size)) {
+	            return false;
+	        }
+	        if (!_isEqualArray(spec1.transform, spec2.transform)) {
+	            return false;
+	        }
+	        if (!_isEqualArray(spec1.origin, spec2.origin)) {
+	            return false;
+	        }
+	        if (!_isEqualArray(spec1.align, spec2.align)) {
+	            return false;
+	        }
+	        return true;
+	    };
+
+	    /**
+	     * Helper function that returns a string containing the differences
+	     * between two specs.
+	     *
+	     * @param {Spec} spec1 Spec to compare
+	     * @param {Spec} spec2 Spec to compare
+	     * @return {String} text
+	     */
+	    LayoutUtility.getSpecDiffText = function(spec1, spec2) {
+	        var result = 'spec diff:';
+	        if (spec1.opacity !== spec2.opacity) {
+	            result += '\nopacity: ' + spec1.opacity + ' != ' + spec2.opacity;
+	        }
+	        if (!_isEqualArray(spec1.size, spec2.size)) {
+	            result += '\nsize: ' + JSON.stringify(spec1.size) + ' != ' + JSON.stringify(spec2.size);
+	        }
+	        if (!_isEqualArray(spec1.transform, spec2.transform)) {
+	            result += '\ntransform: ' + JSON.stringify(spec1.transform) + ' != ' + JSON.stringify(spec2.transform);
+	        }
+	        if (!_isEqualArray(spec1.origin, spec2.origin)) {
+	            result += '\norigin: ' + JSON.stringify(spec1.origin) + ' != ' + JSON.stringify(spec2.origin);
+	        }
+	        if (!_isEqualArray(spec1.align, spec2.align)) {
+	            result += '\nalign: ' + JSON.stringify(spec1.align) + ' != ' + JSON.stringify(spec2.align);
+	        }
+	        return result;
+	    };
+
+	    /**
+	     * Helper function to call whenever a critical error has occurred.
+	     *
+	     * @param {String} message error-message
+	     */
+	    LayoutUtility.error = function(message) {
+	        console.log('ERROR: ' + message);
+	        throw message;
+	    };
+
+	    /**
+	     * Helper function to call whenever a warning error has occurred.
+	     *
+	     * @param {String} message warning-message
+	     */
+	    LayoutUtility.warning = function(message) {
+	        console.log('WARNING: ' + message);
+	    };
+
+	    /**
+	     * Helper function to log 1 or more arguments. All the arguments
+	     * are concatenated to produce a single string which is logged.
+	     *
+	     * @param {String|Array|Object} args arguments to stringify and concatenate
+	     */
+	    LayoutUtility.log = function(args) {
+	        var message = '';
+	        for (var i = 0; i < arguments.length; i++) {
+	            var arg = arguments[i];
+	            if ((arg instanceof Object) || (arg instanceof Array)) {
+	                message += JSON.stringify(arg);
+	            }
+	            else {
+	                message += arg;
+	            }
+	        }
+	        console.log(message);
+	    };
+
+	    /**
+	     * Registers a layout-helper so it can be used as a layout-literal for
+	     * a layout-controller. The LayoutHelper instance must support the `parse`
+	     * function, which is fed the layout-literal content.
+	     *
+	     * **Example:**
+	     *
+	     * ```javascript
+	     * Layout.registerHelper('dock', LayoutDockHelper);
+	     *
+	     * var layoutController = new LayoutController({
+	     *   layout: { dock: [,
+	     *     ['top', 'header', 50],
+	     *     ['bottom', 'footer', 50],
+	     *     ['fill', 'content'],
+	     *   ]},
+	     *   dataSource: {
+	     *     header: new Surface({content: 'Header'}),
+	     *     footer: new Surface({content: 'Footer'}),
+	     *     content: new Surface({content: 'Content'}),
+	     *   }
+	     * })
+	     * ```
+	     *
+	     * @param {String} name name of the helper (e.g. 'dock')
+	     * @param {Function} Helper Helper to register (e.g. LayoutDockHelper)
+	     */
+	    LayoutUtility.registerHelper = function(name, Helper) {
+	        if (!Helper.prototype.parse) {
+	            LayoutUtility.error('The layout-helper for name "' + name + '" is required to support the "parse" method');
+	        }
+	        if (this.registeredHelpers[name] !== undefined) {
+	            LayoutUtility.warning('A layout-helper with the name "' + name + '" is already registered and will be overwritten');
+	        }
+	        this.registeredHelpers[name] = Helper;
+	    };
+
+	    /**
+	     * Unregisters a layout-helper.
+	     *
+	     * @param {String} name name of the layout-helper
+	     */
+	    LayoutUtility.unregisterHelper = function(name) {
+	        delete this.registeredHelpers[name];
+	    };
+
+	    /**
+	     * Gets a registered layout-helper by its name.
+	     *
+	     * @param {String} name name of the layout-helper
+	     * @return {Function} layout-helper or undefined
+	     */
+	    LayoutUtility.getRegisteredHelper = function(name) {
+	        return this.registeredHelpers[name];
+	    };
+
+	    // Layout function
+	    module.exports = LayoutUtility;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * Internal LayoutNode class used by `LayoutController`.
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var Transform = __webpack_require__(23);
+	    var LayoutUtility = __webpack_require__(31);
+
+	    /**
+	     * @class
+	     * @param {Object} renderNode Render-node which this layout-node represents
+	     * @alias module:LayoutNode
+	     */
+	    function LayoutNode(renderNode, spec) {
+	        this.renderNode = renderNode;
+	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
+	        this._spec.renderNode = renderNode; // also store in spec
+	        this._invalidated = false;
+	        this._removing = false;
+	        //this.scrollLength = undefined;
+	        //this.trueSizeRequested = false;
+	    }
+
+	    /**
+	     * Called when the node is destroyed
+	     */
+	    LayoutNode.prototype.destroy = function() {
+	        // override to implement
+	    };
+
+	    /**
+	     * Reset the end-state. This function is called on all layout-nodes prior to
+	     * calling the layout-function. So that the layout-function starts with a clean slate.
+	     */
+	    LayoutNode.prototype.reset = function() {
+	        this._invalidated = false;
+	        this.trueSizeRequested = false;
+	    };
+
+	    /**
+	     * Set the spec of the node
+	     *
+	     * @param {Object} spec
+	     */
+	    LayoutNode.prototype.setSpec = function(spec) {
+	        this._spec.align = spec.align;
+	        this._spec.origin = spec.origin;
+	        this._spec.size = spec.size;
+	        this._spec.transform = spec.transform;
+	        this._spec.opacity = spec.opacity;
+	    };
+
+	    /**
+	     * Set the content of the node
+	     *
+	     * @param {Object} set
+	     */
+	    LayoutNode.prototype.set = function(set, size) {
+	        this._invalidated = true;
+	        this._removing = false;
+	        var spec = this._spec;
+	        spec.opacity = set.opacity;
+	        spec.size = set.size;
+	        spec.origin = set.origin;
+	        spec.align = set.align;
+	        if (set.translate || set.skew || set.rotate || set.scale) {
+	            this._spec.transform = Transform.build({
+	                translate: set.translate || [0, 0, 0],
+	                skew: set.skew || [0, 0, 0],
+	                scale: set.scale || [1, 1, 1],
+	                rotate: set.rotate || [0, 0, 0]
+	            });
+	        }
+	        else {
+	            this._spec.transform = undefined;
+	        }
+	        this.scrollLength = set.scrollLength;
+	    };
+
+	    /**
+	     * Creates the render-spec
+	     */
+	    LayoutNode.prototype.getSpec = function() {
+	        return this._invalidated ? this._spec : undefined;
+	    };
+
+	    /**
+	     * Marks the node for removal
+	     */
+	    LayoutNode.prototype.remove = function(removeSpec) {
+	        this._removing = true;
+	    };
+
+	    module.exports = LayoutNode;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -7401,8 +7731,8 @@
 
 	    // import dependencies
 	    var LayoutNode = __webpack_require__(32);
-	    var LayoutContext = __webpack_require__(52);
-	    var LayoutUtility = __webpack_require__(35);
+	    var LayoutContext = __webpack_require__(53);
+	    var LayoutUtility = __webpack_require__(31);
 
 	    var MAX_POOL_SIZE = 100;
 	    var LOG_PREFIX = 'Nodes: ';
@@ -7973,7 +8303,760 @@
 
 
 /***/ },
-/* 31 */
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Surface = __webpack_require__(21);
+	    var Context = __webpack_require__(41);
+
+	    /**
+	     * ContainerSurface is an object designed to contain surfaces and
+	     *   set properties to be applied to all of them at once.
+	     *   This extends the Surface class.
+	     *   A container surface will enforce these properties on the
+	     *   surfaces it contains:
+	     *
+	     *   size (clips contained surfaces to its own width and height);
+	     *
+	     *   origin;
+	     *
+	     *   its own opacity and transform, which will be automatically
+	     *   applied to  all Surfaces contained directly and indirectly.
+	     *
+	     * @class ContainerSurface
+	     * @extends Surface
+	     * @constructor
+	     * @param {Array.Number} [options.size] [width, height] in pixels
+	     * @param {Array.string} [options.classes] CSS classes to set on all inner content
+	     * @param {Array} [options.properties] string dictionary of HTML attributes to set on target div
+	     * @param {string} [options.content] inner (HTML) content of surface (should not be used)
+	     */
+	    function ContainerSurface(options) {
+	        Surface.call(this, options);
+	        this._container = document.createElement('div');
+	        this._container.classList.add('famous-group');
+	        this._container.classList.add('famous-container-group');
+	        this._shouldRecalculateSize = false;
+	        this.context = new Context(this._container);
+	        this.setContent(this._container);
+	    }
+
+	    ContainerSurface.prototype = Object.create(Surface.prototype);
+	    ContainerSurface.prototype.constructor = ContainerSurface;
+	    ContainerSurface.prototype.elementType = 'div';
+	    ContainerSurface.prototype.elementClass = 'famous-surface';
+
+	    /**
+	     * Add renderables to this object's render tree
+	     *
+	     * @method add
+	     *
+	     * @param {Object} obj renderable object
+	     * @return {RenderNode} RenderNode wrapping this object, if not already a RenderNode
+	     */
+	    ContainerSurface.prototype.add = function add() {
+	        return this.context.add.apply(this.context, arguments);
+	    };
+
+	    /**
+	     * Return spec for this surface.  Note: Can result in a size recalculation.
+	     *
+	     * @private
+	     * @method render
+	     *
+	     * @return {Object} render spec for this surface (spec id)
+	     */
+	    ContainerSurface.prototype.render = function render() {
+	        if (this._sizeDirty) this._shouldRecalculateSize = true;
+	        return Surface.prototype.render.apply(this, arguments);
+	    };
+
+	    /**
+	     * Place the document element this component manages into the document.
+	     *
+	     * @private
+	     * @method deploy
+	     * @param {Node} target document parent of this container
+	     */
+	    ContainerSurface.prototype.deploy = function deploy() {
+	        this._shouldRecalculateSize = true;
+	        return Surface.prototype.deploy.apply(this, arguments);
+	    };
+
+	    /**
+	     * Apply changes from this component to the corresponding document element.
+	     * This includes changes to classes, styles, size, content, opacity, origin,
+	     * and matrix transforms.
+	     *
+	     * @private
+	     * @method commit
+	     * @param {Context} context commit context
+	     * @param {Transform} transform unused TODO
+	     * @param {Number} opacity  unused TODO
+	     * @param {Array.Number} origin unused TODO
+	     * @param {Array.Number} size unused TODO
+	     * @return {undefined} TODO returns an undefined value
+	     */
+	    ContainerSurface.prototype.commit = function commit(context, transform, opacity, origin, size) {
+	        var previousSize = this._size ? [this._size[0], this._size[1]] : null;
+	        var result = Surface.prototype.commit.apply(this, arguments);
+	        if (this._shouldRecalculateSize || (previousSize && (this._size[0] !== previousSize[0] || this._size[1] !== previousSize[1]))) {
+	            this.context.setSize();
+	            this._shouldRecalculateSize = false;
+	        }
+	        this.context.update();
+	        return result;
+	    };
+
+	    module.exports = ContainerSurface;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventEmitter = __webpack_require__(54);
+
+	    /**
+	     * EventHandler forwards received events to a set of provided callback functions.
+	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
+	     *
+	     * @class EventHandler
+	     * @extends EventEmitter
+	     * @constructor
+	     */
+	    function EventHandler() {
+	        EventEmitter.apply(this, arguments);
+
+	        this.downstream = []; // downstream event handlers
+	        this.downstreamFn = []; // downstream functions
+
+	        this.upstream = []; // upstream event handlers
+	        this.upstreamListeners = {}; // upstream listeners
+	    }
+	    EventHandler.prototype = Object.create(EventEmitter.prototype);
+	    EventHandler.prototype.constructor = EventHandler;
+
+	    /**
+	     * Assign an event handler to receive an object's input events.
+	     *
+	     * @method setInputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
+	        object.trigger = handler.trigger.bind(handler);
+	        if (handler.subscribe && handler.unsubscribe) {
+	            object.subscribe = handler.subscribe.bind(handler);
+	            object.unsubscribe = handler.unsubscribe.bind(handler);
+	        }
+	    };
+
+	    /**
+	     * Assign an event handler to receive an object's output events.
+	     *
+	     * @method setOutputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
+	        if (handler instanceof EventHandler) handler.bindThis(object);
+	        object.pipe = handler.pipe.bind(handler);
+	        object.unpipe = handler.unpipe.bind(handler);
+	        object.on = handler.on.bind(handler);
+	        object.addListener = object.on;
+	        object.removeListener = handler.removeListener.bind(handler);
+	    };
+
+	    /**
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
+	     *
+	     * @method emit
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.emit = function emit(type, event) {
+	        EventEmitter.prototype.emit.apply(this, arguments);
+	        var i = 0;
+	        for (i = 0; i < this.downstream.length; i++) {
+	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
+	        }
+	        for (i = 0; i < this.downstreamFn.length; i++) {
+	            this.downstreamFn[i](type, event);
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for emit
+	     * @method addListener
+	     */
+	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    EventHandler.prototype.pipe = function pipe(target) {
+	        if (target.subscribe instanceof Function) return target.subscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index < 0) downstreamCtx.push(target);
+
+	        if (target instanceof Function) target('pipe', null);
+	        else if (target.trigger) target.trigger('pipe', null);
+
+	        return target;
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     *   Undoes work of "pipe".
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    EventHandler.prototype.unpipe = function unpipe(target) {
+	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index >= 0) {
+	            downstreamCtx.splice(index, 1);
+	            if (target instanceof Function) target('unpipe', null);
+	            else if (target.trigger) target.trigger('unpipe', null);
+	            return target;
+	        }
+	        else return false;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.on = function on(type, handler) {
+	        EventEmitter.prototype.on.apply(this, arguments);
+	        if (!(type in this.upstreamListeners)) {
+	            var upstreamListener = this.trigger.bind(this, type);
+	            this.upstreamListeners[type] = upstreamListener;
+	            for (var i = 0; i < this.upstream.length; i++) {
+	                this.upstream[i].on(type, upstreamListener);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for "on"
+	     * @method addListener
+	     */
+	    EventHandler.prototype.addListener = EventHandler.prototype.on;
+
+	    /**
+	     * Listen for events from an upstream event handler.
+	     *
+	     * @method subscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.subscribe = function subscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index < 0) {
+	            this.upstream.push(source);
+	            for (var type in this.upstreamListeners) {
+	                source.on(type, this.upstreamListeners[type]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Stop listening to events from an upstream event handler.
+	     *
+	     * @method unsubscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index >= 0) {
+	            this.upstream.splice(index, 1);
+	            for (var type in this.upstreamListeners) {
+	                source.removeListener(type, this.upstreamListeners[type]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    module.exports = EventHandler;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Context = __webpack_require__(41);
+	    var Transform = __webpack_require__(23);
+	    var Surface = __webpack_require__(21);
+
+	    /**
+	     * A Context designed to contain surfaces and set properties
+	     *   to be applied to all of them at once.
+	     *   This is primarily used for specific performance improvements in the rendering engine.
+	     *   Private.
+	     *
+	     * @private
+	     * @class Group
+	     * @extends Surface
+	     * @constructor
+	     * @param {Object} [options] Surface options array (see Surface})
+	     */
+	    function Group(options) {
+	        Surface.call(this, options);
+	        this._shouldRecalculateSize = false;
+	        this._container = document.createDocumentFragment();
+	        this.context = new Context(this._container);
+	        this.setContent(this._container);
+	        this._groupSize = [undefined, undefined];
+	    }
+
+	    /** @const */
+	    Group.SIZE_ZERO = [0, 0];
+
+	    Group.prototype = Object.create(Surface.prototype);
+	    Group.prototype.elementType = 'div';
+	    Group.prototype.elementClass = 'famous-group';
+
+	    /**
+	     * Add renderables to this component's render tree.
+	     *
+	     * @method add
+	     * @private
+	     * @param {Object} obj renderable object
+	     * @return {RenderNode} Render wrapping provided object, if not already a RenderNode
+	     */
+	    Group.prototype.add = function add() {
+	        return this.context.add.apply(this.context, arguments);
+	    };
+
+	    /**
+	     * Generate a render spec from the contents of this component.
+	     *
+	     * @private
+	     * @method render
+	     * @return {Number} Render spec for this component
+	     */
+	    Group.prototype.render = function render() {
+	        return Surface.prototype.render.call(this);
+	    };
+
+	    /**
+	     * Place the document element this component manages into the document.
+	     *
+	     * @private
+	     * @method deploy
+	     * @param {Node} target document parent of this container
+	     */
+	    Group.prototype.deploy = function deploy(target) {
+	        this.context.migrate(target);
+	    };
+
+	    /**
+	     * Remove this component and contained content from the document
+	     *
+	     * @private
+	     * @method recall
+	     *
+	     * @param {Node} target node to which the component was deployed
+	     */
+	    Group.prototype.recall = function recall(target) {
+	        this._container = document.createDocumentFragment();
+	        this.context.migrate(this._container);
+	    };
+
+	    /**
+	     * Apply changes from this component to the corresponding document element.
+	     *
+	     * @private
+	     * @method commit
+	     *
+	     * @param {Object} context update spec passed in from above in the render tree.
+	     */
+	    Group.prototype.commit = function commit(context) {
+	        var transform = context.transform;
+	        var origin = context.origin;
+	        var opacity = context.opacity;
+	        var size = context.size;
+	        var result = Surface.prototype.commit.call(this, {
+	            allocator: context.allocator,
+	            transform: Transform.thenMove(transform, [-origin[0] * size[0], -origin[1] * size[1], 0]),
+	            opacity: opacity,
+	            origin: origin,
+	            size: Group.SIZE_ZERO
+	        });
+	        if (size[0] !== this._groupSize[0] || size[1] !== this._groupSize[1]) {
+	            this._groupSize[0] = size[0];
+	            this._groupSize[1] = size[1];
+	            this.context.setSize(size);
+	        }
+	        this.context.update({
+	            transform: Transform.translate(-origin[0] * size[0], -origin[1] * size[1], 0),
+	            origin: origin,
+	            size: size
+	        });
+	        return result;
+	    };
+
+	    module.exports = Group;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * A singleton that maintains a global registry of Surfaces.
+	     *   Private.
+	     *
+	     * @private
+	     * @static
+	     * @class Entity
+	     */
+
+	    var entities = [];
+
+	    /**
+	     * Get entity from global index.
+	     *
+	     * @private
+	     * @method get
+	     * @param {Number} id entity registration id
+	     * @return {Surface} entity in the global index
+	     */
+	    function get(id) {
+	        return entities[id];
+	    }
+
+	    /**
+	     * Overwrite entity in the global index
+	     *
+	     * @private
+	     * @method set
+	     * @param {Number} id entity registration id
+	     * @param {Surface} entity to add to the global index
+	     */
+	    function set(id, entity) {
+	        entities[id] = entity;
+	    }
+
+	    /**
+	     * Add entity to global index
+	     *
+	     * @private
+	     * @method register
+	     * @param {Surface} entity to add to global index
+	     * @return {Number} new id
+	     */
+	    function register(entity) {
+	        var id = entities.length;
+	        set(id, entity);
+	        return id;
+	    }
+
+	    /**
+	     * Remove entity from global index
+	     *
+	     * @private
+	     * @method unregister
+	     * @param {Number} id entity registration id
+	     */
+	    function unregister(id) {
+	        set(id, null);
+	    }
+
+	    module.exports = {
+	        register: register,
+	        unregister: unregister,
+	        get: get,
+	        set: set
+	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(35);
+
+	    /**
+	     *  A collection of methods for setting options which can be extended
+	     *  onto other classes.
+	     *
+	     *
+	     *  **** WARNING ****
+	     *  You can only pass through objects that will compile into valid JSON.
+	     *
+	     *  Valid options:
+	     *      Strings,
+	     *      Arrays,
+	     *      Objects,
+	     *      Numbers,
+	     *      Nested Objects,
+	     *      Nested Arrays.
+	     *
+	     *    This excludes:
+	     *        Document Fragments,
+	     *        Functions
+	     * @class OptionsManager
+	     * @constructor
+	     * @param {Object} value options dictionary
+	     */
+	    function OptionsManager(value) {
+	        this._value = value;
+	        this.eventOutput = null;
+	    }
+
+	    /**
+	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
+	     *
+	     * @static
+	     * @method OptionsManager.patch
+	     *
+	     * @param {Object} source source arguments
+	     * @param {...Object} data argument additions and overwrites
+	     * @return {Object} source object
+	     */
+	    OptionsManager.patch = function patchObject(source, data) {
+	        var manager = new OptionsManager(source);
+	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
+	        return source;
+	    };
+
+	    function _createEventOutput() {
+	        this.eventOutput = new EventHandler();
+	        this.eventOutput.bindThis(this);
+	        EventHandler.setOutputHandler(this, this.eventOutput);
+	    }
+
+	    /**
+	     * Create OptionsManager from source with arguments overriden by patches.
+	     *   Triggers 'change' event on this object's event handler if the state of
+	     *   the OptionsManager changes as a result.
+	     *
+	     * @method patch
+	     *
+	     * @param {...Object} arguments list of patch objects
+	     * @return {OptionsManager} this
+	     */
+	    OptionsManager.prototype.patch = function patch() {
+	        var myState = this._value;
+	        for (var i = 0; i < arguments.length; i++) {
+	            var data = arguments[i];
+	            for (var k in data) {
+	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
+	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
+	                    this.key(k).patch(data[k]);
+	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
+	                }
+	                else this.set(k, data[k]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for patch
+	     *
+	     * @method setOptions
+	     *
+	     */
+	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
+
+	    /**
+	     * Return OptionsManager based on sub-object retrieved by key
+	     *
+	     * @method key
+	     *
+	     * @param {string} identifier key
+	     * @return {OptionsManager} new options manager with the value
+	     */
+	    OptionsManager.prototype.key = function key(identifier) {
+	        var result = new OptionsManager(this._value[identifier]);
+	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
+	        return result;
+	    };
+
+	    /**
+	     * Look up value by key or get the full options hash
+	     * @method get
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object or full options hash
+	     */
+	    OptionsManager.prototype.get = function get(key) {
+	        return key ? this._value[key] : this._value;
+	    };
+
+	    /**
+	     * Alias for get
+	     * @method getOptions
+	     */
+	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
+
+	    /**
+	     * Set key to value.  Outputs 'change' event if a value is overwritten.
+	     *
+	     * @method set
+	     *
+	     * @param {string} key key string
+	     * @param {Object} value value object
+	     * @return {OptionsManager} new options manager based on the value object
+	     */
+	    OptionsManager.prototype.set = function set(key, value) {
+	        var originalValue = this.get(key);
+	        this._value[key] = value;
+	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
+	        return this;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    OptionsManager.prototype.on = function on() {
+	        _createEventOutput.call(this);
+	        return this.on.apply(this, arguments);
+	    };
+
+	    /**
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
+	     *
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function} handler function object to remove
+	     * @return {EventHandler} internal event handler object (for chaining)
+	     */
+	    OptionsManager.prototype.removeListener = function removeListener() {
+	        _createEventOutput.call(this);
+	        return this.removeListener.apply(this, arguments);
+	    };
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    OptionsManager.prototype.pipe = function pipe() {
+	        _createEventOutput.call(this);
+	        return this.pipe.apply(this, arguments);
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     * Undoes work of "pipe"
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    OptionsManager.prototype.unpipe = function unpipe() {
+	        _createEventOutput.call(this);
+	        return this.unpipe.apply(this, arguments);
+	    };
+
+	    module.exports = OptionsManager;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -7997,14 +9080,14 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var OptionsManager = __webpack_require__(34);
-	    var Transform = __webpack_require__(22);
+	    var OptionsManager = __webpack_require__(38);
+	    var Transform = __webpack_require__(23);
 	    var Vector = __webpack_require__(42);
 	    var Particle = __webpack_require__(44);
 	    var Spring = __webpack_require__(46);
 	    var PhysicsEngine = __webpack_require__(43);
 	    var LayoutNode = __webpack_require__(32);
-	    var Transitionable = __webpack_require__(48);
+	    var Transitionable = __webpack_require__(49);
 
 	    /**
 	     * @class
@@ -8390,124 +9473,7 @@
 
 
 /***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * Internal LayoutNode class used by `LayoutController`.
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var Transform = __webpack_require__(22);
-	    var LayoutUtility = __webpack_require__(35);
-
-	    /**
-	     * @class
-	     * @param {Object} renderNode Render-node which this layout-node represents
-	     * @alias module:LayoutNode
-	     */
-	    function LayoutNode(renderNode, spec) {
-	        this.renderNode = renderNode;
-	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
-	        this._spec.renderNode = renderNode; // also store in spec
-	        this._invalidated = false;
-	        this._removing = false;
-	        //this.scrollLength = undefined;
-	        //this.trueSizeRequested = false;
-	    }
-
-	    /**
-	     * Called when the node is destroyed
-	     */
-	    LayoutNode.prototype.destroy = function() {
-	        // override to implement
-	    };
-
-	    /**
-	     * Reset the end-state. This function is called on all layout-nodes prior to
-	     * calling the layout-function. So that the layout-function starts with a clean slate.
-	     */
-	    LayoutNode.prototype.reset = function() {
-	        this._invalidated = false;
-	        this.trueSizeRequested = false;
-	    };
-
-	    /**
-	     * Set the spec of the node
-	     *
-	     * @param {Object} spec
-	     */
-	    LayoutNode.prototype.setSpec = function(spec) {
-	        this._spec.align = spec.align;
-	        this._spec.origin = spec.origin;
-	        this._spec.size = spec.size;
-	        this._spec.transform = spec.transform;
-	        this._spec.opacity = spec.opacity;
-	    };
-
-	    /**
-	     * Set the content of the node
-	     *
-	     * @param {Object} set
-	     */
-	    LayoutNode.prototype.set = function(set, size) {
-	        this._invalidated = true;
-	        this._removing = false;
-	        var spec = this._spec;
-	        spec.opacity = set.opacity;
-	        spec.size = set.size;
-	        spec.origin = set.origin;
-	        spec.align = set.align;
-	        if (set.translate || set.skew || set.rotate || set.scale) {
-	            this._spec.transform = Transform.build({
-	                translate: set.translate || [0, 0, 0],
-	                skew: set.skew || [0, 0, 0],
-	                scale: set.scale || [1, 1, 1],
-	                rotate: set.rotate || [0, 0, 0]
-	            });
-	        }
-	        else {
-	            this._spec.transform = undefined;
-	        }
-	        this.scrollLength = set.scrollLength;
-	    };
-
-	    /**
-	     * Creates the render-spec
-	     */
-	    LayoutNode.prototype.getSpec = function() {
-	        return this._invalidated ? this._spec : undefined;
-	    };
-
-	    /**
-	     * Marks the node for removal
-	     */
-	    LayoutNode.prototype.remove = function(removeSpec) {
-	        this._removing = true;
-	    };
-
-	    module.exports = LayoutNode;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 33 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -8520,946 +9486,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(53);
-
-	    /**
-	     * EventHandler forwards received events to a set of provided callback functions.
-	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
-	     *
-	     * @class EventHandler
-	     * @extends EventEmitter
-	     * @constructor
-	     */
-	    function EventHandler() {
-	        EventEmitter.apply(this, arguments);
-
-	        this.downstream = []; // downstream event handlers
-	        this.downstreamFn = []; // downstream functions
-
-	        this.upstream = []; // upstream event handlers
-	        this.upstreamListeners = {}; // upstream listeners
-	    }
-	    EventHandler.prototype = Object.create(EventEmitter.prototype);
-	    EventHandler.prototype.constructor = EventHandler;
-
-	    /**
-	     * Assign an event handler to receive an object's input events.
-	     *
-	     * @method setInputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
-	        object.trigger = handler.trigger.bind(handler);
-	        if (handler.subscribe && handler.unsubscribe) {
-	            object.subscribe = handler.subscribe.bind(handler);
-	            object.unsubscribe = handler.unsubscribe.bind(handler);
-	        }
-	    };
-
-	    /**
-	     * Assign an event handler to receive an object's output events.
-	     *
-	     * @method setOutputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
-	        if (handler instanceof EventHandler) handler.bindThis(object);
-	        object.pipe = handler.pipe.bind(handler);
-	        object.unpipe = handler.unpipe.bind(handler);
-	        object.on = handler.on.bind(handler);
-	        object.addListener = object.on;
-	        object.removeListener = handler.removeListener.bind(handler);
-	    };
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.emit = function emit(type, event) {
-	        EventEmitter.prototype.emit.apply(this, arguments);
-	        var i = 0;
-	        for (i = 0; i < this.downstream.length; i++) {
-	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
-	        }
-	        for (i = 0; i < this.downstreamFn.length; i++) {
-	            this.downstreamFn[i](type, event);
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for emit
-	     * @method addListener
-	     */
-	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    EventHandler.prototype.pipe = function pipe(target) {
-	        if (target.subscribe instanceof Function) return target.subscribe(this);
-
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index < 0) downstreamCtx.push(target);
-
-	        if (target instanceof Function) target('pipe', null);
-	        else if (target.trigger) target.trigger('pipe', null);
-
-	        return target;
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     *   Undoes work of "pipe".
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    EventHandler.prototype.unpipe = function unpipe(target) {
-	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
-
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index >= 0) {
-	            downstreamCtx.splice(index, 1);
-	            if (target instanceof Function) target('unpipe', null);
-	            else if (target.trigger) target.trigger('unpipe', null);
-	            return target;
-	        }
-	        else return false;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.on = function on(type, handler) {
-	        EventEmitter.prototype.on.apply(this, arguments);
-	        if (!(type in this.upstreamListeners)) {
-	            var upstreamListener = this.trigger.bind(this, type);
-	            this.upstreamListeners[type] = upstreamListener;
-	            for (var i = 0; i < this.upstream.length; i++) {
-	                this.upstream[i].on(type, upstreamListener);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for "on"
-	     * @method addListener
-	     */
-	    EventHandler.prototype.addListener = EventHandler.prototype.on;
-
-	    /**
-	     * Listen for events from an upstream event handler.
-	     *
-	     * @method subscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.subscribe = function subscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index < 0) {
-	            this.upstream.push(source);
-	            for (var type in this.upstreamListeners) {
-	                source.on(type, this.upstreamListeners[type]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Stop listening to events from an upstream event handler.
-	     *
-	     * @method unsubscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index >= 0) {
-	            this.upstream.splice(index, 1);
-	            for (var type in this.upstreamListeners) {
-	                source.removeListener(type, this.upstreamListeners[type]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    module.exports = EventHandler;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(33);
-
-	    /**
-	     *  A collection of methods for setting options which can be extended
-	     *  onto other classes.
-	     *
-	     *
-	     *  **** WARNING ****
-	     *  You can only pass through objects that will compile into valid JSON.
-	     *
-	     *  Valid options:
-	     *      Strings,
-	     *      Arrays,
-	     *      Objects,
-	     *      Numbers,
-	     *      Nested Objects,
-	     *      Nested Arrays.
-	     *
-	     *    This excludes:
-	     *        Document Fragments,
-	     *        Functions
-	     * @class OptionsManager
-	     * @constructor
-	     * @param {Object} value options dictionary
-	     */
-	    function OptionsManager(value) {
-	        this._value = value;
-	        this.eventOutput = null;
-	    }
-
-	    /**
-	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
-	     *
-	     * @static
-	     * @method OptionsManager.patch
-	     *
-	     * @param {Object} source source arguments
-	     * @param {...Object} data argument additions and overwrites
-	     * @return {Object} source object
-	     */
-	    OptionsManager.patch = function patchObject(source, data) {
-	        var manager = new OptionsManager(source);
-	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
-	        return source;
-	    };
-
-	    function _createEventOutput() {
-	        this.eventOutput = new EventHandler();
-	        this.eventOutput.bindThis(this);
-	        EventHandler.setOutputHandler(this, this.eventOutput);
-	    }
-
-	    /**
-	     * Create OptionsManager from source with arguments overriden by patches.
-	     *   Triggers 'change' event on this object's event handler if the state of
-	     *   the OptionsManager changes as a result.
-	     *
-	     * @method patch
-	     *
-	     * @param {...Object} arguments list of patch objects
-	     * @return {OptionsManager} this
-	     */
-	    OptionsManager.prototype.patch = function patch() {
-	        var myState = this._value;
-	        for (var i = 0; i < arguments.length; i++) {
-	            var data = arguments[i];
-	            for (var k in data) {
-	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
-	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
-	                    this.key(k).patch(data[k]);
-	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
-	                }
-	                else this.set(k, data[k]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for patch
-	     *
-	     * @method setOptions
-	     *
-	     */
-	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
-
-	    /**
-	     * Return OptionsManager based on sub-object retrieved by key
-	     *
-	     * @method key
-	     *
-	     * @param {string} identifier key
-	     * @return {OptionsManager} new options manager with the value
-	     */
-	    OptionsManager.prototype.key = function key(identifier) {
-	        var result = new OptionsManager(this._value[identifier]);
-	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
-	        return result;
-	    };
-
-	    /**
-	     * Look up value by key or get the full options hash
-	     * @method get
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object or full options hash
-	     */
-	    OptionsManager.prototype.get = function get(key) {
-	        return key ? this._value[key] : this._value;
-	    };
-
-	    /**
-	     * Alias for get
-	     * @method getOptions
-	     */
-	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
-
-	    /**
-	     * Set key to value.  Outputs 'change' event if a value is overwritten.
-	     *
-	     * @method set
-	     *
-	     * @param {string} key key string
-	     * @param {Object} value value object
-	     * @return {OptionsManager} new options manager based on the value object
-	     */
-	    OptionsManager.prototype.set = function set(key, value) {
-	        var originalValue = this.get(key);
-	        this._value[key] = value;
-	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
-	        return this;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    OptionsManager.prototype.on = function on() {
-	        _createEventOutput.call(this);
-	        return this.on.apply(this, arguments);
-	    };
-
-	    /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function} handler function object to remove
-	     * @return {EventHandler} internal event handler object (for chaining)
-	     */
-	    OptionsManager.prototype.removeListener = function removeListener() {
-	        _createEventOutput.call(this);
-	        return this.removeListener.apply(this, arguments);
-	    };
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    OptionsManager.prototype.pipe = function pipe() {
-	        _createEventOutput.call(this);
-	        return this.pipe.apply(this, arguments);
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     * Undoes work of "pipe"
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    OptionsManager.prototype.unpipe = function unpipe() {
-	        _createEventOutput.call(this);
-	        return this.unpipe.apply(this, arguments);
-	    };
-
-	    module.exports = OptionsManager;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define, console*/
-	/*eslint no-console:0*/
-
-	/**
-	 * Utility class for famous-flex.
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    /**
-	     * @class
-	     * @alias module:LayoutUtility
-	     */
-	    function LayoutUtility() {
-	    }
-	    LayoutUtility.registeredHelpers = {};
-
-	    var Capabilities = {
-	        SEQUENCE: 1,
-	        DIRECTION_X: 2,
-	        DIRECTION_Y: 4,
-	        SCROLLING: 8
-	    };
-	    LayoutUtility.Capabilities = Capabilities;
-
-	    /**
-	     *  Normalizes the margins argument.
-	     *
-	     *  @param {Array.Number} margins
-	     */
-	    LayoutUtility.normalizeMargins = function(margins) {
-	        if (!margins) {
-	            return [0, 0, 0, 0];
-	        } else if (!Array.isArray(margins)) {
-	            return [margins, margins, margins, margins];
-	        } else if (margins.length === 0) {
-	            return [0, 0, 0, 0];
-	        } else if (margins.length === 1) {
-	            return [margins[0], margins[0], margins[0], margins[0]];
-	        } else if (margins.length === 2) {
-	            return [margins[0], margins[1], margins[0], margins[1]];
-	        }
-	        else {
-	            return margins;
-	        }
-	    };
-
-	    /**
-	     * Makes a (shallow) copy of a spec.
-	     *
-	     * @param {Spec} spec Spec to clone
-	     * @return {Spec} cloned spec
-	     */
-	    LayoutUtility.cloneSpec = function(spec) {
-	        var clone = {};
-	        if (spec.opacity !== undefined) {
-	            clone.opacity = spec.opacity;
-	        }
-	        if (spec.size !== undefined) {
-	            clone.size = spec.size.slice(0);
-	        }
-	        if (spec.transform !== undefined) {
-	            clone.transform = spec.transform.slice(0);
-	        }
-	        if (spec.origin !== undefined) {
-	            clone.origin = spec.origin.slice(0);
-	        }
-	        if (spec.align !== undefined) {
-	            clone.align = spec.align.slice(0);
-	        }
-	        return clone;
-	    };
-
-	    /**
-	     * Clears the contents of a spec.
-	     *
-	     * @param {Spec} spec Spec to clear
-	     * @return {Spec} spec
-	     */
-	    LayoutUtility.clearSpec = function(spec) {
-	        delete spec.opacity;
-	        delete spec.size;
-	        delete spec.transform;
-	        delete spec.origin;
-	        delete spec.align;
-	        return spec;
-	    };
-
-	    /**
-	     * Compares two arrays for equality.
-	     */
-	    function _isEqualArray(a, b) {
-	        if (a === b) {
-	            return true;
-	        }
-	        if ((a === undefined) || (b === undefined)) {
-	            return false;
-	        }
-	        var i = a.length;
-	        if (i !== b.length){
-	            return false;
-	        }
-	        while (i--) {
-	            if (a[i] !== b[i]) {
-	                return false;
-	            }
-	        }
-	        return true;
-	    }
-
-	    /**
-	     * Compares two specs for equality.
-	     *
-	     * @param {Spec} spec1 Spec to compare
-	     * @param {Spec} spec2 Spec to compare
-	     * @return {Boolean} true/false
-	     */
-	    LayoutUtility.isEqualSpec = function(spec1, spec2) {
-	        if (spec1.opacity !== spec2.opacity) {
-	            return false;
-	        }
-	        if (!_isEqualArray(spec1.size, spec2.size)) {
-	            return false;
-	        }
-	        if (!_isEqualArray(spec1.transform, spec2.transform)) {
-	            return false;
-	        }
-	        if (!_isEqualArray(spec1.origin, spec2.origin)) {
-	            return false;
-	        }
-	        if (!_isEqualArray(spec1.align, spec2.align)) {
-	            return false;
-	        }
-	        return true;
-	    };
-
-	    /**
-	     * Helper function that returns a string containing the differences
-	     * between two specs.
-	     *
-	     * @param {Spec} spec1 Spec to compare
-	     * @param {Spec} spec2 Spec to compare
-	     * @return {String} text
-	     */
-	    LayoutUtility.getSpecDiffText = function(spec1, spec2) {
-	        var result = 'spec diff:';
-	        if (spec1.opacity !== spec2.opacity) {
-	            result += '\nopacity: ' + spec1.opacity + ' != ' + spec2.opacity;
-	        }
-	        if (!_isEqualArray(spec1.size, spec2.size)) {
-	            result += '\nsize: ' + JSON.stringify(spec1.size) + ' != ' + JSON.stringify(spec2.size);
-	        }
-	        if (!_isEqualArray(spec1.transform, spec2.transform)) {
-	            result += '\ntransform: ' + JSON.stringify(spec1.transform) + ' != ' + JSON.stringify(spec2.transform);
-	        }
-	        if (!_isEqualArray(spec1.origin, spec2.origin)) {
-	            result += '\norigin: ' + JSON.stringify(spec1.origin) + ' != ' + JSON.stringify(spec2.origin);
-	        }
-	        if (!_isEqualArray(spec1.align, spec2.align)) {
-	            result += '\nalign: ' + JSON.stringify(spec1.align) + ' != ' + JSON.stringify(spec2.align);
-	        }
-	        return result;
-	    };
-
-	    /**
-	     * Helper function to call whenever a critical error has occurred.
-	     *
-	     * @param {String} message error-message
-	     */
-	    LayoutUtility.error = function(message) {
-	        console.log('ERROR: ' + message);
-	        throw message;
-	    };
-
-	    /**
-	     * Helper function to call whenever a warning error has occurred.
-	     *
-	     * @param {String} message warning-message
-	     */
-	    LayoutUtility.warning = function(message) {
-	        console.log('WARNING: ' + message);
-	    };
-
-	    /**
-	     * Helper function to log 1 or more arguments. All the arguments
-	     * are concatenated to produce a single string which is logged.
-	     *
-	     * @param {String|Array|Object} args arguments to stringify and concatenate
-	     */
-	    LayoutUtility.log = function(args) {
-	        var message = '';
-	        for (var i = 0; i < arguments.length; i++) {
-	            var arg = arguments[i];
-	            if ((arg instanceof Object) || (arg instanceof Array)) {
-	                message += JSON.stringify(arg);
-	            }
-	            else {
-	                message += arg;
-	            }
-	        }
-	        console.log(message);
-	    };
-
-	    /**
-	     * Registers a layout-helper so it can be used as a layout-literal for
-	     * a layout-controller. The LayoutHelper instance must support the `parse`
-	     * function, which is fed the layout-literal content.
-	     *
-	     * **Example:**
-	     *
-	     * ```javascript
-	     * Layout.registerHelper('dock', LayoutDockHelper);
-	     *
-	     * var layoutController = new LayoutController({
-	     *   layout: { dock: [,
-	     *     ['top', 'header', 50],
-	     *     ['bottom', 'footer', 50],
-	     *     ['fill', 'content'],
-	     *   ]},
-	     *   dataSource: {
-	     *     header: new Surface({content: 'Header'}),
-	     *     footer: new Surface({content: 'Footer'}),
-	     *     content: new Surface({content: 'Content'}),
-	     *   }
-	     * })
-	     * ```
-	     *
-	     * @param {String} name name of the helper (e.g. 'dock')
-	     * @param {Function} Helper Helper to register (e.g. LayoutDockHelper)
-	     */
-	    LayoutUtility.registerHelper = function(name, Helper) {
-	        if (!Helper.prototype.parse) {
-	            LayoutUtility.error('The layout-helper for name "' + name + '" is required to support the "parse" method');
-	        }
-	        if (this.registeredHelpers[name] !== undefined) {
-	            LayoutUtility.warning('A layout-helper with the name "' + name + '" is already registered and will be overwritten');
-	        }
-	        this.registeredHelpers[name] = Helper;
-	    };
-
-	    /**
-	     * Unregisters a layout-helper.
-	     *
-	     * @param {String} name name of the layout-helper
-	     */
-	    LayoutUtility.unregisterHelper = function(name) {
-	        delete this.registeredHelpers[name];
-	    };
-
-	    /**
-	     * Gets a registered layout-helper by its name.
-	     *
-	     * @param {String} name name of the layout-helper
-	     * @return {Function} layout-helper or undefined
-	     */
-	    LayoutUtility.getRegisteredHelper = function(name) {
-	        return this.registeredHelpers[name];
-	    };
-
-	    // Layout function
-	    module.exports = LayoutUtility;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 36 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var RenderNode = __webpack_require__(51);
-	    var EventHandler = __webpack_require__(33);
-	    var ElementAllocator = __webpack_require__(54);
-	    var Transform = __webpack_require__(22);
-	    var Transitionable = __webpack_require__(48);
-
-	    var _zeroZero = [0, 0];
-	    var usePrefix = !('perspective' in document.documentElement.style);
-
-	    function _getElementSize(element) {
-	        return [element.clientWidth, element.clientHeight];
-	    }
-
-	    var _setPerspective = usePrefix ? function(element, perspective) {
-	        element.style.webkitPerspective = perspective ? perspective.toFixed() + 'px' : '';
-	    } : function(element, perspective) {
-	        element.style.perspective = perspective ? perspective.toFixed() + 'px' : '';
-	    };
-
-	    /**
-	     * The top-level container for a Famous-renderable piece of the document.
-	     *   It is directly updated by the process-wide Engine object, and manages one
-	     *   render tree root, which can contain other renderables.
-	     *
-	     * @class Context
-	     * @constructor
-	     * @private
-	     * @param {Node} container Element in which content will be inserted
-	     */
-	    function Context(container) {
-	        this.container = container;
-	        this._allocator = new ElementAllocator(container);
-
-	        this._node = new RenderNode();
-	        this._eventOutput = new EventHandler();
-	        this._size = _getElementSize(this.container);
-
-	        this._perspectiveState = new Transitionable(0);
-	        this._perspective = undefined;
-
-	        this._nodeContext = {
-	            allocator: this._allocator,
-	            transform: Transform.identity,
-	            opacity: 1,
-	            origin: _zeroZero,
-	            align: _zeroZero,
-	            size: this._size
-	        };
-
-	        this._eventOutput.on('resize', function() {
-	            this.setSize(_getElementSize(this.container));
-	        }.bind(this));
-
-	    }
-
-	    // Note: Unused
-	    Context.prototype.getAllocator = function getAllocator() {
-	        return this._allocator;
-	    };
-
-	    /**
-	     * Add renderables to this Context's render tree.
-	     *
-	     * @method add
-	     *
-	     * @param {Object} obj renderable object
-	     * @return {RenderNode} RenderNode wrapping this object, if not already a RenderNode
-	     */
-	    Context.prototype.add = function add(obj) {
-	        return this._node.add(obj);
-	    };
-
-	    /**
-	     * Move this Context to another containing document element.
-	     *
-	     * @method migrate
-	     *
-	     * @param {Node} container Element to which content will be migrated
-	     */
-	    Context.prototype.migrate = function migrate(container) {
-	        if (container === this.container) return;
-	        this.container = container;
-	        this._allocator.migrate(container);
-	    };
-
-	    /**
-	     * Gets viewport size for Context.
-	     *
-	     * @method getSize
-	     *
-	     * @return {Array.Number} viewport size as [width, height]
-	     */
-	    Context.prototype.getSize = function getSize() {
-	        return this._size;
-	    };
-
-	    /**
-	     * Sets viewport size for Context.
-	     *
-	     * @method setSize
-	     *
-	     * @param {Array.Number} size [width, height].  If unspecified, use size of root document element.
-	     */
-	    Context.prototype.setSize = function setSize(size) {
-	        if (!size) size = _getElementSize(this.container);
-	        this._size[0] = size[0];
-	        this._size[1] = size[1];
-	    };
-
-	    /**
-	     * Commit this Context's content changes to the document.
-	     *
-	     * @private
-	     * @method update
-	     * @param {Object} contextParameters engine commit specification
-	     */
-	    Context.prototype.update = function update(contextParameters) {
-	        if (contextParameters) {
-	            if (contextParameters.transform) this._nodeContext.transform = contextParameters.transform;
-	            if (contextParameters.opacity) this._nodeContext.opacity = contextParameters.opacity;
-	            if (contextParameters.origin) this._nodeContext.origin = contextParameters.origin;
-	            if (contextParameters.align) this._nodeContext.align = contextParameters.align;
-	            if (contextParameters.size) this._nodeContext.size = contextParameters.size;
-	        }
-	        var perspective = this._perspectiveState.get();
-	        if (perspective !== this._perspective) {
-	            _setPerspective(this.container, perspective);
-	            this._perspective = perspective;
-	        }
-
-	        this._node.commit(this._nodeContext);
-	    };
-
-	    /**
-	     * Get current perspective of this context in pixels.
-	     *
-	     * @method getPerspective
-	     * @return {Number} depth perspective in pixels
-	     */
-	    Context.prototype.getPerspective = function getPerspective() {
-	        return this._perspectiveState.get();
-	    };
-
-	    /**
-	     * Set current perspective of this context in pixels.
-	     *
-	     * @method setPerspective
-	     * @param {Number} perspective in pixels
-	     * @param {Object} [transition] Transitionable object for applying the change
-	     * @param {function(Object)} callback function called on completion of transition
-	     */
-	    Context.prototype.setPerspective = function setPerspective(perspective, transition, callback) {
-	        return this._perspectiveState.set(perspective, transition, callback);
-	    };
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    Context.prototype.emit = function emit(type, event) {
-	        return this._eventOutput.emit(type, event);
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    Context.prototype.on = function on(type, handler) {
-	        return this._eventOutput.on(type, handler);
-	    };
-
-	    /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function} handler function object to remove
-	     * @return {EventHandler} internal event handler object (for chaining)
-	     */
-	    Context.prototype.removeListener = function removeListener(type, handler) {
-	        return this._eventOutput.removeListener(type, handler);
-	    };
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    Context.prototype.pipe = function pipe(target) {
-	        return this._eventOutput.pipe(target);
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     *   Undoes work of "pipe".
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    Context.prototype.unpipe = function unpipe(target) {
-	        return this._eventOutput.unpipe(target);
-	    };
-
-	    module.exports = Context;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 37 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(40);
-	    var EventHandler = __webpack_require__(33);
-	    var Transform = __webpack_require__(22);
+	    var Entity = __webpack_require__(37);
+	    var EventHandler = __webpack_require__(35);
+	    var Transform = __webpack_require__(23);
 
 	    var usePrefix = !('transform' in document.documentElement.style);
 	    var devicePixelRatio = window.devicePixelRatio || 1;
@@ -9778,11 +9807,10 @@
 
 
 /***/ },
-/* 38 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;
-	/* This Source Code Form is subject to the terms of the Mozilla Public
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 	 *
@@ -9792,572 +9820,228 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(20);
-	    var Context = __webpack_require__(36);
+	    var RenderNode = __webpack_require__(52);
+	    var EventHandler = __webpack_require__(35);
+	    var ElementAllocator = __webpack_require__(55);
+	    var Transform = __webpack_require__(23);
+	    var Transitionable = __webpack_require__(49);
 
-	    /**
-	     * ContainerSurface is an object designed to contain surfaces and
-	     *   set properties to be applied to all of them at once.
-	     *   This extends the Surface class.
-	     *   A container surface will enforce these properties on the
-	     *   surfaces it contains:
-	     *
-	     *   size (clips contained surfaces to its own width and height);
-	     *
-	     *   origin;
-	     *
-	     *   its own opacity and transform, which will be automatically
-	     *   applied to  all Surfaces contained directly and indirectly.
-	     *
-	     * @class ContainerSurface
-	     * @extends Surface
-	     * @constructor
-	     * @param {Array.Number} [options.size] [width, height] in pixels
-	     * @param {Array.string} [options.classes] CSS classes to set on all inner content
-	     * @param {Array} [options.properties] string dictionary of HTML attributes to set on target div
-	     * @param {string} [options.content] inner (HTML) content of surface (should not be used)
-	     */
-	    function ContainerSurface(options) {
-	        Surface.call(this, options);
-	        this._container = document.createElement('div');
-	        this._container.classList.add('famous-group');
-	        this._container.classList.add('famous-container-group');
-	        this._shouldRecalculateSize = false;
-	        this.context = new Context(this._container);
-	        this.setContent(this._container);
+	    var _zeroZero = [0, 0];
+	    var usePrefix = !('perspective' in document.documentElement.style);
+
+	    function _getElementSize(element) {
+	        return [element.clientWidth, element.clientHeight];
 	    }
 
-	    ContainerSurface.prototype = Object.create(Surface.prototype);
-	    ContainerSurface.prototype.constructor = ContainerSurface;
-	    ContainerSurface.prototype.elementType = 'div';
-	    ContainerSurface.prototype.elementClass = 'famous-surface';
+	    var _setPerspective = usePrefix ? function(element, perspective) {
+	        element.style.webkitPerspective = perspective ? perspective.toFixed() + 'px' : '';
+	    } : function(element, perspective) {
+	        element.style.perspective = perspective ? perspective.toFixed() + 'px' : '';
+	    };
 
 	    /**
-	     * Add renderables to this object's render tree
+	     * The top-level container for a Famous-renderable piece of the document.
+	     *   It is directly updated by the process-wide Engine object, and manages one
+	     *   render tree root, which can contain other renderables.
+	     *
+	     * @class Context
+	     * @constructor
+	     * @private
+	     * @param {Node} container Element in which content will be inserted
+	     */
+	    function Context(container) {
+	        this.container = container;
+	        this._allocator = new ElementAllocator(container);
+
+	        this._node = new RenderNode();
+	        this._eventOutput = new EventHandler();
+	        this._size = _getElementSize(this.container);
+
+	        this._perspectiveState = new Transitionable(0);
+	        this._perspective = undefined;
+
+	        this._nodeContext = {
+	            allocator: this._allocator,
+	            transform: Transform.identity,
+	            opacity: 1,
+	            origin: _zeroZero,
+	            align: _zeroZero,
+	            size: this._size
+	        };
+
+	        this._eventOutput.on('resize', function() {
+	            this.setSize(_getElementSize(this.container));
+	        }.bind(this));
+
+	    }
+
+	    // Note: Unused
+	    Context.prototype.getAllocator = function getAllocator() {
+	        return this._allocator;
+	    };
+
+	    /**
+	     * Add renderables to this Context's render tree.
 	     *
 	     * @method add
 	     *
 	     * @param {Object} obj renderable object
 	     * @return {RenderNode} RenderNode wrapping this object, if not already a RenderNode
 	     */
-	    ContainerSurface.prototype.add = function add() {
-	        return this.context.add.apply(this.context, arguments);
+	    Context.prototype.add = function add(obj) {
+	        return this._node.add(obj);
 	    };
 
 	    /**
-	     * Return spec for this surface.  Note: Can result in a size recalculation.
+	     * Move this Context to another containing document element.
+	     *
+	     * @method migrate
+	     *
+	     * @param {Node} container Element to which content will be migrated
+	     */
+	    Context.prototype.migrate = function migrate(container) {
+	        if (container === this.container) return;
+	        this.container = container;
+	        this._allocator.migrate(container);
+	    };
+
+	    /**
+	     * Gets viewport size for Context.
+	     *
+	     * @method getSize
+	     *
+	     * @return {Array.Number} viewport size as [width, height]
+	     */
+	    Context.prototype.getSize = function getSize() {
+	        return this._size;
+	    };
+
+	    /**
+	     * Sets viewport size for Context.
+	     *
+	     * @method setSize
+	     *
+	     * @param {Array.Number} size [width, height].  If unspecified, use size of root document element.
+	     */
+	    Context.prototype.setSize = function setSize(size) {
+	        if (!size) size = _getElementSize(this.container);
+	        this._size[0] = size[0];
+	        this._size[1] = size[1];
+	    };
+
+	    /**
+	     * Commit this Context's content changes to the document.
 	     *
 	     * @private
-	     * @method render
-	     *
-	     * @return {Object} render spec for this surface (spec id)
+	     * @method update
+	     * @param {Object} contextParameters engine commit specification
 	     */
-	    ContainerSurface.prototype.render = function render() {
-	        if (this._sizeDirty) this._shouldRecalculateSize = true;
-	        return Surface.prototype.render.apply(this, arguments);
-	    };
-
-	    /**
-	     * Place the document element this component manages into the document.
-	     *
-	     * @private
-	     * @method deploy
-	     * @param {Node} target document parent of this container
-	     */
-	    ContainerSurface.prototype.deploy = function deploy() {
-	        this._shouldRecalculateSize = true;
-	        return Surface.prototype.deploy.apply(this, arguments);
-	    };
-
-	    /**
-	     * Apply changes from this component to the corresponding document element.
-	     * This includes changes to classes, styles, size, content, opacity, origin,
-	     * and matrix transforms.
-	     *
-	     * @private
-	     * @method commit
-	     * @param {Context} context commit context
-	     * @param {Transform} transform unused TODO
-	     * @param {Number} opacity  unused TODO
-	     * @param {Array.Number} origin unused TODO
-	     * @param {Array.Number} size unused TODO
-	     * @return {undefined} TODO returns an undefined value
-	     */
-	    ContainerSurface.prototype.commit = function commit(context, transform, opacity, origin, size) {
-	        var previousSize = this._size ? [this._size[0], this._size[1]] : null;
-	        var result = Surface.prototype.commit.apply(this, arguments);
-	        if (this._shouldRecalculateSize || (previousSize && (this._size[0] !== previousSize[0] || this._size[1] !== previousSize[1]))) {
-	            this.context.setSize();
-	            this._shouldRecalculateSize = false;
+	    Context.prototype.update = function update(contextParameters) {
+	        if (contextParameters) {
+	            if (contextParameters.transform) this._nodeContext.transform = contextParameters.transform;
+	            if (contextParameters.opacity) this._nodeContext.opacity = contextParameters.opacity;
+	            if (contextParameters.origin) this._nodeContext.origin = contextParameters.origin;
+	            if (contextParameters.align) this._nodeContext.align = contextParameters.align;
+	            if (contextParameters.size) this._nodeContext.size = contextParameters.size;
 	        }
-	        this.context.update();
-	        return result;
-	    };
+	        var perspective = this._perspectiveState.get();
+	        if (perspective !== this._perspective) {
+	            _setPerspective(this.container, perspective);
+	            this._perspective = perspective;
+	        }
 
-	    module.exports = ContainerSurface;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Context = __webpack_require__(36);
-	    var Transform = __webpack_require__(22);
-	    var Surface = __webpack_require__(20);
-
-	    /**
-	     * A Context designed to contain surfaces and set properties
-	     *   to be applied to all of them at once.
-	     *   This is primarily used for specific performance improvements in the rendering engine.
-	     *   Private.
-	     *
-	     * @private
-	     * @class Group
-	     * @extends Surface
-	     * @constructor
-	     * @param {Object} [options] Surface options array (see Surface})
-	     */
-	    function Group(options) {
-	        Surface.call(this, options);
-	        this._shouldRecalculateSize = false;
-	        this._container = document.createDocumentFragment();
-	        this.context = new Context(this._container);
-	        this.setContent(this._container);
-	        this._groupSize = [undefined, undefined];
-	    }
-
-	    /** @const */
-	    Group.SIZE_ZERO = [0, 0];
-
-	    Group.prototype = Object.create(Surface.prototype);
-	    Group.prototype.elementType = 'div';
-	    Group.prototype.elementClass = 'famous-group';
-
-	    /**
-	     * Add renderables to this component's render tree.
-	     *
-	     * @method add
-	     * @private
-	     * @param {Object} obj renderable object
-	     * @return {RenderNode} Render wrapping provided object, if not already a RenderNode
-	     */
-	    Group.prototype.add = function add() {
-	        return this.context.add.apply(this.context, arguments);
+	        this._node.commit(this._nodeContext);
 	    };
 
 	    /**
-	     * Generate a render spec from the contents of this component.
+	     * Get current perspective of this context in pixels.
 	     *
-	     * @private
-	     * @method render
-	     * @return {Number} Render spec for this component
+	     * @method getPerspective
+	     * @return {Number} depth perspective in pixels
 	     */
-	    Group.prototype.render = function render() {
-	        return Surface.prototype.render.call(this);
+	    Context.prototype.getPerspective = function getPerspective() {
+	        return this._perspectiveState.get();
 	    };
 
 	    /**
-	     * Place the document element this component manages into the document.
+	     * Set current perspective of this context in pixels.
 	     *
-	     * @private
-	     * @method deploy
-	     * @param {Node} target document parent of this container
+	     * @method setPerspective
+	     * @param {Number} perspective in pixels
+	     * @param {Object} [transition] Transitionable object for applying the change
+	     * @param {function(Object)} callback function called on completion of transition
 	     */
-	    Group.prototype.deploy = function deploy(target) {
-	        this.context.migrate(target);
+	    Context.prototype.setPerspective = function setPerspective(perspective, transition, callback) {
+	        return this._perspectiveState.set(perspective, transition, callback);
 	    };
 
 	    /**
-	     * Remove this component and contained content from the document
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
 	     *
-	     * @private
-	     * @method recall
+	     * @method emit
 	     *
-	     * @param {Node} target node to which the component was deployed
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
 	     */
-	    Group.prototype.recall = function recall(target) {
-	        this._container = document.createDocumentFragment();
-	        this.context.migrate(this._container);
+	    Context.prototype.emit = function emit(type, event) {
+	        return this._eventOutput.emit(type, event);
 	    };
 
 	    /**
-	     * Apply changes from this component to the corresponding document element.
+	     * Bind a callback function to an event type handled by this object.
 	     *
-	     * @private
-	     * @method commit
+	     * @method "on"
 	     *
-	     * @param {Object} context update spec passed in from above in the render tree.
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
 	     */
-	    Group.prototype.commit = function commit(context) {
-	        var transform = context.transform;
-	        var origin = context.origin;
-	        var opacity = context.opacity;
-	        var size = context.size;
-	        var result = Surface.prototype.commit.call(this, {
-	            allocator: context.allocator,
-	            transform: Transform.thenMove(transform, [-origin[0] * size[0], -origin[1] * size[1], 0]),
-	            opacity: opacity,
-	            origin: origin,
-	            size: Group.SIZE_ZERO
-	        });
-	        if (size[0] !== this._groupSize[0] || size[1] !== this._groupSize[1]) {
-	            this._groupSize[0] = size[0];
-	            this._groupSize[1] = size[1];
-	            this.context.setSize(size);
-	        }
-	        this.context.update({
-	            transform: Transform.translate(-origin[0] * size[0], -origin[1] * size[1], 0),
-	            origin: origin,
-	            size: size
-	        });
-	        return result;
-	    };
-
-	    module.exports = Group;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * A singleton that maintains a global registry of Surfaces.
-	     *   Private.
-	     *
-	     * @private
-	     * @static
-	     * @class Entity
-	     */
-
-	    var entities = [];
-
-	    /**
-	     * Get entity from global index.
-	     *
-	     * @private
-	     * @method get
-	     * @param {Number} id entity registration id
-	     * @return {Surface} entity in the global index
-	     */
-	    function get(id) {
-	        return entities[id];
-	    }
-
-	    /**
-	     * Overwrite entity in the global index
-	     *
-	     * @private
-	     * @method set
-	     * @param {Number} id entity registration id
-	     * @param {Surface} entity to add to the global index
-	     */
-	    function set(id, entity) {
-	        entities[id] = entity;
-	    }
-
-	    /**
-	     * Add entity to global index
-	     *
-	     * @private
-	     * @method register
-	     * @param {Surface} entity to add to global index
-	     * @return {Number} new id
-	     */
-	    function register(entity) {
-	        var id = entities.length;
-	        set(id, entity);
-	        return id;
-	    }
-
-	    /**
-	     * Remove entity from global index
-	     *
-	     * @private
-	     * @method unregister
-	     * @param {Number} id entity registration id
-	     */
-	    function unregister(id) {
-	        set(id, null);
-	    }
-
-	    module.exports = {
-	        register: register,
-	        unregister: unregister,
-	        get: get,
-	        set: set
-	    };
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-
-	/**
-	 * LayoutDockHelper helps positioning nodes using docking principles.
-	 *
-	 * **Example:**
-	 *
-	 * ```javascript
-	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
-	 *
-	 * function HeaderFooterLayout(context, options) {
-	 *   var dock = new LayoutDockHelper(context);
-	 *   dock.top('header', options.headerHeight);
-	 *   dock.bottom('footer', options.footerHeight);
-	 *   dock.fill('content');
-	 * };
-	 * ```
-	 *
-	 * You can also use layout-literals to create layouts using docking semantics:
-	 *
-	 * ```javascript
-	 * var layoutController = new LayoutController({
-	 *   layout: {dock: [
-	 *     ['top', 'header', 40],
-	 *     ['bottom', 'footer', 40, 1], // z-index +1
-	 *     ['fill', 'content']
-	 *   ]},
-	 *   dataSource: {
-	 *     header: new Surface({content: 'header'}),
-	 *     footer: new Surface({content: 'footer'}),
-	 *     content: new Surface({content: 'content'}),
-	 *   }
-	 * });
-	 * ```
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var LayoutUtility = __webpack_require__(35);
-
-	    /**
-	     * @class
-	     * @param {LayoutContext} context layout-context
-	     * @param {Object} [options] additional options
-	     * @param {Object} [options.margins] margins to start out with (default: 0px)
-	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
-	     * @alias module:LayoutDockHelper
-	     */
-	    function LayoutDockHelper(context, options) {
-	        var size = context.size;
-	        this._size = size;
-	        this._context = context;
-	        this._options = options;
-	        this._z = (options && options.translateZ) ? options.translateZ : 0;
-	        if (options && options.margins) {
-	            var margins = LayoutUtility.normalizeMargins(options.margins);
-	            this._left = margins[3];
-	            this._top = margins[0];
-	            this._right = size[0] - margins[1];
-	            this._bottom = size[1] - margins[2];
-	        }
-	        else {
-	            this._left = 0;
-	            this._top = 0;
-	            this._right = size[0];
-	            this._bottom = size[1];
-	        }
-	    }
-
-	    /**
-	     * Parses the layout-rules based on a JSON data object.
-	     * The object should be an array with the following syntax:
-	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
-	     *
-	     * **Example:**
-	     *
-	     * ```JSON
-	     * [
-	     *   ['top': 'header', 50],
-	     *   ['bottom': 'footer', 50, 10], // z-index: 10
-	     *   ['fill', 'content']
-	     * ]
-	     * ```
-	     *
-	     * @param {Object} data JSON object
-	     */
-	    LayoutDockHelper.prototype.parse = function(data) {
-	        for (var i = 0; i < data.length; i++) {
-	            var rule = data[i];
-	            var value = (data.length >= 3) ? rule[2] : undefined;
-	            if (rule[0] === 'top') {
-	                this.top(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'left') {
-	                this.left(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'right') {
-	                this.right(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'bottom') {
-	                this.bottom(rule[1], value, (data.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'fill') {
-	                this.fill(rule[1], (data.length >=3) ? rule[2] : undefined);
-	            }
-	        }
+	    Context.prototype.on = function on(type, handler) {
+	        return this._eventOutput.on(type, handler);
 	    };
 
 	    /**
-	     * Dock the node to the top.
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
 	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function} handler function object to remove
+	     * @return {EventHandler} internal event handler object (for chaining)
 	     */
-	    LayoutDockHelper.prototype.top = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._top += height;
-	        return this;
+	    Context.prototype.removeListener = function removeListener(type, handler) {
+	        return this._eventOutput.removeListener(type, handler);
 	    };
 
 	    /**
-	     * Dock the node to the left
+	     * Add event handler object to set of downstream handlers.
 	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
 	     */
-	    LayoutDockHelper.prototype.left = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (width === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            width = size[0];
-	        }
-	        this._context.set(node, {
-	            size: [width, this._bottom - this._top],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._left += width;
-	        return this;
+	    Context.prototype.pipe = function pipe(target) {
+	        return this._eventOutput.pipe(target);
 	    };
 
 	    /**
-	     * Dock the node to the bottom
+	     * Remove handler object from set of downstream handlers.
+	     *   Undoes work of "pipe".
 	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
 	     */
-	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 1],
-	            align: [0, 1],
-	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
-	        });
-	        this._bottom -= height;
-	        return this;
+	    Context.prototype.unpipe = function unpipe(target) {
+	        return this._eventOutput.unpipe(target);
 	    };
 
-	    /**
-	     * Dock the node to the right.
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.right = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (node) {
-	            if (width === undefined) {
-	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	                width = size[0];
-	            }
-	            this._context.set(node, {
-	                size: [width, this._bottom - this._top],
-	                origin: [1, 0],
-	                align: [1, 0],
-	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
-	            });
-	        }
-	        if (width) {
-	            this._right -= width;
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Fills the node to the remaining content.
-	     *
-	     * @param {LayoutNode|String} node layout-node to dock
-	     * @param {Number} [z] z-index to use for the node}
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.fill = function(node, z) {
-	        this._context.set(node, {
-	            size: [this._right - this._left, this._bottom - this._top],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        return this;
-	    };
-
-	    // Register the helper
-	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
-
-	    module.exports = LayoutDockHelper;
+	    module.exports = Context;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -10759,7 +10443,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(33);
+	    var EventHandler = __webpack_require__(35);
 
 	    /**
 	     * The Physics Engine is responsible for mediating bodies with their
@@ -11291,9 +10975,9 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Vector = __webpack_require__(42);
-	    var Transform = __webpack_require__(22);
-	    var EventHandler = __webpack_require__(33);
-	    var Integrator = __webpack_require__(58);
+	    var Transform = __webpack_require__(23);
+	    var EventHandler = __webpack_require__(35);
+	    var Integrator = __webpack_require__(59);
 
 	    /**
 	     * A point body that is controlled by the Physics Engine. A particle has
@@ -11683,7 +11367,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(55);
+	    var Force = __webpack_require__(56);
 
 	    /**
 	     * Drag is a force that opposes velocity. Attach it to the physics engine
@@ -11810,7 +11494,7 @@
 	/*global console */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(55);
+	    var Force = __webpack_require__(56);
 	    var Vector = __webpack_require__(42);
 
 	    /**
@@ -12080,9 +11764,9 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(33);
-	    var Engine = __webpack_require__(18);
-	    var OptionsManager = __webpack_require__(34);
+	    var EventHandler = __webpack_require__(35);
+	    var Engine = __webpack_require__(19);
+	    var OptionsManager = __webpack_require__(38);
 
 	    /**
 	     * Handles piped in mousewheel events.
@@ -12274,6 +11958,256 @@
 /* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+
+	/**
+	 * LayoutDockHelper helps positioning nodes using docking principles.
+	 *
+	 * **Example:**
+	 *
+	 * ```javascript
+	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
+	 *
+	 * function HeaderFooterLayout(context, options) {
+	 *   var dock = new LayoutDockHelper(context);
+	 *   dock.top('header', options.headerHeight);
+	 *   dock.bottom('footer', options.footerHeight);
+	 *   dock.fill('content');
+	 * };
+	 * ```
+	 *
+	 * You can also use layout-literals to create layouts using docking semantics:
+	 *
+	 * ```javascript
+	 * var layoutController = new LayoutController({
+	 *   layout: {dock: [
+	 *     ['top', 'header', 40],
+	 *     ['bottom', 'footer', 40, 1], // z-index +1
+	 *     ['fill', 'content']
+	 *   ]},
+	 *   dataSource: {
+	 *     header: new Surface({content: 'header'}),
+	 *     footer: new Surface({content: 'footer'}),
+	 *     content: new Surface({content: 'content'}),
+	 *   }
+	 * });
+	 * ```
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var LayoutUtility = __webpack_require__(31);
+
+	    /**
+	     * @class
+	     * @param {LayoutContext} context layout-context
+	     * @param {Object} [options] additional options
+	     * @param {Object} [options.margins] margins to start out with (default: 0px)
+	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
+	     * @alias module:LayoutDockHelper
+	     */
+	    function LayoutDockHelper(context, options) {
+	        var size = context.size;
+	        this._size = size;
+	        this._context = context;
+	        this._options = options;
+	        this._z = (options && options.translateZ) ? options.translateZ : 0;
+	        if (options && options.margins) {
+	            var margins = LayoutUtility.normalizeMargins(options.margins);
+	            this._left = margins[3];
+	            this._top = margins[0];
+	            this._right = size[0] - margins[1];
+	            this._bottom = size[1] - margins[2];
+	        }
+	        else {
+	            this._left = 0;
+	            this._top = 0;
+	            this._right = size[0];
+	            this._bottom = size[1];
+	        }
+	    }
+
+	    /**
+	     * Parses the layout-rules based on a JSON data object.
+	     * The object should be an array with the following syntax:
+	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
+	     *
+	     * **Example:**
+	     *
+	     * ```JSON
+	     * [
+	     *   ['top': 'header', 50],
+	     *   ['bottom': 'footer', 50, 10], // z-index: 10
+	     *   ['fill', 'content']
+	     * ]
+	     * ```
+	     *
+	     * @param {Object} data JSON object
+	     */
+	    LayoutDockHelper.prototype.parse = function(data) {
+	        for (var i = 0; i < data.length; i++) {
+	            var rule = data[i];
+	            var value = (data.length >= 3) ? rule[2] : undefined;
+	            if (rule[0] === 'top') {
+	                this.top(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'left') {
+	                this.left(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'right') {
+	                this.right(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'bottom') {
+	                this.bottom(rule[1], value, (data.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'fill') {
+	                this.fill(rule[1], (data.length >=3) ? rule[2] : undefined);
+	            }
+	        }
+	    };
+
+	    /**
+	     * Dock the node to the top.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.top = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._top += height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the left
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.left = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (width === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            width = size[0];
+	        }
+	        this._context.set(node, {
+	            size: [width, this._bottom - this._top],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._left += width;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the bottom
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 1],
+	            align: [0, 1],
+	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+	        });
+	        this._bottom -= height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the right.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.right = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (node) {
+	            if (width === undefined) {
+	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	                width = size[0];
+	            }
+	            this._context.set(node, {
+	                size: [width, this._bottom - this._top],
+	                origin: [1, 0],
+	                align: [1, 0],
+	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+	            });
+	        }
+	        if (width) {
+	            this._right -= width;
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Fills the node to the remaining content.
+	     *
+	     * @param {LayoutNode|String} node layout-node to dock
+	     * @param {Number} [z] z-index to use for the node}
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.fill = function(node, z) {
+	        this._context.set(node, {
+	            size: [this._right - this._left, this._bottom - this._top],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        return this;
+	    };
+
+	    // Register the helper
+	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
+
+	    module.exports = LayoutDockHelper;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 49 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12284,8 +12218,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var MultipleTransition = __webpack_require__(56);
-	    var TweenTransition = __webpack_require__(57);
+	    var MultipleTransition = __webpack_require__(57);
+	    var TweenTransition = __webpack_require__(58);
 
 	    /**
 	     * A state maintainer for a smooth transition between
@@ -12499,7 +12433,7 @@
 
 
 /***/ },
-/* 49 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -12512,8 +12446,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transitionable = __webpack_require__(48);
-	    var Transform = __webpack_require__(22);
+	    var Transitionable = __webpack_require__(49);
+	    var Transform = __webpack_require__(23);
 	    var Utility = __webpack_require__(24);
 
 	    /**
@@ -12735,16 +12669,16 @@
 
 
 /***/ },
-/* 50 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Create a simple path alias to allow browserify to resolve
 	// the runtime on a supported path.
-	module.exports = __webpack_require__(60);
+	module.exports = __webpack_require__(61);
 
 
 /***/ },
-/* 51 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -12757,8 +12691,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(40);
-	    var SpecParser = __webpack_require__(59);
+	    var Entity = __webpack_require__(37);
+	    var SpecParser = __webpack_require__(60);
 
 	    /**
 	     * A wrapper for inserting a renderable component (like a Modifer or
@@ -12917,7 +12851,7 @@
 
 
 /***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -13179,7 +13113,7 @@
 
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13280,7 +13214,7 @@
 
 
 /***/ },
-/* 54 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13392,7 +13326,7 @@
 
 
 /***/ },
-/* 55 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13406,7 +13340,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Vector = __webpack_require__(42);
-	    var EventHandler = __webpack_require__(33);
+	    var EventHandler = __webpack_require__(35);
 
 	    /**
 	     * Force base class.
@@ -13459,7 +13393,7 @@
 
 
 /***/ },
-/* 56 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13542,7 +13476,7 @@
 
 
 /***/ },
-/* 57 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13974,7 +13908,7 @@
 
 
 /***/ },
-/* 58 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -14082,7 +14016,7 @@
 
 
 /***/ },
-/* 59 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -14095,7 +14029,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transform = __webpack_require__(22);
+	    var Transform = __webpack_require__(23);
 
 	    /**
 	     *
@@ -14264,19 +14198,19 @@
 
 
 /***/ },
-/* 60 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*globals Handlebars: true */
-	var base = __webpack_require__(61);
+	var base = __webpack_require__(62);
 
 	// Each of these augment the Handlebars object. No need to setup here.
 	// (This is done to easily share code between commonjs and browse envs)
-	var SafeString = __webpack_require__(62)["default"];
-	var Exception = __webpack_require__(63)["default"];
-	var Utils = __webpack_require__(64);
-	var runtime = __webpack_require__(65);
+	var SafeString = __webpack_require__(63)["default"];
+	var Exception = __webpack_require__(64)["default"];
+	var Utils = __webpack_require__(65);
+	var runtime = __webpack_require__(66);
 
 	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
 	var create = function() {
@@ -14301,12 +14235,12 @@
 	exports["default"] = Handlebars;
 
 /***/ },
-/* 61 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(64);
-	var Exception = __webpack_require__(63)["default"];
+	var Utils = __webpack_require__(65);
+	var Exception = __webpack_require__(64)["default"];
 
 	var VERSION = "1.3.0";
 	exports.VERSION = VERSION;var COMPILER_REVISION = 4;
@@ -14486,7 +14420,7 @@
 	exports.createFrame = createFrame;
 
 /***/ },
-/* 62 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -14502,7 +14436,7 @@
 	exports["default"] = SafeString;
 
 /***/ },
-/* 63 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -14535,12 +14469,12 @@
 	exports["default"] = Exception;
 
 /***/ },
-/* 64 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*jshint -W004 */
-	var SafeString = __webpack_require__(62)["default"];
+	var SafeString = __webpack_require__(63)["default"];
 
 	var escape = {
 	  "&": "&amp;",
@@ -14616,14 +14550,14 @@
 	exports.isEmpty = isEmpty;
 
 /***/ },
-/* 65 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(64);
-	var Exception = __webpack_require__(63)["default"];
-	var COMPILER_REVISION = __webpack_require__(61).COMPILER_REVISION;
-	var REVISION_CHANGES = __webpack_require__(61).REVISION_CHANGES;
+	var Utils = __webpack_require__(65);
+	var Exception = __webpack_require__(64)["default"];
+	var COMPILER_REVISION = __webpack_require__(62).COMPILER_REVISION;
+	var REVISION_CHANGES = __webpack_require__(62).REVISION_CHANGES;
 
 	function checkRevision(compilerInfo) {
 	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
