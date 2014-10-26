@@ -66,6 +66,9 @@ define(function(require) {
         return mainLayout;
     }
 
+    //
+    // Message-bar holding textarea input and send button
+    //
     var messageBar;
     function _createMessageBar() {
         var back = new Surface({
@@ -91,7 +94,7 @@ define(function(require) {
     }
 
     //
-    // Message-input
+    // Message-input textarea
     //
     var messageInputTextArea;
     function _createMessageInput() {
@@ -101,6 +104,12 @@ define(function(require) {
             placeholder: 'famous-flex-chat...'
         });
         messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
+        messageInputTextArea.on('keydown', function(e) {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                _sendMessage();
+            }
+        });
         return messageInputTextArea;
     }
 
@@ -119,19 +128,25 @@ define(function(require) {
         return false;
     }
 
+    //
+    // Create send button
+    //
     function _createSendButton() {
-        return new Surface({
+        var button = new Surface({
             classes: ['message-send'],
             content: 'Send',
             size: [60, undefined]
         });
+        button.on('click', _sendMessage);
+        return button;
     }
 
     //
-    // create scrollview
+    // Create scrollview
     //
+    var scrollView;
     function _createScrollView() {
-        var scrollView = new ScrollView({
+        scrollView = new ScrollView({
             layout: ChatLayout,
             layoutOptions: {
                 // callback that is called by the layout-function to check
@@ -144,6 +159,7 @@ define(function(require) {
                 }
             },
             dataSource: viewSequence,
+            reverse: true,
             useContainer: true
         });
         return scrollView;
@@ -166,10 +182,14 @@ define(function(require) {
     //
     // setup firebase
     //
+    var fbMessages;
     function _setupFirebase() {
-        var firebase = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
-        firebase.limit(20).on('child_added', function(snapshot) {
-            viewSequence.push(_createChatBubble(snapshot.val()));
+        fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
+        fbMessages.limit(20).on('child_added', function(snapshot) {
+            var chatBubble = _createChatBubble(snapshot.val());
+            viewSequence.push(chatBubble);
+            scrollView.reflowLayout();
+            scrollView.goToRenderNode(chatBubble);
         });
     }
 
@@ -180,17 +200,26 @@ define(function(require) {
     function _createChatBubble(data) {
         return new Surface({
             size: [undefined, true],
+            classes: ['message-bubble'],
             content: chatBubbleTemplate(data)
         });
     }
 
     //
-    // posts a new message
+    // Sends a new message
     //
-    /*function _postMessage(text) {
-        //viewSequence
-        //viewSequence.
-    }*/
+    function _sendMessage() {
+        var value = messageInputTextArea.getValue();
+        if (!value || (value === '')) {
+            return;
+        }
+        messageInputTextArea.setValue('');
+        fbMessages.push({
+            author: 'Hein',
+            message: value,
+            timeStamp: new Date().getTime()
+        });
+    }
 
     /**
      * Create pull to refresh cell
@@ -236,7 +265,7 @@ define(function(require) {
             size: [100, 100],
             align: [1.0, 0.0],
             origin: [1.0, 0.0],
-            transform: Transform.translate(-10, 70, 1000)
+            transform: Transform.translate(-10, 10, 1000)
         });
         var lagometer = new Lagometer({
             size: lagometerMod.getSize()

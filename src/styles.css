@@ -26,6 +26,26 @@ body {
   font-weight: 600;
 }
 
+.message-bubble {
+  padding: 0px 10px 10px 10px;
+}
+
+.message-bubble .back {
+  border-radius: 8px;
+  border: 1px solid #EEEEEE;
+  background-color: #DDDDDD;
+  padding: 5px 10px 10px 5px;
+}
+
+.message-bubble .author {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.message-bubble .message {
+  font-size: 16px;
+}
+
 
 /*.pull-to-refresh {
   z-index: 0;

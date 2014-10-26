@@ -80,7 +80,7 @@ define(function(require, exports, module) {
     };
 
     // Layout function
-    function TableLayout(context, options) {
+    function ChatLayout(context, options) {
 
         // Prepare
         var size = context.size;
@@ -277,8 +277,8 @@ define(function(require, exports, module) {
         }
     }
 
-    TableLayout.Capabilities = capabilities;
-    TableLayout.Name = 'TableLayout';
-    TableLayout.Description = 'Layout for sections and cells';
-    module.exports = TableLayout;
+    ChatLayout.Capabilities = capabilities;
+    ChatLayout.Name = 'ChatLayout';
+    ChatLayout.Description = 'Layout for chat view';
+    module.exports = ChatLayout;
 });
