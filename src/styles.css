@@ -8,20 +8,22 @@ body {
 
 
 .message-back {
-  border-top: 1px solid #AAAAAA;
-  background-color: #DDDDDD;
+  border-top: 1px solid #CCCCCC;
+  background-color: #EEEEEE;
 }
 
 .message-input {
   border-radius: 7px;
-  border-color: #AAAAAA;
+  border-color: #CCCCCC;
   font-size: 16px;
   padding: 6px 5px 6px 5px;
+  -webkit-appearance: none;
 }
 
 .message-send {
   text-align: center;
   line-height: 34px;
+  font-weight: 600;
 }
 
 

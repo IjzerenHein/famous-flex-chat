@@ -69,8 +69,8 @@
 	    //<webpack>
 	    __webpack_require__(4);
 	    __webpack_require__(17);
-	    __webpack_require__(6);
 	    __webpack_require__(5);
+	    __webpack_require__(8);
 	    //</webpack>
 
 	    // Fast-click
@@ -105,7 +105,7 @@
 	    //
 	    var mainLayout;
 	    function _createMainLayout() {
-	        mainLayout = new FlowLayoutController({
+	        mainLayout = new LayoutController({
 	            layout: HeaderFooterLayout,
 	            layoutOptions: {
 	                footerHeight: 50
@@ -150,7 +150,8 @@
 	    function _createMessageInput() {
 	        messageInputTextArea = new AutosizeTextareaSurface({
 	            rows: 1,
-	            classes: ['message-input']
+	            classes: ['message-input'],
+	            placeholder: 'famous-flex-chat...'
 	        });
 	        messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
 	        return messageInputTextArea;
@@ -228,7 +229,7 @@
 	    //
 	    // Create a chat-bubble
 	    //
-	    var chatBubbleTemplate = __webpack_require__(8);
+	    var chatBubbleTemplate = __webpack_require__(7);
 	    function _createChatBubble(data) {
 	        return new Surface({
 	            size: [undefined, true],
@@ -757,16 +758,10 @@
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "index.html"
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	var dispose = __webpack_require__(10)
 		// The css code:
-		(__webpack_require__(7));
+		(__webpack_require__(6));
 	// Hot Module Replacement
 	if(false) {
 		module.hot.accept();
@@ -774,14 +769,14 @@
 	}
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
-		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n\n.message-back {\n  border-top: 1px solid #AAAAAA;\n  background-color: #DDDDDD;\n}\n\n.message-input {\n  border-radius: 7px;\n  border-color: #AAAAAA;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n}\n\n.message-send {\n  text-align: center;\n  line-height: 34px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
+		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n}\n\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(51).default.template(function (Handlebars,depth0,helpers,partials,data) {
@@ -792,6 +787,12 @@
 
 	  return buffer;
 	  });
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__.p + "index.html"
 
 /***/ },
 /* 9 */
@@ -3372,7 +3373,7 @@
 	    // import dependencies
 	    var LayoutController = __webpack_require__(15);
 	    var LayoutNodeManager = __webpack_require__(33);
-	    var FlowLayoutNode = __webpack_require__(39);
+	    var FlowLayoutNode = __webpack_require__(37);
 	    var Transform = __webpack_require__(23);
 
 	    /**
@@ -3588,9 +3589,9 @@
 
 	    // import dependencies
 	    var Utility = __webpack_require__(24);
-	    var Entity = __webpack_require__(37);
+	    var Entity = __webpack_require__(38);
 	    var ViewSequence = __webpack_require__(20);
-	    var OptionsManager = __webpack_require__(38);
+	    var OptionsManager = __webpack_require__(39);
 	    var EventHandler = __webpack_require__(35);
 	    var LayoutUtility = __webpack_require__(31);
 	    var LayoutNodeManager = __webpack_require__(33);
@@ -4219,7 +4220,7 @@
 	     */
 	    var Context = __webpack_require__(41);
 	    var EventHandler = __webpack_require__(35);
-	    var OptionsManager = __webpack_require__(38);
+	    var OptionsManager = __webpack_require__(39);
 
 	    var Engine = {};
 
@@ -7199,7 +7200,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var EventHandler = __webpack_require__(35);
-	    var OptionsManager = __webpack_require__(38);
+	    var OptionsManager = __webpack_require__(39);
 	    var RenderNode = __webpack_require__(52);
 	    var Utility = __webpack_require__(24);
 
@@ -8769,296 +8770,6 @@
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * A singleton that maintains a global registry of Surfaces.
-	     *   Private.
-	     *
-	     * @private
-	     * @static
-	     * @class Entity
-	     */
-
-	    var entities = [];
-
-	    /**
-	     * Get entity from global index.
-	     *
-	     * @private
-	     * @method get
-	     * @param {Number} id entity registration id
-	     * @return {Surface} entity in the global index
-	     */
-	    function get(id) {
-	        return entities[id];
-	    }
-
-	    /**
-	     * Overwrite entity in the global index
-	     *
-	     * @private
-	     * @method set
-	     * @param {Number} id entity registration id
-	     * @param {Surface} entity to add to the global index
-	     */
-	    function set(id, entity) {
-	        entities[id] = entity;
-	    }
-
-	    /**
-	     * Add entity to global index
-	     *
-	     * @private
-	     * @method register
-	     * @param {Surface} entity to add to global index
-	     * @return {Number} new id
-	     */
-	    function register(entity) {
-	        var id = entities.length;
-	        set(id, entity);
-	        return id;
-	    }
-
-	    /**
-	     * Remove entity from global index
-	     *
-	     * @private
-	     * @method unregister
-	     * @param {Number} id entity registration id
-	     */
-	    function unregister(id) {
-	        set(id, null);
-	    }
-
-	    module.exports = {
-	        register: register,
-	        unregister: unregister,
-	        get: get,
-	        set: set
-	    };
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(35);
-
-	    /**
-	     *  A collection of methods for setting options which can be extended
-	     *  onto other classes.
-	     *
-	     *
-	     *  **** WARNING ****
-	     *  You can only pass through objects that will compile into valid JSON.
-	     *
-	     *  Valid options:
-	     *      Strings,
-	     *      Arrays,
-	     *      Objects,
-	     *      Numbers,
-	     *      Nested Objects,
-	     *      Nested Arrays.
-	     *
-	     *    This excludes:
-	     *        Document Fragments,
-	     *        Functions
-	     * @class OptionsManager
-	     * @constructor
-	     * @param {Object} value options dictionary
-	     */
-	    function OptionsManager(value) {
-	        this._value = value;
-	        this.eventOutput = null;
-	    }
-
-	    /**
-	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
-	     *
-	     * @static
-	     * @method OptionsManager.patch
-	     *
-	     * @param {Object} source source arguments
-	     * @param {...Object} data argument additions and overwrites
-	     * @return {Object} source object
-	     */
-	    OptionsManager.patch = function patchObject(source, data) {
-	        var manager = new OptionsManager(source);
-	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
-	        return source;
-	    };
-
-	    function _createEventOutput() {
-	        this.eventOutput = new EventHandler();
-	        this.eventOutput.bindThis(this);
-	        EventHandler.setOutputHandler(this, this.eventOutput);
-	    }
-
-	    /**
-	     * Create OptionsManager from source with arguments overriden by patches.
-	     *   Triggers 'change' event on this object's event handler if the state of
-	     *   the OptionsManager changes as a result.
-	     *
-	     * @method patch
-	     *
-	     * @param {...Object} arguments list of patch objects
-	     * @return {OptionsManager} this
-	     */
-	    OptionsManager.prototype.patch = function patch() {
-	        var myState = this._value;
-	        for (var i = 0; i < arguments.length; i++) {
-	            var data = arguments[i];
-	            for (var k in data) {
-	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
-	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
-	                    this.key(k).patch(data[k]);
-	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
-	                }
-	                else this.set(k, data[k]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for patch
-	     *
-	     * @method setOptions
-	     *
-	     */
-	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
-
-	    /**
-	     * Return OptionsManager based on sub-object retrieved by key
-	     *
-	     * @method key
-	     *
-	     * @param {string} identifier key
-	     * @return {OptionsManager} new options manager with the value
-	     */
-	    OptionsManager.prototype.key = function key(identifier) {
-	        var result = new OptionsManager(this._value[identifier]);
-	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
-	        return result;
-	    };
-
-	    /**
-	     * Look up value by key or get the full options hash
-	     * @method get
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object or full options hash
-	     */
-	    OptionsManager.prototype.get = function get(key) {
-	        return key ? this._value[key] : this._value;
-	    };
-
-	    /**
-	     * Alias for get
-	     * @method getOptions
-	     */
-	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
-
-	    /**
-	     * Set key to value.  Outputs 'change' event if a value is overwritten.
-	     *
-	     * @method set
-	     *
-	     * @param {string} key key string
-	     * @param {Object} value value object
-	     * @return {OptionsManager} new options manager based on the value object
-	     */
-	    OptionsManager.prototype.set = function set(key, value) {
-	        var originalValue = this.get(key);
-	        this._value[key] = value;
-	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
-	        return this;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    OptionsManager.prototype.on = function on() {
-	        _createEventOutput.call(this);
-	        return this.on.apply(this, arguments);
-	    };
-
-	    /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function} handler function object to remove
-	     * @return {EventHandler} internal event handler object (for chaining)
-	     */
-	    OptionsManager.prototype.removeListener = function removeListener() {
-	        _createEventOutput.call(this);
-	        return this.removeListener.apply(this, arguments);
-	    };
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    OptionsManager.prototype.pipe = function pipe() {
-	        _createEventOutput.call(this);
-	        return this.pipe.apply(this, arguments);
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     * Undoes work of "pipe"
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    OptionsManager.prototype.unpipe = function unpipe() {
-	        _createEventOutput.call(this);
-	        return this.unpipe.apply(this, arguments);
-	    };
-
-	    module.exports = OptionsManager;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
 	 * This Source Code is licensed under the MIT license. If a copy of the
 	 * MIT-license was not distributed with this file, You can obtain one at:
@@ -9080,7 +8791,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var OptionsManager = __webpack_require__(38);
+	    var OptionsManager = __webpack_require__(39);
 	    var Transform = __webpack_require__(23);
 	    var Vector = __webpack_require__(42);
 	    var Particle = __webpack_require__(44);
@@ -9473,6 +9184,296 @@
 
 
 /***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * A singleton that maintains a global registry of Surfaces.
+	     *   Private.
+	     *
+	     * @private
+	     * @static
+	     * @class Entity
+	     */
+
+	    var entities = [];
+
+	    /**
+	     * Get entity from global index.
+	     *
+	     * @private
+	     * @method get
+	     * @param {Number} id entity registration id
+	     * @return {Surface} entity in the global index
+	     */
+	    function get(id) {
+	        return entities[id];
+	    }
+
+	    /**
+	     * Overwrite entity in the global index
+	     *
+	     * @private
+	     * @method set
+	     * @param {Number} id entity registration id
+	     * @param {Surface} entity to add to the global index
+	     */
+	    function set(id, entity) {
+	        entities[id] = entity;
+	    }
+
+	    /**
+	     * Add entity to global index
+	     *
+	     * @private
+	     * @method register
+	     * @param {Surface} entity to add to global index
+	     * @return {Number} new id
+	     */
+	    function register(entity) {
+	        var id = entities.length;
+	        set(id, entity);
+	        return id;
+	    }
+
+	    /**
+	     * Remove entity from global index
+	     *
+	     * @private
+	     * @method unregister
+	     * @param {Number} id entity registration id
+	     */
+	    function unregister(id) {
+	        set(id, null);
+	    }
+
+	    module.exports = {
+	        register: register,
+	        unregister: unregister,
+	        get: get,
+	        set: set
+	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(35);
+
+	    /**
+	     *  A collection of methods for setting options which can be extended
+	     *  onto other classes.
+	     *
+	     *
+	     *  **** WARNING ****
+	     *  You can only pass through objects that will compile into valid JSON.
+	     *
+	     *  Valid options:
+	     *      Strings,
+	     *      Arrays,
+	     *      Objects,
+	     *      Numbers,
+	     *      Nested Objects,
+	     *      Nested Arrays.
+	     *
+	     *    This excludes:
+	     *        Document Fragments,
+	     *        Functions
+	     * @class OptionsManager
+	     * @constructor
+	     * @param {Object} value options dictionary
+	     */
+	    function OptionsManager(value) {
+	        this._value = value;
+	        this.eventOutput = null;
+	    }
+
+	    /**
+	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
+	     *
+	     * @static
+	     * @method OptionsManager.patch
+	     *
+	     * @param {Object} source source arguments
+	     * @param {...Object} data argument additions and overwrites
+	     * @return {Object} source object
+	     */
+	    OptionsManager.patch = function patchObject(source, data) {
+	        var manager = new OptionsManager(source);
+	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
+	        return source;
+	    };
+
+	    function _createEventOutput() {
+	        this.eventOutput = new EventHandler();
+	        this.eventOutput.bindThis(this);
+	        EventHandler.setOutputHandler(this, this.eventOutput);
+	    }
+
+	    /**
+	     * Create OptionsManager from source with arguments overriden by patches.
+	     *   Triggers 'change' event on this object's event handler if the state of
+	     *   the OptionsManager changes as a result.
+	     *
+	     * @method patch
+	     *
+	     * @param {...Object} arguments list of patch objects
+	     * @return {OptionsManager} this
+	     */
+	    OptionsManager.prototype.patch = function patch() {
+	        var myState = this._value;
+	        for (var i = 0; i < arguments.length; i++) {
+	            var data = arguments[i];
+	            for (var k in data) {
+	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
+	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
+	                    this.key(k).patch(data[k]);
+	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
+	                }
+	                else this.set(k, data[k]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for patch
+	     *
+	     * @method setOptions
+	     *
+	     */
+	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
+
+	    /**
+	     * Return OptionsManager based on sub-object retrieved by key
+	     *
+	     * @method key
+	     *
+	     * @param {string} identifier key
+	     * @return {OptionsManager} new options manager with the value
+	     */
+	    OptionsManager.prototype.key = function key(identifier) {
+	        var result = new OptionsManager(this._value[identifier]);
+	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
+	        return result;
+	    };
+
+	    /**
+	     * Look up value by key or get the full options hash
+	     * @method get
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object or full options hash
+	     */
+	    OptionsManager.prototype.get = function get(key) {
+	        return key ? this._value[key] : this._value;
+	    };
+
+	    /**
+	     * Alias for get
+	     * @method getOptions
+	     */
+	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
+
+	    /**
+	     * Set key to value.  Outputs 'change' event if a value is overwritten.
+	     *
+	     * @method set
+	     *
+	     * @param {string} key key string
+	     * @param {Object} value value object
+	     * @return {OptionsManager} new options manager based on the value object
+	     */
+	    OptionsManager.prototype.set = function set(key, value) {
+	        var originalValue = this.get(key);
+	        this._value[key] = value;
+	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
+	        return this;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    OptionsManager.prototype.on = function on() {
+	        _createEventOutput.call(this);
+	        return this.on.apply(this, arguments);
+	    };
+
+	    /**
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
+	     *
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function} handler function object to remove
+	     * @return {EventHandler} internal event handler object (for chaining)
+	     */
+	    OptionsManager.prototype.removeListener = function removeListener() {
+	        _createEventOutput.call(this);
+	        return this.removeListener.apply(this, arguments);
+	    };
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    OptionsManager.prototype.pipe = function pipe() {
+	        _createEventOutput.call(this);
+	        return this.pipe.apply(this, arguments);
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     * Undoes work of "pipe"
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    OptionsManager.prototype.unpipe = function unpipe() {
+	        _createEventOutput.call(this);
+	        return this.unpipe.apply(this, arguments);
+	    };
+
+	    module.exports = OptionsManager;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -9486,7 +9487,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(37);
+	    var Entity = __webpack_require__(38);
 	    var EventHandler = __webpack_require__(35);
 	    var Transform = __webpack_require__(23);
 
@@ -11766,7 +11767,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var EventHandler = __webpack_require__(35);
 	    var Engine = __webpack_require__(19);
-	    var OptionsManager = __webpack_require__(38);
+	    var OptionsManager = __webpack_require__(39);
 
 	    /**
 	     * Handles piped in mousewheel events.
@@ -12674,7 +12675,7 @@
 
 	// Create a simple path alias to allow browserify to resolve
 	// the runtime on a supported path.
-	module.exports = __webpack_require__(61);
+	module.exports = __webpack_require__(60);
 
 
 /***/ },
@@ -12691,8 +12692,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(37);
-	    var SpecParser = __webpack_require__(60);
+	    var Entity = __webpack_require__(38);
+	    var SpecParser = __webpack_require__(61);
 
 	    /**
 	     * A wrapper for inserting a renderable component (like a Modifer or
@@ -14019,6 +14020,43 @@
 /* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+	/*globals Handlebars: true */
+	var base = __webpack_require__(62);
+
+	// Each of these augment the Handlebars object. No need to setup here.
+	// (This is done to easily share code between commonjs and browse envs)
+	var SafeString = __webpack_require__(63)["default"];
+	var Exception = __webpack_require__(64)["default"];
+	var Utils = __webpack_require__(65);
+	var runtime = __webpack_require__(66);
+
+	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
+	var create = function() {
+	  var hb = new base.HandlebarsEnvironment();
+
+	  Utils.extend(hb, base);
+	  hb.SafeString = SafeString;
+	  hb.Exception = Exception;
+	  hb.Utils = Utils;
+
+	  hb.VM = runtime;
+	  hb.template = function(spec) {
+	    return runtime.template(spec, hb);
+	  };
+
+	  return hb;
+	};
+
+	var Handlebars = create();
+	Handlebars.create = create;
+
+	exports["default"] = Handlebars;
+
+/***/ },
+/* 61 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -14196,43 +14234,6 @@
 	    module.exports = SpecParser;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
-
-/***/ },
-/* 61 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	/*globals Handlebars: true */
-	var base = __webpack_require__(62);
-
-	// Each of these augment the Handlebars object. No need to setup here.
-	// (This is done to easily share code between commonjs and browse envs)
-	var SafeString = __webpack_require__(63)["default"];
-	var Exception = __webpack_require__(64)["default"];
-	var Utils = __webpack_require__(65);
-	var runtime = __webpack_require__(66);
-
-	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
-	var create = function() {
-	  var hb = new base.HandlebarsEnvironment();
-
-	  Utils.extend(hb, base);
-	  hb.SafeString = SafeString;
-	  hb.Exception = Exception;
-	  hb.Utils = Utils;
-
-	  hb.VM = runtime;
-	  hb.template = function(spec) {
-	    return runtime.template(spec, hb);
-	  };
-
-	  return hb;
-	};
-
-	var Handlebars = create();
-	Handlebars.create = create;
-
-	exports["default"] = Handlebars;
 
 /***/ },
 /* 62 */

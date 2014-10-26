@@ -32,12 +32,12 @@ module.exports = function(grunt) {
           port: 21,
           authKey: 'gloey.nl'
         },
-        src: 'example/dist',
-        dest: '/domains/gloey.nl/htdocs/www/apps/tablelayout'
+        src: 'dist',
+        dest: '/domains/gloey.nl/htdocs/www/apps/chat'
       }
     },
     exec: {
-      clean: 'rm -rf ./example/dist',
+      clean: 'rm -rf ./dist',
       build: 'webpack --minify',
       'build-debug': 'webpack',
       'open-dev': 'open http://localhost:8080/webpack-dev-server/',

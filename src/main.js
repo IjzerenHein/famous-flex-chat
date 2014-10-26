@@ -52,7 +52,7 @@ define(function(require) {
     //
     var mainLayout;
     function _createMainLayout() {
-        mainLayout = new FlowLayoutController({
+        mainLayout = new LayoutController({
             layout: HeaderFooterLayout,
             layoutOptions: {
                 footerHeight: 50
@@ -97,7 +97,8 @@ define(function(require) {
     function _createMessageInput() {
         messageInputTextArea = new AutosizeTextareaSurface({
             rows: 1,
-            classes: ['message-input']
+            classes: ['message-input'],
+            placeholder: 'famous-flex-chat...'
         });
         messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
         return messageInputTextArea;
