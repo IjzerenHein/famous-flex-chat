@@ -25,7 +25,6 @@ define(function(require) {
     FastClick.attach(document.body);
 
     // import dependencies
-    var TextareaSurface = require('famous/surfaces/TextareaSurface');
     var Firebase = require('firebase/lib/firebase-web');
     var Engine = require('famous/core/Engine');
     var ViewSequence = require('famous/core/ViewSequence');
@@ -38,6 +37,7 @@ define(function(require) {
     var FlowLayoutController = require('famous-flex/FlowLayoutController');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
+    var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
 
     // Initialize
     var mainContext = Engine.createContext();
@@ -93,31 +93,14 @@ define(function(require) {
     //
     // Message-input
     //
-    var preferredMessageInputHeight = 30;
+    var messageInputTextArea;
     function _createMessageInput() {
-        var input = new TextareaSurface({
+        messageInputTextArea = new AutosizeTextareaSurface({
             rows: 1,
             classes: ['message-input']
         });
-
-        // Detect if the content of the text-area exceeds the available space.
-        // If so, increase the height to accomodate for this.
-        input.render = function() {
-            if (this._currentTarget) {
-                if (preferredMessageInputHeight !== this._currentTarget.scrollHeight) {
-                    var oldHeightStyle = this._currentTarget.style.height;
-                    this._currentTarget.style.height = (this._currentTarget.scrollHeight - 16) + 'px';
-                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
-                    //console.log('new height: ' + preferredMessageInputHeight);
-                    if (!_updateMessageBarHeight()) {
-                        this._currentTarget.style.height = oldHeightStyle;
-                    }
-                    preferredMessageInputHeight = this._currentTarget.scrollHeight;
-                }
-            }
-            return this.id;
-        }.bind(input);
-        return input;
+        messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
+        return messageInputTextArea;
     }
 
     //
@@ -125,7 +108,7 @@ define(function(require) {
     // was entered in the message text-area.
     //
     function _updateMessageBarHeight() {
-        var height = Math.max(Math.min(preferredMessageInputHeight + 16, 200), 50);
+        var height = Math.max(Math.min(messageInputTextArea.getScrollHeight() + 16, 200), 50);
         if (mainLayout.getLayoutOptions().footerHeight !== height) {
             mainLayout.setLayoutOptions({
                 footerHeight: height
