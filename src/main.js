@@ -38,7 +38,9 @@ define(function(require) {
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
+    var InputSurface = require('famous/surfaces/InputSurface');
     var moment = require('moment/moment');
+    var cuid = require('cuid');
 
     // Initialize
     var mainContext = Engine.createContext();
@@ -56,15 +58,33 @@ define(function(require) {
         mainLayout = new LayoutController({
             layout: HeaderFooterLayout,
             layoutOptions: {
+                headerHeight: 34,
                 footerHeight: 50
             },
             dataSource: {
+                header: _createNameBar(),
                 content: _createScrollView(),
                 footer: _createMessageBar()
             }
         });
         mainContext.add(mainLayout);
         return mainLayout;
+    }
+
+    //
+    // Creates the top input field for the name
+    //
+    var nameBar;
+    function _createNameBar() {
+        nameBar = new InputSurface({
+            classes: ['name-input'],
+            placeholder: 'Your name...',
+            value: localStorage.name
+        });
+        nameBar.on('change', function() {
+            localStorage.name = nameBar.getValue();
+        });
+        return nameBar;
     }
 
     //
@@ -189,7 +209,9 @@ define(function(require) {
         fbMessages.limit(20).on('child_added', function(snapshot) {
             var data = snapshot.val();
             data.time = moment(data.timeStamp).format('LT');
-            //data.timestamp =
+            if (!data.author || (data.author === '')) {
+                data.author = 'Anonymous bastard';
+            }
             var chatBubble = _createChatBubble(data);
             viewSequence.push(chatBubble);
             scrollView.reflowLayout();
@@ -210,6 +232,22 @@ define(function(require) {
     }
 
     //
+    // Generates a unique id for every user so that received messages
+    // can be distinguished comming from this user or another user.
+    //
+    var userId;
+    function _getUserId() {
+        if (!userId) {
+            userId = localStorage.userId;
+            if (!userId) {
+                userId = cuid();
+                localStorage.userId = userId;
+            }
+        }
+        return userId;
+    }
+
+    //
     // Sends a new message
     //
     function _sendMessage() {
@@ -219,7 +257,8 @@ define(function(require) {
         }
         messageInputTextArea.setValue('');
         fbMessages.push({
-            author: 'Hein',
+            author: nameBar.getValue(),
+            userId: _getUserId(),
             message: value,
             timeStamp: new Date().getTime()
         });

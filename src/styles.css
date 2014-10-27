@@ -6,42 +6,68 @@ body {
   background: white;
 }
 
+/**
+ * Name-bar
+ */
+.name-input {
+  font-size: 16px;
+  padding: 6px 10px 6px 10px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  border-bottom: 1px solid #CCCCCC;
+  z-index: 10;
+}
 
+/**
+ * Message-bar
+ */
 .message-back {
   border-top: 1px solid #CCCCCC;
   background-color: #EEEEEE;
 }
-
 .message-input {
   border-radius: 7px;
   border-color: #CCCCCC;
   font-size: 16px;
   padding: 6px 5px 6px 5px;
   -webkit-appearance: none;
+  -moz-appearance: none;
 }
-
 .message-send {
   text-align: center;
   line-height: 34px;
   font-weight: 600;
 }
 
+
+/**
+ * Message-bubbles
+ */
 .message-bubble {
   padding: 0 10px 10px 10px;
 }
-
-/*
-  .bubble {
-    position: relative;
-    width: 250px;
-    height: 100px;
-    padding: 0px;
-    background: #ADB400;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-}*/
-
+.message-bubble .back {
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  border: 1px solid #EEEEEE;
+  background-color: #DDDDDD;
+  padding: 8px 8px 8px 8px;
+}
+.message-bubble .author {
+  font-size: 14px;
+  font-weight: bold;
+}
+.message-bubble .time {
+  float: right;
+  font-size: 12px;
+  color: #888888;
+}
+.message-bubble .message {
+  margin-top: 3px;
+  font-size: 16px;
+}
 .message-bubble .back:after {
   content: "";
   position: absolute;
@@ -50,40 +76,14 @@ body {
   border-color: transparent #DDDDDD;
   display: block;
   width: 0;
-  /*z-index: 1;*/
-}
-
-.message-bubble .time {
-  float: right;
-  font-size: 12px;
-  color: #888888;
 }
 .message-bubble.send .back:after {
   border-width: 5px 0 5px 10px;
   right: 2px;
 }
-
 .message-bubble.received .back:after {
   border-width: 5px 10px 5px 0;
   left: 2px;
-}
-
-.message-bubble .back {
-  border-radius: 8px;
-  -webkit-border-radius: 8px;
-  -moz-border-radius: 8px;
-  border: 1px solid #EEEEEE;
-  background-color: #DDDDDD;
-  padding: 5px 10px 10px 5px;
-}
-
-.message-bubble .author {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.message-bubble .message {
-  font-size: 16px;
 }
 
 
