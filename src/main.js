@@ -47,7 +47,6 @@ define(function(require) {
     var viewSequence = new ViewSequence();
     _setupFirebase();
     _createMainLayout();
-    _createScrollView();
     _createLagometer();
 
     //
@@ -213,8 +212,16 @@ define(function(require) {
                 data.author = 'Anonymous bastard';
             }
             var chatBubble = _createChatBubble(data);
-            viewSequence.push(chatBubble);
-            scrollView.reflowLayout();
+            var insertSpec;
+            if (data.userId === _getUserId()) {
+                //insertSpec = messageBar.getSpec('input');
+                //insertSpec.origin = [0, 1];
+                //insertSpec.align = [0, 1];
+                //insertSpec.size = [undefined, insertSpec.size[1]];
+                //var footerSpec = mainLayout.getSpec('footer');
+                //insertSpec.transform[13] += footerSpec.transform[13]; // y-coordinate
+            }
+            scrollView.insert(-1, chatBubble, insertSpec);
             scrollView.goToRenderNode(chatBubble);
         });
     }
@@ -262,6 +269,7 @@ define(function(require) {
             message: value,
             timeStamp: new Date().getTime()
         });
+        messageInputTextArea.focus();
     }
 
     /**
