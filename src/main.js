@@ -200,7 +200,7 @@ define(function(require) {
     function _createChatBubble(data) {
         return new Surface({
             size: [undefined, true],
-            classes: ['message-bubble'],
+            classes: ['message-bubble', 'received'],
             content: chatBubbleTemplate(data)
         });
     }
