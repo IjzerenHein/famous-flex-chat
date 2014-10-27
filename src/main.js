@@ -34,10 +34,11 @@ define(function(require) {
     var ScrollView = require('famous-flex/ScrollView');
     var ChatLayout = require('./ChatLayout');
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
-    var FlowLayoutController = require('famous-flex/FlowLayoutController');
+    //var FlowLayoutController = require('famous-flex/FlowLayoutController');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
+    var moment = require('moment/moment');
 
     // Initialize
     var mainContext = Engine.createContext();
@@ -186,7 +187,10 @@ define(function(require) {
     function _setupFirebase() {
         fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
         fbMessages.limit(20).on('child_added', function(snapshot) {
-            var chatBubble = _createChatBubble(snapshot.val());
+            var data = snapshot.val();
+            data.time = moment(data.timeStamp).format('LT');
+            //data.timestamp =
+            var chatBubble = _createChatBubble(data);
             viewSequence.push(chatBubble);
             scrollView.reflowLayout();
             scrollView.goToRenderNode(chatBubble);

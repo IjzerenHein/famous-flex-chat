@@ -53,6 +53,11 @@ body {
   /*z-index: 1;*/
 }
 
+.message-bubble .time {
+  float: right;
+  font-size: 12px;
+  color: #888888;
+}
 .message-bubble.send .back:after {
   border-width: 5px 0 5px 10px;
   right: 2px;

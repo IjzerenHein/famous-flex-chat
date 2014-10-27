@@ -53,6 +53,7 @@
     "handlebars-loader": "^0.1.7",
     "html-loader": "^0.2.2",
     "json-loader": "^0.5.1",
+    "moment": "^2.8.3",
     "optimist": "^0.6.1",
     "pleasejs": "^0.2.0",
     "script-loader": "^0.6.0",

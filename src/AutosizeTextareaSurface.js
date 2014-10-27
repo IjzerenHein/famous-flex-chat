@@ -158,7 +158,9 @@ define(function(require, exports, module) {
      * @param {Node} target document parent of this container
      */
     AutosizeTextareaSurface.prototype.deploy = function deploy(target) {
-        if (this._placeholder !== '') target.placeholder = this._placeholder;
+        if (this._placeholder !== ''){
+            target.placeholder = this._placeholder;
+        }
         target.value = this._value;
         target.name = this._name;
         target.wrap = this._wrap;
