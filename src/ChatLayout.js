@@ -235,7 +235,7 @@ define(function(require, exports, module) {
         //
         if (lastSectionBeforeVisibleCell) {
             var translate = lastSectionBeforeVisibleCell.set.translate;
-            translate[direction] = 0;
+            translate[direction] = Math.max(0, translate[direction]);
             translate[2] = 1; // put section on top, so that it overlays cells
             if ((lastCellOffsetInFirstVisibleSection !== undefined) &&
                 (lastSectionBeforeVisibleCell.set.size[direction] > lastCellOffsetInFirstVisibleSection)) {
