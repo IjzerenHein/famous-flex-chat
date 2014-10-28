@@ -204,7 +204,7 @@ define(function(require, exports, module) {
             firstCellOffset = offset;
             if (!lastCell) {
                 lastCell = node;
-                lastCell = offset;
+                lastCellOffset = offset;
             }
         }
 

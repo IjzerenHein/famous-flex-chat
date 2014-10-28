@@ -211,24 +211,19 @@ define(function(require) {
             if (!data.author || (data.author === '')) {
                 data.author = 'Anonymous bastard';
             }
-            console.log('adding message: ' + JSON.stringify(data));
+            //console.log('adding message: ' + JSON.stringify(data));
             var chatBubble = _createChatBubble(data);
             var insertSpec;
-            if (data.userId === _getUserId()) {
+            //if (data.userId === _getUserId()) {
                 //insertSpec = messageBar.getSpec('input');
                 //insertSpec.origin = [0, 1];
                 //insertSpec.align = [0, 1];
                 //insertSpec.size = [undefined, insertSpec.size[1]];
                 //var footerSpec = mainLayout.getSpec('footer');
                 //insertSpec.transform[13] += footerSpec.transform[13]; // y-coordinate
-            }
-            //scrollView.insert(-1, chatBubble, insertSpec);
-            viewSequence.push(chatBubble);
-            //var nextViewSequence = viewSequence.getNext();
-            //if = viewSequence.getNext();
-            //scrollView.setDataSource(nextViewSequence);
-            //scrollView.goToRenderNode(chatBubble);
-            scrollView.reflowLayout();
+            //}
+            scrollView.insert(-1, chatBubble, insertSpec);
+            scrollView.goToRenderNode(chatBubble);
         });
     }
 
@@ -239,6 +234,7 @@ define(function(require) {
     function _createChatBubble(data) {
         return new Surface({
             size: [undefined, true],
+            //size: [undefined, 100],
             classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
             content: chatBubbleTemplate(data)
         });
