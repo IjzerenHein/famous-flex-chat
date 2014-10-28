@@ -181,7 +181,7 @@ define(function(require) {
                 // callback that is called by the layout-function to check
                 // whether a node is a section
                 isSectionCallback: function(renderNode) {
-                    return renderNode.options.isSection;
+                    return renderNode.properties.isSection;
                 },
                 isPullToRefreshCallback: function(renderNode) {
                     return renderNode.isPullToRefresh;
@@ -213,14 +213,26 @@ define(function(require) {
     // setup firebase
     //
     var fbMessages;
+    var lastSectionDay;
     function _setupFirebase() {
         fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
         fbMessages.limit(20).on('child_added', function(snapshot) {
             var data = snapshot.val();
-            data.time = moment(data.timeStamp).format('LT');
+            var time = moment(data.timeStamp);
+            data.time = time.format('LT');
             if (!data.author || (data.author === '')) {
                 data.author = 'Anonymous bastard';
             }
+
+            // Insert section
+            //var day = time.calander();
+            var day = time.format('LL');
+            if (day !== lastSectionDay) {
+                lastSectionDay = day;
+                var daySection = _createDaySection(day);
+                scrollView.insert(-1, daySection);
+            }
+
             //console.log('adding message: ' + JSON.stringify(data));
             var chatBubble = _createChatBubble(data);
             var insertSpec;
@@ -244,9 +256,23 @@ define(function(require) {
     function _createChatBubble(data) {
         return new Surface({
             size: [undefined, true],
-            //size: [undefined, 100],
             classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
             content: chatBubbleTemplate(data)
+        });
+    }
+
+    //
+    // Create a day section
+    //
+    var daySectionTemplate = require('./day-section.handlebars');
+    function _createDaySection(day) {
+        return new Surface({
+            size: [undefined, 42],
+            classes: ['message-day'],
+            content: daySectionTemplate({text: day}),
+            properties: {
+                isSection: true
+            }
         });
     }
 

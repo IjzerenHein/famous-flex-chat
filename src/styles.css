@@ -42,6 +42,27 @@ body {
 
 
 /**
+ * Message-day
+ */
+.message-day {
+  padding: 5px 10px 15px 10px;
+  overflow: hidden;
+  text-align: center;
+  z-index: 10;
+}
+.message-day .text{
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  border-radius: 15px;
+  padding: 5px 10px;
+  background: rgb(187, 191, 114);
+  color: white;
+  display: inline-block;
+  font-size: 12px;
+}
+
+
+/**
  * Message-bubbles
  */
 .message-bubble {
