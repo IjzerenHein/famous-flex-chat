@@ -190,6 +190,7 @@ define(function(require) {
             dataSource: viewSequence,
             reverse: true,
             useContainer: true,
+            mouseMove: true,
             logging: false
         });
         return scrollView;

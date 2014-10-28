@@ -49,6 +49,13 @@ body {
   overflow: hidden;
   text-align: center;
   z-index: 10;
+  /* disable text selection */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .message-day .text{
   -webkit-border-radius: 15px;
@@ -67,6 +74,13 @@ body {
  */
 .message-bubble {
   padding: 0 10px 10px 10px;
+  /* disable text selection */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .message-bubble.send {
   padding: 0 10px 10px 30px;
