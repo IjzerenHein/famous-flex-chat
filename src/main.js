@@ -211,6 +211,7 @@ define(function(require) {
             if (!data.author || (data.author === '')) {
                 data.author = 'Anonymous bastard';
             }
+            console.log('adding message: ' + JSON.stringify(data));
             var chatBubble = _createChatBubble(data);
             var insertSpec;
             if (data.userId === _getUserId()) {
@@ -221,8 +222,13 @@ define(function(require) {
                 //var footerSpec = mainLayout.getSpec('footer');
                 //insertSpec.transform[13] += footerSpec.transform[13]; // y-coordinate
             }
-            scrollView.insert(-1, chatBubble, insertSpec);
-            scrollView.goToRenderNode(chatBubble);
+            //scrollView.insert(-1, chatBubble, insertSpec);
+            viewSequence.push(chatBubble);
+            //var nextViewSequence = viewSequence.getNext();
+            //if = viewSequence.getNext();
+            //scrollView.setDataSource(nextViewSequence);
+            //scrollView.goToRenderNode(chatBubble);
+            scrollView.reflowLayout();
         });
     }
 

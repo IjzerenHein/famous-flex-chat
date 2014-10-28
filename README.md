@@ -1,6 +1,8 @@
 famous-flex-chat
 ==========
 
+THIS PROJECT IS STILL WORK IN PROGRESS
+
 Chat-demo for famo.us using the famous-flex ScrollView. This project demonstrates how to create
 a cross-platform native feeling chat application using web technologies.
 
