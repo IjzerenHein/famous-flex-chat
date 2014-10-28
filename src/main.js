@@ -38,6 +38,7 @@ define(function(require) {
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
+    var Console = require('./Console');
     var InputSurface = require('famous/surfaces/InputSurface');
     var moment = require('moment/moment');
     var cuid = require('cuid');
@@ -48,6 +49,7 @@ define(function(require) {
     _setupFirebase();
     _createMainLayout();
     _createLagometer();
+    _createConsole();
 
     //
     // Main layout, bottom text input, top chat messages
@@ -65,6 +67,13 @@ define(function(require) {
                 content: _createScrollView(),
                 footer: _createMessageBar()
             }
+        });
+        // IMPORTANT NOTE: For some reason the following code prevents a
+        // very annoying bug on android from triggering. The bug occurs when the
+        // keyboard is shown, and the content would become invisible and you
+        // had to scroll down to make the main layout visible....
+        mainLayout.on('layoutstart', function(event) {
+            console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
         });
         mainContext.add(mainLayout);
         return mainLayout;
@@ -180,7 +189,8 @@ define(function(require) {
             },
             dataSource: viewSequence,
             reverse: true,
-            useContainer: true
+            useContainer: true,
+            logging: false
         });
         return scrollView;
     }
@@ -311,6 +321,20 @@ define(function(require) {
     }*/
 
     //
+    // Shows the Console
+    //
+    function _createConsole() {
+        var consoleMod = new Modifier({
+            size: [undefined, 2],
+            align: [0, 0],
+            origin: [0, 0],
+            transform: Transform.translate(0, 0, 1000)
+        });
+        var console = new Console();
+        mainContext.add(consoleMod).add(console);
+    }
+
+    //
     // Shows the lagometer
     //
     function _createLagometer() {
@@ -323,6 +347,6 @@ define(function(require) {
         var lagometer = new Lagometer({
             size: lagometerMod.getSize()
         });
-        mainContext.add(lagometerMod).add(lagometer);
+        //mainContext.add(lagometerMod).add(lagometer);
     }
 });
