@@ -188,7 +188,7 @@ define(function(require) {
                 }
             },
             dataSource: viewSequence,
-            reverse: true,
+            alignment: 1,
             useContainer: true,
             mouseMove: true,
             logging: false
@@ -196,19 +196,19 @@ define(function(require) {
         return scrollView;
     }
 
-    // create view-sequence containing items
-    /*viewSequence.push(_createPullToRefreshCell());
-    for (j = 1; j <= 10; j++) {
-        var title = 'This is a sticky section ' + j;
-        if (j === 1) {
-            title = 'Try pull down to refresh!';
+    //
+    // Test for getLastVisibleItem
+    //
+    /*scrollView.on('reflow', function() {
+        var item = scrollView.getLastVisibleItem();
+        if (item) {
+            var chatText = item.renderNode.properties.message;
+            console.log('Chat: last item: ' + chatText);
         }
-        viewSequence.push(_createSection(title));
-        for (i = 1 ; i <= 5; i++) {
-            viewSequence.push(_createCell(i));
+        else {
+            console.log('Chat: no last item found');
         }
-    }
-    viewSequence.push(_createPullToRefreshCell());*/
+    });*/
 
     //
     // setup firebase
@@ -217,7 +217,7 @@ define(function(require) {
     var lastSectionDay;
     function _setupFirebase() {
         fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
-        fbMessages.limit(20).on('child_added', function(snapshot) {
+        fbMessages.limit(30).on('child_added', function(snapshot) {
             var data = snapshot.val();
             var time = moment(data.timeStamp);
             data.time = time.format('LT');
@@ -233,20 +233,10 @@ define(function(require) {
                 var daySection = _createDaySection(day);
                 scrollView.insert(-1, daySection);
             }
-
             //console.log('adding message: ' + JSON.stringify(data));
             var chatBubble = _createChatBubble(data);
-            var insertSpec;
-            //if (data.userId === _getUserId()) {
-                //insertSpec = messageBar.getSpec('input');
-                //insertSpec.origin = [0, 1];
-                //insertSpec.align = [0, 1];
-                //insertSpec.size = [undefined, insertSpec.size[1]];
-                //var footerSpec = mainLayout.getSpec('footer');
-                //insertSpec.transform[13] += footerSpec.transform[13]; // y-coordinate
-            //}
-            scrollView.insert(-1, chatBubble, insertSpec);
-            scrollView.goToRenderNode(chatBubble);
+            scrollView.insert(-1, chatBubble);
+            scrollView.goToLastPage();
         });
     }
 
@@ -258,7 +248,10 @@ define(function(require) {
         return new Surface({
             size: [undefined, true],
             classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
-            content: chatBubbleTemplate(data)
+            content: chatBubbleTemplate(data),
+            properties: {
+                message: data.message
+            }
         });
     }
 
@@ -311,6 +304,20 @@ define(function(require) {
         messageInputTextArea.focus();
     }
 
+    // create view-sequence containing items
+    /*viewSequence.push(_createPullToRefreshCell());
+    for (j = 1; j <= 10; j++) {
+        var title = 'This is a sticky section ' + j;
+        if (j === 1) {
+            title = 'Try pull down to refresh!';
+        }
+        viewSequence.push(_createSection(title));
+        for (i = 1 ; i <= 5; i++) {
+            viewSequence.push(_createCell(i));
+        }
+    }
+    viewSequence.push(_createPullToRefreshCell());*/
+
     /**
      * Create pull to refresh cell
      */
@@ -320,31 +327,6 @@ define(function(require) {
         });
         surface.isPullToRefresh = true;
         return surface;
-    }*/
-
-    /**
-     * Creates a section
-     */
-    /*function _createSection(text) {
-        return new LayoutController({
-            size: [undefined, 50],
-            isSection: true,
-            layout: {dock: [
-                ['fill', 'back'],
-                ['left', undefined, 20],
-                ['right', undefined, 20],
-                ['fill', 'text', 1]
-            ]},
-            dataSource: {
-                back: new Surface({
-                    classes: ['section-back']
-                }),
-                text: new Surface({
-                    content: text,
-                    classes: ['section-text']
-                })
-            }
-        });
     }*/
 
     //
