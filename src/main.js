@@ -191,7 +191,7 @@ define(function(require) {
             alignment: 1,
             useContainer: true,
             mouseMove: true,
-            logging: false
+            debug: false
         });
         return scrollView;
     }
