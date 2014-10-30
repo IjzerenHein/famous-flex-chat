@@ -164,8 +164,12 @@ define(function(require, exports, module) {
         target.value = this._value;
         target.name = this._name;
         target.wrap = this._wrap;
-        target.cols = this._cols;
-        target.rows = this._rows;
+        if (this._cols !== ''){
+            target.cols = this._cols;
+        }
+        if (this._rows !== ''){
+            target.rows = this._rows;
+        }
     };
 
     module.exports = AutosizeTextareaSurface;
