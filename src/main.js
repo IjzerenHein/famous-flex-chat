@@ -47,8 +47,8 @@ define(function(require) {
     var mainContext = Engine.createContext();
     var viewSequence = new ViewSequence();
     _setupFirebase();
-    _createMainLayout();
-    _createLagometer();
+    mainContext.add(_createMainLayout());
+    //_createLagometer();
     _createConsole();
 
     //
@@ -75,7 +75,6 @@ define(function(require) {
         mainLayout.on('layoutstart', function(event) {
             console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
         });
-        mainContext.add(mainLayout);
         return mainLayout;
     }
 
@@ -356,6 +355,6 @@ define(function(require) {
         var lagometer = new Lagometer({
             size: lagometerMod.getSize()
         });
-        //mainContext.add(lagometerMod).add(lagometer);
+        mainContext.add(lagometerMod).add(lagometer);
     }
 });
