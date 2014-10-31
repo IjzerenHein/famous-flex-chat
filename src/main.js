@@ -188,7 +188,7 @@ define(function(require) {
             },
             dataSource: viewSequence,
             alignment: 1,
-            useContainer: true,
+            useContainer: false,
             mouseMove: true,
             debug: false
         });
@@ -230,12 +230,16 @@ define(function(require) {
             if (day !== lastSectionDay) {
                 lastSectionDay = day;
                 var daySection = _createDaySection(day);
+                daySection.pipe(scrollView);
                 scrollView.insert(-1, daySection);
             }
             //console.log('adding message: ' + JSON.stringify(data));
-            var chatBubble = _createChatBubble(data);
-            scrollView.insert(-1, chatBubble);
-            scrollView.goToLastPage();
+            for (var i = 0; i < 1; i++) {
+                var chatBubble = _createChatBubble(data);
+                chatBubble.pipe(scrollView);
+                scrollView.insert(-1, chatBubble);
+                scrollView.goToLastPage();
+            }
         });
     }
 
