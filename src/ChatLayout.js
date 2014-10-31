@@ -73,10 +73,7 @@ define(function(require, exports, module) {
         direction: [Utility.Direction.Y, Utility.Direction.X],
         scrolling: true,
         trueSize: true,
-        sequentialScrollingOptimized: true,
-        debug: {
-            testPrev: false
-        }
+        sequentialScrollingOptimized: true
     };
 
     // Layout function
@@ -92,6 +89,7 @@ define(function(require, exports, module) {
         var lastSectionBeforeVisibleCell;
         var lastSectionBeforeVisibleCellOffset;
         var lastSectionBeforeVisibleCellLength;
+        var lastSectionBeforeVisibleCellScrollLength;
         var firstVisibleCell;
         var lastCellOffsetInFirstVisibleSection;
         var firstCell;
@@ -153,6 +151,7 @@ define(function(require, exports, module) {
                     lastSectionBeforeVisibleCell = node;
                     lastSectionBeforeVisibleCellOffset = offset - nodeSize;
                     lastSectionBeforeVisibleCellLength = nodeSize;
+                    lastSectionBeforeVisibleCellScrollLength = nodeSize;
                 } else if (lastCellOffsetInFirstVisibleSection === undefined) {
                     lastCellOffsetInFirstVisibleSection = offset - nodeSize;
                 }
@@ -186,6 +185,7 @@ define(function(require, exports, module) {
                     lastSectionBeforeVisibleCell = node;
                     lastSectionBeforeVisibleCellOffset = offset - nodeSize;
                     lastSectionBeforeVisibleCellLength = nodeSize;
+                    lastSectionBeforeVisibleCellScrollLength = nodeSize;
                 }
             } else if (offset >= 0) {
                 firstVisibleCell = node;
@@ -225,9 +225,10 @@ define(function(require, exports, module) {
                 if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
                     lastSectionBeforeVisibleCell = node;
                     nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
-                    set.size[direction] = nodeSize;
                     lastSectionBeforeVisibleCellOffset = offset - nodeSize;
                     lastSectionBeforeVisibleCellLength = nodeSize;
+                    lastSectionBeforeVisibleCellScrollLength = undefined;
+                    set.size[direction] = nodeSize;
                     set.translate[direction] = offset - nodeSize;
                     set.scrollLength = undefined;
                     context.set(node, set);
@@ -248,7 +249,7 @@ define(function(require, exports, module) {
                 set.translate[direction] = lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCellLength;
             }
             set.size[direction] = lastSectionBeforeVisibleCellLength;
-            set.scrollLength = lastSectionBeforeVisibleCellLength;
+            set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
             set.translate[2] = 1; // put section on top, so that it overlays cells
             context.set(lastSectionBeforeVisibleCell, set);
             set.translate[2] = 0; // restore..
