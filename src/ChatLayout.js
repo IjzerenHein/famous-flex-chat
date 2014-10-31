@@ -89,14 +89,19 @@ define(function(require, exports, module) {
         var node;
         var nodeSize;
         var itemSize;
-        var set;
         var lastSectionBeforeVisibleCell;
+        var lastSectionBeforeVisibleCellOffset;
+        var lastSectionBeforeVisibleCellLength;
         var firstVisibleCell;
         var lastCellOffsetInFirstVisibleSection;
         var firstCell;
         var firstCellOffset;
         var lastCell;
         var lastCellOffset;
+        var set = {
+            size: [size[0], size[1]],
+            translate: [0, 0, 0]
+        };
 
         //
         // Determine item-size or use true=size
@@ -134,11 +139,9 @@ define(function(require, exports, module) {
             //
             // Position node
             //
-            set = {
-                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                translate: direction ? [0, offset, 0] : [offset, 0, 0],
-                scrollLength: nodeSize
-            };
+            set.size[direction] = nodeSize;
+            set.translate[direction] = offset;
+            set.scrollLength = nodeSize;
             context.set(node, set);
             offset += nodeSize;
 
@@ -148,6 +151,8 @@ define(function(require, exports, module) {
             if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
                 if (!firstVisibleCell) {
                     lastSectionBeforeVisibleCell = node;
+                    lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+                    lastSectionBeforeVisibleCellLength = nodeSize;
                 } else if (lastCellOffsetInFirstVisibleSection === undefined) {
                     lastCellOffsetInFirstVisibleSection = offset - nodeSize;
                 }
@@ -170,12 +175,17 @@ define(function(require, exports, module) {
                 break;
             }
 
+            // Get node size
+            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+
             //
             // Keep track of the last section before the first visible cell
             //
             if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
                 if (!lastSectionBeforeVisibleCell) {
                     lastSectionBeforeVisibleCell = node;
+                    lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+                    lastSectionBeforeVisibleCellLength = nodeSize;
                 }
             } else if (offset >= 0) {
                 firstVisibleCell = node;
@@ -188,14 +198,11 @@ define(function(require, exports, module) {
             //
             // Position node
             //
-            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
-            set = {
-                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0],
-                scrollLength: nodeSize
-            };
-            context.set(node, set);
             offset -= nodeSize;
+            set.size[direction] = nodeSize;
+            set.translate[direction] = offset;
+            set.scrollLength = nodeSize;
+            context.set(node, set);
 
             //
             // Detect the first and last cell
@@ -218,10 +225,11 @@ define(function(require, exports, module) {
                 if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
                     lastSectionBeforeVisibleCell = node;
                     nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
-                    set = {
-                        size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-                        translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0]
-                    };
+                    set.size[direction] = nodeSize;
+                    lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+                    lastSectionBeforeVisibleCellLength = nodeSize;
+                    set.translate[direction] = offset - nodeSize;
+                    set.scrollLength = undefined;
                     context.set(node, set);
                 }
                 else {
@@ -234,24 +242,22 @@ define(function(require, exports, module) {
         // Reposition "last section before first visible cell" to the top of the layout
         //
         if (lastSectionBeforeVisibleCell) {
-            var translate = lastSectionBeforeVisibleCell.set.translate;
-            translate[direction] = Math.max(0, translate[direction]);
-            translate[2] = 1; // put section on top, so that it overlays cells
+            set.translate[direction] = Math.max(0, lastSectionBeforeVisibleCellOffset);
             if ((lastCellOffsetInFirstVisibleSection !== undefined) &&
-                (lastSectionBeforeVisibleCell.set.size[direction] > lastCellOffsetInFirstVisibleSection)) {
-                translate[direction] = lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCell.set.size[direction];
+                (lastSectionBeforeVisibleCellLength > lastCellOffsetInFirstVisibleSection)) {
+                set.translate[direction] = lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCellLength;
             }
-            context.set(lastSectionBeforeVisibleCell, {
-                size: lastSectionBeforeVisibleCell.set.size,
-                translate: translate,
-                scrollLength: lastSectionBeforeVisibleCell.set.scrollLength
-            });
+            set.size[direction] = lastSectionBeforeVisibleCellLength;
+            set.scrollLength = lastSectionBeforeVisibleCellLength;
+            set.translate[2] = 1; // put section on top, so that it overlays cells
+            context.set(lastSectionBeforeVisibleCell, set);
+            set.translate[2] = 0; // restore..
         }
 
         //
         // Reposition "pull to refresh" renderable at the top
         //
-        if (firstCell && (firstCellOffset > 0) &&
+        /*if (firstCell && (firstCellOffset > 0) &&
            options.isPullToRefreshCallback && options.isPullToRefreshCallback(context.getRenderNode(firstCell))) {
             firstCell.set.translate[direction] = 0;
             firstCell.set.size[direction] = firstCellOffset;
@@ -274,7 +280,7 @@ define(function(require, exports, module) {
                 translate: lastCell.set.translate,
                 scrollLength: 0
             });
-        }
+        }*/
     }
 
     ChatLayout.Capabilities = capabilities;
