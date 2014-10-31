@@ -241,7 +241,7 @@
 	            },
 	            dataSource: viewSequence,
 	            alignment: 1,
-	            useContainer: true,
+	            useContainer: false,
 	            mouseMove: true,
 	            debug: false
 	        });
@@ -283,12 +283,16 @@
 	            if (day !== lastSectionDay) {
 	                lastSectionDay = day;
 	                var daySection = _createDaySection(day);
+	                daySection.pipe(scrollView);
 	                scrollView.insert(-1, daySection);
 	            }
 	            //console.log('adding message: ' + JSON.stringify(data));
-	            var chatBubble = _createChatBubble(data);
-	            scrollView.insert(-1, chatBubble);
-	            scrollView.goToLastPage();
+	            for (var i = 0; i < 1; i++) {
+	                var chatBubble = _createChatBubble(data);
+	                chatBubble.pipe(scrollView);
+	                scrollView.insert(-1, chatBubble);
+	                scrollView.goToLastPage();
+	            }
 	        });
 	    }
 
@@ -492,10 +496,7 @@
 	        direction: [Utility.Direction.Y, Utility.Direction.X],
 	        scrolling: true,
 	        trueSize: true,
-	        sequentialScrollingOptimized: true,
-	        debug: {
-	            testPrev: false
-	        }
+	        sequentialScrollingOptimized: true
 	    };
 
 	    // Layout function
@@ -508,14 +509,20 @@
 	        var node;
 	        var nodeSize;
 	        var itemSize;
-	        var set;
 	        var lastSectionBeforeVisibleCell;
+	        var lastSectionBeforeVisibleCellOffset;
+	        var lastSectionBeforeVisibleCellLength;
+	        var lastSectionBeforeVisibleCellScrollLength;
 	        var firstVisibleCell;
 	        var lastCellOffsetInFirstVisibleSection;
 	        var firstCell;
 	        var firstCellOffset;
 	        var lastCell;
 	        var lastCellOffset;
+	        var set = {
+	            size: [size[0], size[1]],
+	            translate: [0, 0, 0]
+	        };
 
 	        //
 	        // Determine item-size or use true=size
@@ -553,11 +560,9 @@
 	            //
 	            // Position node
 	            //
-	            set = {
-	                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-	                translate: direction ? [0, offset, 0] : [offset, 0, 0],
-	                scrollLength: nodeSize
-	            };
+	            set.size[direction] = nodeSize;
+	            set.translate[direction] = offset;
+	            set.scrollLength = nodeSize;
 	            context.set(node, set);
 	            offset += nodeSize;
 
@@ -567,6 +572,9 @@
 	            if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
 	                if (!firstVisibleCell) {
 	                    lastSectionBeforeVisibleCell = node;
+	                    lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+	                    lastSectionBeforeVisibleCellLength = nodeSize;
+	                    lastSectionBeforeVisibleCellScrollLength = nodeSize;
 	                } else if (lastCellOffsetInFirstVisibleSection === undefined) {
 	                    lastCellOffsetInFirstVisibleSection = offset - nodeSize;
 	                }
@@ -589,12 +597,18 @@
 	                break;
 	            }
 
+	            // Get node size
+	            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+
 	            //
 	            // Keep track of the last section before the first visible cell
 	            //
 	            if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
 	                if (!lastSectionBeforeVisibleCell) {
 	                    lastSectionBeforeVisibleCell = node;
+	                    lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+	                    lastSectionBeforeVisibleCellLength = nodeSize;
+	                    lastSectionBeforeVisibleCellScrollLength = nodeSize;
 	                }
 	            } else if (offset >= 0) {
 	                firstVisibleCell = node;
@@ -607,14 +621,11 @@
 	            //
 	            // Position node
 	            //
-	            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
-	            set = {
-	                size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-	                translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0],
-	                scrollLength: nodeSize
-	            };
-	            context.set(node, set);
 	            offset -= nodeSize;
+	            set.size[direction] = nodeSize;
+	            set.translate[direction] = offset;
+	            set.scrollLength = nodeSize;
+	            context.set(node, set);
 
 	            //
 	            // Detect the first and last cell
@@ -637,10 +648,12 @@
 	                if (options.isSectionCallback && options.isSectionCallback(context.getRenderNode(node))) {
 	                    lastSectionBeforeVisibleCell = node;
 	                    nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
-	                    set = {
-	                        size: direction ? [size[0], nodeSize] : [nodeSize, size[1]],
-	                        translate: direction ? [0, offset - nodeSize, 0] : [offset - nodeSize, 0, 0]
-	                    };
+	                    lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+	                    lastSectionBeforeVisibleCellLength = nodeSize;
+	                    lastSectionBeforeVisibleCellScrollLength = undefined;
+	                    set.size[direction] = nodeSize;
+	                    set.translate[direction] = offset - nodeSize;
+	                    set.scrollLength = undefined;
 	                    context.set(node, set);
 	                }
 	                else {
@@ -653,24 +666,22 @@
 	        // Reposition "last section before first visible cell" to the top of the layout
 	        //
 	        if (lastSectionBeforeVisibleCell) {
-	            var translate = lastSectionBeforeVisibleCell.set.translate;
-	            translate[direction] = Math.max(0, translate[direction]);
-	            translate[2] = 1; // put section on top, so that it overlays cells
+	            set.translate[direction] = Math.max(0, lastSectionBeforeVisibleCellOffset);
 	            if ((lastCellOffsetInFirstVisibleSection !== undefined) &&
-	                (lastSectionBeforeVisibleCell.set.size[direction] > lastCellOffsetInFirstVisibleSection)) {
-	                translate[direction] = lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCell.set.size[direction];
+	                (lastSectionBeforeVisibleCellLength > lastCellOffsetInFirstVisibleSection)) {
+	                set.translate[direction] = lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCellLength;
 	            }
-	            context.set(lastSectionBeforeVisibleCell, {
-	                size: lastSectionBeforeVisibleCell.set.size,
-	                translate: translate,
-	                scrollLength: lastSectionBeforeVisibleCell.set.scrollLength
-	            });
+	            set.size[direction] = lastSectionBeforeVisibleCellLength;
+	            set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
+	            set.translate[2] = 1; // put section on top, so that it overlays cells
+	            context.set(lastSectionBeforeVisibleCell, set);
+	            set.translate[2] = 0; // restore..
 	        }
 
 	        //
 	        // Reposition "pull to refresh" renderable at the top
 	        //
-	        if (firstCell && (firstCellOffset > 0) &&
+	        /*if (firstCell && (firstCellOffset > 0) &&
 	           options.isPullToRefreshCallback && options.isPullToRefreshCallback(context.getRenderNode(firstCell))) {
 	            firstCell.set.translate[direction] = 0;
 	            firstCell.set.size[direction] = firstCellOffset;
@@ -693,7 +704,7 @@
 	                translate: lastCell.set.translate,
 	                scrollLength: 0
 	            });
-	        }
+	        }*/
 	    }
 
 	    ChatLayout.Capabilities = capabilities;
@@ -735,11 +746,33 @@
 	     * @param {Object} [options] Configuration options
 	     */
 	    function AutosizeTextareaSurface(options) {
+	        this._heightInvalidated = true;
+	        this._oldCachedSize = [0, 0];
 	        _createHiddenSurface.call(this);
 	        TextareaSurface.apply(this, arguments);
+	        this.on('change', _onValueChanged.bind(this));
+	        this.on('keyup', _onValueChanged.bind(this));
 	    }
 	    AutosizeTextareaSurface.prototype = Object.create(TextareaSurface.prototype);
 	    AutosizeTextareaSurface.prototype.constructor = AutosizeTextareaSurface;
+
+	    //
+	    // Called whenever the value is changed, copies the value to the
+	    // hidden TextArea surface.
+	    //
+	    function _onValueChanged(event) {
+	        var value = event.currentTarget.value;
+	        if (this._hiddenTextarea._currentTarget) {
+	            this._hiddenTextarea._currentTarget.value = value;
+	        }
+	        else {
+	            if (value === '') {
+	                value = ' ';
+	            }
+	            this._hiddenTextarea.setValue(value);
+	        }
+	        this._heightInvalidated = true;
+	    }
 
 	    /**
 	     * Create the hidden text-area surface
@@ -755,23 +788,50 @@
 	     * emits an event about the preferred height.
 	     */
 	    AutosizeTextareaSurface.prototype.render = function render() {
-	        if (this._currentTarget) {
-	            if (this._scrollHeightCache !== this._currentTarget.scrollHeight) {
-	                this._scrollHeightCache = this._currentTarget.scrollHeight;
-	                this._hiddenTextarea._currentTarget.value = this.getValue();
+
+	        // Return render-spec of both this textArea and the hidden
+	        // text-area so that they are both rendered.
+	        return [this._hiddenTextarea.id, this.id];
+	    };
+
+	    var oldCommit = AutosizeTextareaSurface.prototype.commit;
+	    /**
+	     * Apply changes from this component to the corresponding document element.
+	     * This includes changes to classes, styles, size, content, opacity, origin,
+	     * and matrix transforms.
+	     *
+	     * @private
+	     * @method commit
+	     * @param {Context} context commit context
+	     */
+	    AutosizeTextareaSurface.prototype.commit = function commit(context) {
+
+	        // Call base class
+	        oldCommit.apply(this, arguments);
+
+	        // Check if height has been changed
+	        if ((this._oldCachedSize[0] !== context.size[0]) ||
+	            (this._oldCachedSize[1] !== context.size[1])) {
+	            this._oldCachedSize[0] = context.size[0];
+	            this._oldCachedSize[1] = context.size[1];
+	            this._heightInvalidated = true;
+	        }
+
+	        // Caluclate preferred height
+	        if (this._hiddenTextarea._currentTarget && this._heightInvalidated) {
+	            this._heightInvalidated = false;
+	            var scrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
+	            if (this._scrollHeightCache !== scrollHeight) {
+	                this._scrollHeightCache = scrollHeight;
 	                this._hiddenTextarea._currentTarget.style.height = '10px';
-	                var preferredScrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
-	                if (preferredScrollHeight !== this._preferredScrollHeight) {
-	                    this._preferredScrollHeight = preferredScrollHeight;
+	                scrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
+	                if (scrollHeight !== this._preferredScrollHeight) {
+	                    this._preferredScrollHeight = scrollHeight;
 	                    //console.log('scrollHeight changed: ' + this._preferredScrollHeight);
 	                    this._eventOutput.emit('scrollHeightChanged', this._preferredScrollHeight);
 	                }
 	            }
 	        }
-
-	        // Return render-spec of both this textArea and the hidden
-	        // text-area so that they are both rendered.
-	        return [this.id, this._hiddenTextarea.id];
 	    };
 
 	    /**
@@ -793,6 +853,7 @@
 	        }
 	        hiddenProperties.visibility = 'hidden';
 	        this._hiddenTextarea.setProperties(hiddenProperties);
+	        this._heightInvalidated = true;
 	        return oldSetProperties.call(this, properties);
 	    };
 
@@ -802,56 +863,67 @@
 	     */
 	    var oldSetAttributes = AutosizeTextareaSurface.prototype.setAttributes;
 	    AutosizeTextareaSurface.prototype.setAttributes = function setAttributes(attributes) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setAttributes(attributes);
 	        return oldSetAttributes.call(this, attributes);
 	    };
 	    var oldAddClass = AutosizeTextareaSurface.prototype.addClass;
 	    AutosizeTextareaSurface.prototype.addClass = function addClass(className) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.addClass(className);
 	        return oldAddClass.call(this, className);
 	    };
 	    var oldRemoveClass = AutosizeTextareaSurface.prototype.removeClass;
 	    AutosizeTextareaSurface.prototype.removeClass = function removeClass(className) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.removeClass(className);
 	        return oldRemoveClass.call(this, className);
 	    };
 	    var oldToggleClass = AutosizeTextareaSurface.prototype.toggleClass;
 	    AutosizeTextareaSurface.prototype.toggleClass = function toggleClass(className) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.toggleClass(className);
 	        return oldToggleClass.call(this, className);
 	    };
 	    var oldSetClasses = AutosizeTextareaSurface.prototype.setClasses;
 	    AutosizeTextareaSurface.prototype.setClasses = function setClasses(classList) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setClasses(classList);
 	        return oldSetClasses.call(this, classList);
 	    };
 	    var oldSetContent = AutosizeTextareaSurface.prototype.setContent;
 	    AutosizeTextareaSurface.prototype.setContent = function setContent(content) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setContent(content);
 	        return oldSetContent.call(this, content);
 	    };
 	    var oldSetOptions = AutosizeTextareaSurface.prototype.setOptions;
 	    AutosizeTextareaSurface.prototype.setOptions = function setOptions(options) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setOptions(options);
 	        return oldSetOptions.call(this, options);
 	    };
 	    var oldSetValue = AutosizeTextareaSurface.prototype.setValue;
 	    AutosizeTextareaSurface.prototype.setValue = function setValue(str) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setValue(str);
 	        return oldSetValue.call(this, str);
 	    };
 	    var oldSetWrap = AutosizeTextareaSurface.prototype.setWrap;
 	    AutosizeTextareaSurface.prototype.setWrap = function setWrap(str) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setWrap(str);
 	        return oldSetWrap.call(this, str);
 	    };
 	    var oldSetColumns = AutosizeTextareaSurface.prototype.setColumns;
 	    AutosizeTextareaSurface.prototype.setColumns = function setColumns(num) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setColumns(num);
 	        return oldSetColumns.call(this, num);
 	    };
 	    var oldSetRows = AutosizeTextareaSurface.prototype.setRows;
 	    AutosizeTextareaSurface.prototype.setRows = function setRows(num) {
+	        this._heightInvalidated = true;
 	        this._hiddenTextarea.setRows(num);
 	        return oldSetRows.call(this, num);
 	    };
@@ -5255,6 +5327,7 @@
 	    // import dependencies
 	    var LayoutUtility = __webpack_require__(38);
 	    var FlowLayoutController = __webpack_require__(41);
+	    var LayoutNode = __webpack_require__(40);
 	    var FlowLayoutNode = __webpack_require__(42);
 	    var LayoutNodeManager = __webpack_require__(39);
 	    var ContainerSurface = __webpack_require__(47);
@@ -5301,6 +5374,7 @@
 	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
 	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
 	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+	     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `true`).
 	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
 	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
 	     * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
@@ -5316,7 +5390,8 @@
 	     * @alias module:ScrollView
 	     */
 	    function ScrollView(options, createNodeFn) {
-	        FlowLayoutController.call(this, ScrollView.DEFAULT_OPTIONS, new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
+	        var layoutManager = new LayoutNodeManager(((options.flow === undefined) || options.flow) ? FlowLayoutNode : LayoutNode, _initLayoutNode.bind(this));
+	        FlowLayoutController.call(this, ScrollView.DEFAULT_OPTIONS, layoutManager);
 	        if (options) {
 	            this.setOptions(options);
 	        }
@@ -5882,6 +5957,7 @@
 
 	        //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
 	        return _roundScrollOffset.call(this, scrollOffset);
+	        //return scrollOffset;
 	    }
 
 	    /**
@@ -5895,7 +5971,7 @@
 	                return true;
 	            }
 	            height += node.scrollLength;
-	        }.bind(this), next);
+	        }, next);
 	        return height;
 	    }
 
@@ -6150,7 +6226,7 @@
 	            }
 	        }.bind(this), false);
 	        if (normalizedCount) {
-	            _log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
+	            //_log.call(this, 'normalized ', normalizedCount, ' prev node(s) with length: ', normalizedScrollOffset - startScrollOffset);
 	        }
 	        return normalizedScrollOffset;
 	    }
@@ -6181,7 +6257,7 @@
 	            }
 	        }.bind(this), true);
 	        if (normalizedCount) {
-	            _log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
+	            //_log.call(this, 'normalized ', normalizedCount, ' next node(s) with length: ', normalizedScrollOffset - startScrollOffset);
 	        }
 	        return normalizedScrollOffset;
 	    }
@@ -6224,7 +6300,8 @@
 	            var delta = normalizedScrollOffset - scrollOffset;
 
 	            // Adjust particle
-	            _setParticle.call(this, this._scroll.particle.getPosition1D() + delta, undefined, 'normalize');
+	            var particleValue = this._scroll.particle.getPosition1D();
+	            _setParticle.call(this, particleValue + delta, undefined, 'normalize');
 
 	            // Adjust scroll spring
 	            if (this._scroll.springPosition !== undefined) {
@@ -6773,14 +6850,33 @@
 	        // to a sequential position so that the matrix is unchanged and
 	        // famo.s doesn't have to update the matrix in the DOM.
 	        if (this._layout.capabilities.sequentialScrollingOptimized) {
-	            specs = [];
+
+	            // Re-use previous spec array if size is the same
+	            if (!this._cachedSpecs || (this._cachedSpecs.length !== this._specs.length)) {
+	                specs = [];
+	                this._cachedSpecs = specs;
+	            }
+
+	            // Translate all specs back, and instead use the scroll-offset
+	            // from the `Group`.
 	            var scrollOffset = this._scrollOffsetCache;
 	            var translate = [0, 0, 0];
 	            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
 	            for (i = 0; i < this._specs.length; i++) {
 	                var spec = this._specs[i];
 	                var transform = Transform.thenMove(spec.transform, translate);
-	                var newSpec = {};
+
+	                // Create or re-use spec
+	                var newSpec;
+	                if (specs) {
+	                    newSpec = {};
+	                    specs.push(newSpec);
+	                }
+	                else {
+	                    newSpec = this._cachedSpecs[i];
+	                }
+
+	                // Update spec
 	                newSpec.origin = spec.origin;
 	                newSpec.align = spec.align;
 	                newSpec.opacity = spec.opacity;
@@ -6788,10 +6884,10 @@
 	                newSpec.transform = transform;
 	                newSpec.target = spec.renderNode.render();
 	                newSpec.scrollOffset = scrollOffset;
-	                specs.push(newSpec);
+	                //newSpec.index = i;
 
 	                // Show new spec position for debugging purposes
-	                if (this.options.debug) {
+	                /*if (this.options.debug) {
 	                    if (spec._translatedSpec) {
 	                        newSpec._renderedId = spec._translatedSpec._renderedId;
 	                        if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
@@ -6802,12 +6898,13 @@
 	                    }
 	                    else {
 	                        newSpec._renderedId = newRenderedSpecId++;
-	                        _log.call(this, 'new spec rendered: ', newSpec._renderedId);
+	                        //_log.call(this, 'new spec rendered: ', newSpec._renderedId);
 	                        //console.log('new spec rendered');
 	                    }
 	                    spec._translatedSpec = newSpec;
-	                }
+	                }*/
 	            }
+	            specs = this._cachedSpecs;
 	        }
 	        else {
 
@@ -6817,6 +6914,15 @@
 	                specs[i].target = specs[i].renderNode.render();
 	            }
 	        }
+
+	        // log time betwen start of commit to end of innerRender
+	        /*var now = Date.now();
+	        if (now !== this._now) {
+	            var diff = now - this._now;
+	            if (diff > 2) {
+	                console.log('time execution: ' + diff);
+	            }
+	        }*/
 	        return specs;
 	    }
 
@@ -6831,6 +6937,17 @@
 	     */
 	    ScrollView.prototype.commit = function commit(context) {
 	        var size = context.size;
+
+	        /*var usedHeap = window.performance.memory.usedJSHeapSize;
+	        if (usedHeap !== this._debug.usedHeap) {
+	            console.log('used heap changed: ' + usedHeap);
+	            this._debug.usedHeap = usedHeap;
+	        }*/
+
+	        // Log particle/time diff
+	        this._now = Date.now();
+
+	        // Calculate scroll offset
 	        var scrollOffset = _calcScrollOffset.call(this, true);
 
 	        // When the size or layout function has changed, reflow the layout
@@ -6899,8 +7016,9 @@
 	        var transform = context.transform;
 	        if (this._layout.capabilities.sequentialScrollingOptimized) {
 	            var windowOffset = scrollOffset + this._scroll.groupStart;
-	            transform = this._direction ? Transform.translate(0, windowOffset, 0) : Transform.translate(windowOffset, 0, 0);
-	            transform = Transform.multiply(context.transform, transform);
+	            var translate = [0, 0, 0];
+	            translate[this._direction] = windowOffset;
+	            transform = Transform.thenMove(transform, translate);
 	        }
 
 	        // Return the spec
@@ -7479,7 +7597,7 @@
 	        }
 
 	        // Return
-	        if (size && (origin[0] !== 0 && origin[1] !== 0)) {
+	        if (size) {
 	            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
 	        }
 	        this._commitOutput.size = size;
@@ -11656,21 +11774,6 @@
 	    };
 
 	    /**
-	     * Clears the contents of a spec.
-	     *
-	     * @param {Spec} spec Spec to clear
-	     * @return {Spec} spec
-	     */
-	    LayoutUtility.clearSpec = function(spec) {
-	        delete spec.opacity;
-	        delete spec.size;
-	        delete spec.transform;
-	        delete spec.origin;
-	        delete spec.align;
-	        return spec;
-	    };
-
-	    /**
 	     * Compares two arrays for equality.
 	     */
 	    function _isEqualArray(a, b) {
@@ -11880,7 +11983,6 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutNode = __webpack_require__(40);
 	    var LayoutContext = __webpack_require__(139);
 	    var LayoutUtility = __webpack_require__(38);
 
@@ -11914,8 +12016,13 @@
 	            //start: undefined
 	        };
 	        this._pool = {
-	            size: 0
-	            //first: undefined
+	            layoutNodes: {
+	                size: 0
+	                //first: undefined
+	            },
+	            contextNodes: {
+	                size: 0
+	            }
 	        };
 	        this.verbose = false;
 	        //this._first = undefined; // first item in the linked list
@@ -11939,6 +12046,14 @@
 	            node.reset();
 	            node = node._next;
 	        }
+
+	        // Move all previously allocated context-nodes to the pool
+	        if (this._pool.contextNodes.inUseLast) {
+	            this._pool.contextNodes.inUseLast._next = this._pool.contextNodes.first;
+	        }
+	        this._pool.contextNodes.first = this._pool.contextNodes.inUseFirst;
+	        this._pool.contextNodes.inUseFirst = undefined;
+	        this._pool.contextNodes.inUseLast = undefined;
 
 	        // Prepare data
 	        this._nodesById = nodesById;
@@ -12012,36 +12127,13 @@
 	            var spec = node.getSpec();
 	            if (!spec) {
 
-	                // Remove node from linked-list
-	                if (node._next) {
-	                    node._next._prev = node._prev;
-	                }
-	                if (node._prev) {
-	                    node._prev._next = node._next;
-	                }
-	                else {
-	                    this._first = node._next;
-	                }
-
-	                // Destroy the node
+	                // Destroy node
 	                var destroyNode = node;
 	                node = node._next;
-	                destroyNode.destroy();
-	                if (this.verbose) {
-	                    LayoutUtility.log(LOG_PREFIX, 'destroying node');
-	                }
-
-	                // Add node to pool
-	                if (this._pool.size < MAX_POOL_SIZE) {
-	                    this._pool.size++;
-	                    destroyNode._next = this._pool.first;
-	                    this._pool.first = destroyNode;
-	                }
+	                _destroyNode.call(this, destroyNode);
 
 	                // Mark as modified
 	                result.modified = true;
-
-	                _checkIntegrity.call(this);
 	            }
 	            else {
 
@@ -12097,10 +12189,10 @@
 	     */
 	    LayoutNodeManager.prototype.createNode = function(renderNode, spec) {
 	        var node;
-	        if (this._pool.first) {
-	            node = this._pool.first;
-	            this._pool.first = node._next;
-	            this._pool.size--;
+	        if (this._pool.layoutNodes.first) {
+	            node = this._pool.layoutNodes.first;
+	            this._pool.layoutNodes.first = node._next;
+	            this._pool.layoutNodes.size--;
 	            node.constructor.apply(node, arguments);
 	        }
 	        else {
@@ -12114,6 +12206,73 @@
 	        }
 	        return node;
 	    };
+
+	    /**
+	     * Destroys a layout-node
+	     */
+	    function _destroyNode(node) {
+
+	        // Remove node from linked-list
+	        if (node._next) {
+	            node._next._prev = node._prev;
+	        }
+	        if (node._prev) {
+	            node._prev._next = node._next;
+	        }
+	        else {
+	            this._first = node._next;
+	        }
+
+	        // Destroy the node
+	        node.destroy();
+	        if (this.verbose) {
+	            LayoutUtility.log(LOG_PREFIX, 'destroying node');
+	        }
+
+	        // Add node to pool
+	        if (this._pool.layoutNodes.size < MAX_POOL_SIZE) {
+	            this._pool.layoutNodes.size++;
+	            node._prev = undefined;
+	            node._next = this._pool.layoutNodes.first;
+	            this._pool.layoutNodes.first = node;
+	        }
+
+	        _checkIntegrity.call(this);
+	    }
+
+	    function _createContextNode(renderNode) {
+	        var node;
+	        if (this._pool.contextNodes.first) {
+	            node = this._pool.contextNodes.first;
+	            this._pool.contextNodes.first = node._next;
+	            // init
+	            node.renderNode = renderNode;
+	            node.viewSequence = undefined;
+	            node.node = undefined;
+	            node.set = undefined;
+	            node.index = undefined;
+	            node.next = undefined;
+	            node.prev = undefined;
+	            node.byId = undefined;
+	            node.arrayElement = undefined;
+	            node.trueSizeRequested = undefined;
+	            node.usesTrueSize = undefined;
+	        }
+	        else {
+	            this._pool.contextNodes.size++;
+	            node = {
+	                renderNode: renderNode
+	            };
+	        }
+	        // add to in use list
+	        if (!this._pool.contextNodes.inUseLast) {
+	            this._pool.contextNodes.inUseLast = node;
+	        }
+	        node._next = this._pool.contextNodes.inUseFirst;
+	        this._pool.contextNodes.inUseFirst = node;
+	        // done
+	        return node;
+	    }
 
 	    /**
 	     * Enumates all layout-nodes.
@@ -12323,12 +12482,11 @@
 	        if (!this._context.reverse) {
 	            this._contextState.nextSequence = this._contextState.nextSequence.getNext();
 	        }
-	        return {
-	            renderNode: renderNode,
-	            viewSequence: nextSequence,
-	            next: true,
-	            index: ++this._contextState.nextGetIndex
-	        };
+	        var contextNode = _createContextNode.call(this, renderNode);
+	        contextNode.viewSequence = nextSequence;
+	        contextNode.next = true;
+	        contextNode.index = ++this._contextState.nextGetIndex;
+	        return contextNode;
 	    }
 
 	    /**
@@ -12355,25 +12513,18 @@
 	        if (this._context.reverse) {
 	            this._contextState.prevSequence = this._contextState.prevSequence.getPrevious();
 	        }
-	        return {
-	            renderNode: renderNode,
-	            viewSequence: prevSequence,
-	            prev: true,
-	            index: --this._contextState.prevGetIndex
-	        };
+	        var contextNode = _createContextNode.call(this, renderNode);
+	        contextNode.viewSequence = prevSequence;
+	        contextNode.prev = true;
+	        contextNode.index = --this._contextState.prevGetIndex;
+	        return contextNode;
 	    }
 
 	    /**
 	     * Resolve id into a context-node.
 	     */
 	     function _contextGet(contextNodeOrId) {
-	        if (!contextNodeOrId) {
-	            return undefined;
-	        }
-	        if ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string')) {
-	            if (!this._nodesById) {
-	               return undefined;
-	            }
+	        if (this._nodesById && ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string'))) {
 	            var renderNode = this._nodesById[contextNodeOrId];
 	            if (!renderNode) {
 	                return undefined;
@@ -12383,19 +12534,17 @@
 	            if (renderNode instanceof Array) {
 	                var result = [];
 	                for (var i = 0 ; i < renderNode.length; i++) {
-	                    result.push({
-	                        renderNode: renderNode[i],
-	                        arrayElement: true
-	                    });
+	                    var contextNodeElm = _createContextNode.call(this, renderNode[i]);
+	                    contextNodeElm.arrayElement = true;
+	                    result.push(contextNodeElm);
 	                }
 	                return result;
 	            }
 
 	            // Create context node
-	            return {
-	                renderNode: renderNode,
-	                byId: true
-	            };
+	            var contextNode = _createContextNode.call(this, renderNode);
+	            contextNode.byId = true;
+	            return contextNode;
 	        }
 	        else {
 	            return contextNodeOrId;
@@ -12406,13 +12555,7 @@
 	     * Get render-node by its id.
 	     */
 	     function _contextGetRenderNode(contextNodeOrId) {
-	        if (!contextNodeOrId) {
-	            return undefined;
-	        }
-	        if ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string')) {
-	            if (!this._nodesById) {
-	               return undefined;
-	            }
+	        if (this._nodesById && ((contextNodeOrId instanceof String) || (typeof contextNodeOrId === 'string'))) {
 	            return this._nodesById[contextNodeOrId];
 	        }
 	        else {
@@ -12541,10 +12684,19 @@
 	    }
 
 	    /**
+	     * Called to update the options for the node
+	     */
+	    LayoutNode.prototype.setOptions = function(options) {
+	        // override to implement
+	    };
+
+	    /**
 	     * Called when the node is destroyed
 	     */
 	    LayoutNode.prototype.destroy = function() {
-	        // override to implement
+	        this.renderNode = undefined;
+	        this._spec.renderNode = undefined;
+	        this._viewSequence = undefined;
 	    };
 
 	    /**
@@ -12988,25 +13140,18 @@
 	     * Set the properties from a spec.
 	     */
 	    FlowLayoutNode.prototype.setSpec = function(spec) {
-	        if ((spec.opacity !== undefined) || this._removing) {
-	            _setPropertyValue.call(this, 'opacity', spec.opacity, DEFAULT.opacity);
+	        var set;
+	        if (spec.transform) {
+	            set = Transform.interpret(spec.transform);
 	        }
-	        if (spec.size|| this._removing) {
-	            _setPropertyValue.call(this, 'size', spec.size, DEFAULT.size);
+	        if (!set) {
+	            set = {};
 	        }
-	        if (spec.align|| this._removing) {
-	            _setPropertyValue.call(this, 'align', spec.align, DEFAULT.align);
-	        }
-	        if (spec.origin|| this._removing) {
-	            _setPropertyValue.call(this, 'origin', spec.origin, DEFAULT.origin);
-	        }
-	        if (spec.transform || this._removing) {
-	            var transform = spec.transform ? Transform.interpret(spec.transform) : {};
-	            _setPropertyValue.call(this, 'translate', transform.translate, DEFAULT.translate);
-	            _setPropertyValue.call(this, 'scale', transform.scale, DEFAULT.scale);
-	            _setPropertyValue.call(this, 'skew', transform.skew, DEFAULT.skew);
-	            _setPropertyValue.call(this, 'rotate', transform.rotate, DEFAULT.rotate);
-	        }
+	        set.opacity = spec.opacity;
+	        set.size = spec.size;
+	        set.align = spec.align;
+	        set.origin = spec.origin;
+	        _set.call(this, set, DEFAULT.size);
 	    };
 
 	    /**
@@ -13143,12 +13288,18 @@
 	        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
 	        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
 	        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
-	        this._spec.transform = Transform.build({
-	            translate: _getTranslateValue.call(this, DEFAULT.translate),
-	            skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
-	            scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
-	            rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
-	        });
+	        var translate = _getTranslateValue.call(this, DEFAULT.translate);
+	        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
+	            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
+	        }
+	        else {
+	            this._spec.transform = Transform.build({
+	                translate: translate,
+	                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
+	                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
+	                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
+	            });
+	        }
 	        //if (this.renderNode._debug) {
 	            //this.renderNode._debug = false;
 	            /*console.log(JSON.stringify({
@@ -13167,32 +13318,10 @@
 	    /**
 	     * Helper function to set the property of a node (e.g. opacity, translate, etc..)
 	     */
-	    function _setPropertyValue(propName, endState, defaultValue, immediate) {
-
-	        // Check if end-state equals default-value, if so reset it to undefined
-	        if ((endState !== undefined) && (defaultValue !== undefined)) {
-	            if (Array.isArray(endState) && Array.isArray(defaultValue) && (endState.length === defaultValue.length)) {
-	                var same = true;
-	                for (var i = 0 ; i < endState.length; i++) {
-	                    if (endState[i] !== defaultValue[i]) {
-	                        same = false;
-	                        break;
-	                    }
-	                }
-	                endState = same ? undefined : endState;
-	            }
-	            else if (endState === defaultValue) {
-	                endState = undefined;
-	            }
-	        }
+	    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
 
 	        // Get property
-	        var prop = this._properties[propName];
-
-	        // When property doesn't exist, and no end-state, nothing to do
-	        if ((endState === undefined) && (!prop || !prop.init)) {
-	            return;
-	        }
+	        prop = prop || this._properties[propName];
 
 	        // Update the property
 	        if (prop && prop.init) {
@@ -13205,10 +13334,16 @@
 	                value = prop.particle.getPosition();
 	            }
 	            prop.endState.set(value);
+	            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
+	                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
+	            }
 	            if (immediate) {
 	                prop.particle.setPosition(value);
+	                this._endStateReached = false;
 	            }
-	            this._pe.wake();
+	            else {
+	                this._pe.wake();
+	            }
 	            return;
 	        }
 
@@ -13220,12 +13355,10 @@
 	                }),
 	                endState: new Vector(endState)
 	            };
-	            var springOptions = {};
-	            for (var key in this.options.spring) {
-	                springOptions[key] = this.options.spring[key];
-	            }
-	            springOptions.anchor = prop.endState;
-	            prop.force = new Spring(springOptions);
+	            prop.force = new Spring(this.options.spring);
+	            prop.force.setOptions({
+	                anchor: prop.endState
+	            });
 	            this._pe.addBody(prop.particle);
 	            prop.forceId = this._pe.attach(prop.force, prop.particle);
 	            this._properties[propName] = prop;
@@ -13233,25 +13366,88 @@
 	        else {
 	            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
 	            prop.endState.set(endState);
-	            this._pe.wake();
+	            if (!this._initial && !immediate) {
+	                this._pe.wake();
+	            }
 	        }
 	        prop.init = true;
 	        prop.invalidated = true;
 	    }
-	    FlowLayoutNode.prototype.set = function(set, size) {
+
+	    /**
+	     * Get value if not equals.
+	     */
+	    function _getIfNE2D(a1, a2) {
+	        return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
+	    }
+	    function _getIfNE3D(a1, a2) {
+	        return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
+	    }
+
+	    /**
+	     * context.set(..)
+	     */
+	    FlowLayoutNode.prototype.set = function(set, defaultSize) {
 	        this._removing = false;
 	        this.scrollLength = set.scrollLength;
-	        _setPropertyValue.call(this, 'opacity', set.opacity, DEFAULT.opacity);
-	        _setPropertyValue.call(this, 'align', set.align, DEFAULT.align);
-	        _setPropertyValue.call(this, 'origin', set.origin, DEFAULT.origin);
-	        _setPropertyValue.call(this, 'size', set.size, size, this.usesTrueSize);
-	        _setPropertyValue.call(this, 'translate', set.translate, DEFAULT.translate);
-	        _setPropertyValue.call(this, 'skew', set.skew, DEFAULT.skew);
-	        _setPropertyValue.call(this, 'rotate', set.rotate, DEFAULT.rotate);
-	        _setPropertyValue.call(this, 'scale', set.scale, DEFAULT.scale);
+	        _set.call(this, set, defaultSize);
 	        this._invalidated = true;
 	        _verifyIntegrity.call(this);
 	    };
+
+	    /**
+	     * context.set(..)
+	     */
+	    function _set(set, defaultSize) {
+
+	        // set opacity
+	        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
+	        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
+	            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
+	        }
+
+	        // set align
+	        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
+	        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
+	            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
+	        }
+
+	        // set orgin
+	        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
+	        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
+	            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
+	        }
+
+	        // set size
+	        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
+	        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
+	            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
+	        }
+
+	        // set translate
+	        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
+	        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
+	            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
+	        }
+
+	        // set scale
+	        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
+	        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
+	            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
+	        }
+
+	        // set rotate
+	        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
+	        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
+	            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
+	        }
+
+	        // set skew
+	        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
+	        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
+	            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
+	        }
+	    }
 
 	    module.exports = FlowLayoutNode;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
