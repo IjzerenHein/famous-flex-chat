@@ -31,10 +31,10 @@ define(function(require) {
     var Surface = require('famous/core/Surface');
     var Modifier = require('famous/core/Modifier');
     var Transform = require('famous/core/Transform');
+    var StockScrollView = require('famous/views/ScrollView');
     var ScrollView = require('famous-flex/ScrollView');
     var ChatLayout = require('./ChatLayout');
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
-    //var FlowLayoutController = require('famous-flex/FlowLayoutController');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
@@ -42,14 +42,40 @@ define(function(require) {
     var InputSurface = require('famous/surfaces/InputSurface');
     var moment = require('moment/moment');
     var cuid = require('cuid');
+    var browser = require('ua_parser').userAgent(window.navigator.userAgent);
+    // templates
+    var chatBubbleTemplate = require('./chat-bubble.handlebars');
+    var daySectionTemplate = require('./day-section.handlebars');
+
+    // debugging
+    var flow = true;
+    var debug = false;
+    var useContainer = false;
+    var stockScrollView = false;
+    var stickySections = true;
+    var duplicateCount = 1;
+    var trueSize = true;
+
+    // On mobile or other devices that have keyboards that slide in, ensure
+    // that container mode is enabled.
+    if ((browser.platform === 'tablet') || (browser.platform === 'mobile')) {
+        useContainer = true;
+    }
 
     // Initialize
+    //var mobileDetect = new MobileDetect(window.navigator.userAgent);
     var mainContext = Engine.createContext();
     var viewSequence = new ViewSequence();
     _setupFirebase();
     mainContext.add(_createMainLayout());
     //_createLagometer();
-    _createConsole();
+    //_loadDemoData();
+
+    // Fix for android, which causes a repaint after a resize, which
+    // repositions the keyboard correctly.
+    if (browser.os.android) {
+        _createConsole();
+    }
 
     //
     // Main layout, bottom text input, top chat messages
@@ -67,13 +93,6 @@ define(function(require) {
                 content: _createScrollView(),
                 footer: _createMessageBar()
             }
-        });
-        // IMPORTANT NOTE: For some reason the following code prevents a
-        // very annoying bug on android from triggering. The bug occurs when the
-        // keyboard is shown, and the content would become invisible and you
-        // had to scroll down to make the main layout visible....
-        mainLayout.on('layoutstart', function(event) {
-            console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
         });
         return mainLayout;
     }
@@ -174,24 +193,31 @@ define(function(require) {
     //
     var scrollView;
     function _createScrollView() {
-        scrollView = new ScrollView({
-            layout: ChatLayout,
-            layoutOptions: {
-                // callback that is called by the layout-function to check
-                // whether a node is a section
-                isSectionCallback: function(renderNode) {
-                    return renderNode.properties.isSection;
+        if (stockScrollView) {
+            scrollView = new StockScrollView();
+            scrollView.sequenceFrom(viewSequence);
+        }
+        else {
+            scrollView = new ScrollView({
+                layout: ChatLayout,
+                layoutOptions: {
+                    // callback that is called by the layout-function to check
+                    // whether a node is a section
+                    isSectionCallback: function(renderNode) {
+                        return renderNode.properties.isSection && stickySections;
+                    },
+                    isPullToRefreshCallback: function(renderNode) {
+                        return renderNode.isPullToRefresh;
+                    }
                 },
-                isPullToRefreshCallback: function(renderNode) {
-                    return renderNode.isPullToRefresh;
-                }
-            },
-            dataSource: viewSequence,
-            alignment: 1,
-            useContainer: false,
-            mouseMove: true,
-            debug: false
-        });
+                dataSource: viewSequence,
+                flow: flow,
+                alignment: 1,
+                useContainer: useContainer,
+                mouseMove: true,
+                debug: debug
+            });
+        }
         return scrollView;
     }
 
@@ -210,6 +236,41 @@ define(function(require) {
     });*/
 
     //
+    // Adds a message to the scrollview
+    //
+    function _addMessage(data) {
+        var time = moment(data.timeStamp || new Date());
+        data.time = time.format('LT');
+        if (!data.author || (data.author === '')) {
+            data.author = 'Anonymous bastard';
+        }
+
+        // Insert section
+        //var day = time.calander();
+        var day = time.format('LL');
+        if (day !== lastSectionDay) {
+            lastSectionDay = day;
+            var daySection = _createDaySection(day);
+            if (stockScrollView || !useContainer) {
+                daySection.pipe(scrollView);
+            }
+            viewSequence.push(daySection);
+        }
+        //console.log('adding message: ' + JSON.stringify(data));
+        for (var i = 0; i < duplicateCount; i++) {
+            var chatBubble = _createChatBubble(data);
+            if (stockScrollView || !useContainer) {
+                chatBubble.pipe(scrollView);
+            }
+            viewSequence.push(chatBubble);
+        }
+        if (!stockScrollView) {
+            scrollView.goToLastPage();
+            scrollView.reflowLayout();
+        }
+    }
+
+    //
     // setup firebase
     //
     var fbMessages;
@@ -217,51 +278,31 @@ define(function(require) {
     function _setupFirebase() {
         fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
         fbMessages.limit(30).on('child_added', function(snapshot) {
-            var data = snapshot.val();
-            var time = moment(data.timeStamp);
-            data.time = time.format('LT');
-            if (!data.author || (data.author === '')) {
-                data.author = 'Anonymous bastard';
-            }
-
-            // Insert section
-            //var day = time.calander();
-            var day = time.format('LL');
-            if (day !== lastSectionDay) {
-                lastSectionDay = day;
-                var daySection = _createDaySection(day);
-                daySection.pipe(scrollView);
-                scrollView.insert(-1, daySection);
-            }
-            //console.log('adding message: ' + JSON.stringify(data));
-            for (var i = 0; i < 1; i++) {
-                var chatBubble = _createChatBubble(data);
-                chatBubble.pipe(scrollView);
-                scrollView.insert(-1, chatBubble);
-                scrollView.goToLastPage();
-            }
+            _addMessage(snapshot.val());
         });
     }
 
     //
     // Create a chat-bubble
     //
-    var chatBubbleTemplate = require('./chat-bubble.handlebars');
     function _createChatBubble(data) {
-        return new Surface({
-            size: [undefined, true],
+        var surface = new Surface({
+            size: [undefined, trueSize ? true : 65],
             classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
             content: chatBubbleTemplate(data),
             properties: {
                 message: data.message
             }
         });
+        /*surface.on('onresize', function(event) {
+            console.log('whut');
+        });*/
+        return surface;
     }
 
     //
     // Create a day section
     //
-    var daySectionTemplate = require('./day-section.handlebars');
     function _createDaySection(day) {
         return new Surface({
             size: [undefined, 42],
@@ -335,15 +376,33 @@ define(function(require) {
     //
     // Shows the Console
     //
+    function _loadDemoData() {
+        var data = require('./demoMessages.json');
+        for (var i = 0 ; i < data.length; i++) {
+            _addMessage(data[i]);
+        }
+    }
+
+    //
+    // Shows the Console
+    //
     function _createConsole() {
         var consoleMod = new Modifier({
             size: [undefined, 2],
-            align: [0, 0],
-            origin: [0, 0],
+            align: [0, 1],
+            origin: [0, 1],
             transform: Transform.translate(0, 0, 1000)
         });
         var console = new Console();
         mainContext.add(consoleMod).add(console);
+
+        // IMPORTANT NOTE: For some reason the following code prevents a
+        // very annoying bug on android from triggering. The bug occurs when the
+        // keyboard is shown, and the content would become invisible and you
+        // had to scroll down to make the main layout visible....
+        mainLayout.on('layoutstart', function(event) {
+            console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
+        });
     }
 
     //

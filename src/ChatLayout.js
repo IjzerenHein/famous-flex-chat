@@ -114,12 +114,18 @@ define(function(require, exports, module) {
         //
         // Process all next nodes
         //
+        //var trueSizeRequested = false;
         while (offset < context.scrollEnd) {
             node = context.next();
             if (!node) {
                 break;
             }
             nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
+            /*if (!nodeSize || node.trueSizeRequested || trueSizeRequested) {
+                var renderNode = context.getRenderNode(node);
+                console.log(context.cycle + ': next node size: ' + nodeSize + ', requested: ' + trueSizeRequested, ', scrollOffset:' + context.scrollOffset + ', id: ' + renderNode.id);
+                trueSizeRequested = true;
+            }*/
 
             //
             // Detect the first and last cell
@@ -167,6 +173,7 @@ define(function(require, exports, module) {
         //
         // Process previous nodes
         //
+        //trueSizeRequested = false;
         offset = context.scrollOffset;
         while (offset > context.scrollStart) {
             node = context.prev();
@@ -176,6 +183,11 @@ define(function(require, exports, module) {
 
             // Get node size
             nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+            /*if (!nodeSize || node.trueSizeRequested || trueSizeRequested) {
+                var renderNode = context.getRenderNode(node);
+                console.log(context.cycle + ': prev node size: ' + nodeSize + ', requested: ' + trueSizeRequested, ', scrollOffset:' + context.scrollOffset + ', id: ' + renderNode.id);
+                trueSizeRequested = true;
+            }*/
 
             //
             // Keep track of the last section before the first visible cell
@@ -250,9 +262,7 @@ define(function(require, exports, module) {
             }
             set.size[direction] = lastSectionBeforeVisibleCellLength;
             set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
-            set.translate[2] = 1; // put section on top, so that it overlays cells
             context.set(lastSectionBeforeVisibleCell, set);
-            set.translate[2] = 0; // restore..
         }
 
         //
