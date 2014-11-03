@@ -81,6 +81,7 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  overflow: hidden;
 }
 .message-bubble.send {
   padding: 0 10px 10px 30px;
@@ -113,6 +114,7 @@ body {
 .message-bubble .message {
   margin-top: 3px;
   font-size: 16px;
+  word-wrap: break-word;
 }
 .message-bubble .back:after {
   content: "";
