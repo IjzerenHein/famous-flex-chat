@@ -38,6 +38,7 @@ define(function(require) {
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
+    var Timer = require('famous/utilities/Timer');
     var Console = require('./Console');
     var InputSurface = require('famous/surfaces/InputSurface');
     var moment = require('moment/moment');
@@ -238,6 +239,8 @@ define(function(require) {
     //
     // Adds a message to the scrollview
     //
+    var afterInitialRefreshTimerId;
+    var afterInitialRefresh;
     function _addMessage(data) {
         var time = moment(data.timeStamp || new Date());
         data.time = time.format('LT');
@@ -265,8 +268,20 @@ define(function(require) {
             viewSequence.push(chatBubble);
         }
         if (!stockScrollView) {
-            scrollView.goToLastPage();
-            scrollView.reflowLayout();
+            if (afterInitialRefresh) {
+                scrollView.goToLastPage();
+                scrollView.reflowLayout();
+            }
+            else {
+                viewSequence = viewSequence.getNext() || viewSequence;
+                scrollView.setDataSource(viewSequence);
+                scrollView.goToLastPage();
+                if (afterInitialRefreshTimerId === undefined) {
+                    afterInitialRefreshTimerId = Timer.setTimeout(function() {
+                        afterInitialRefresh = true;
+                    }, 100);
+                }
+            }
         }
     }
 
