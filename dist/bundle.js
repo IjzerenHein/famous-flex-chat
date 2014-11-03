@@ -68,41 +68,67 @@
 
 	    //<webpack>
 	    __webpack_require__(5);
-	    __webpack_require__(20);
+	    __webpack_require__(21);
 	    __webpack_require__(6);
 	    __webpack_require__(8);
 	    //</webpack>
 
 	    // Fast-click
-	    var FastClick = __webpack_require__(14);
+	    var FastClick = __webpack_require__(15);
 	    FastClick.attach(document.body);
 
 	    // import dependencies
-	    var Firebase = __webpack_require__(15);
-	    var Engine = __webpack_require__(22);
-	    var ViewSequence = __webpack_require__(23);
-	    var Surface = __webpack_require__(24);
-	    var Modifier = __webpack_require__(25);
-	    var Transform = __webpack_require__(26);
-	    var ScrollView = __webpack_require__(16);
+	    var Firebase = __webpack_require__(16);
+	    var Engine = __webpack_require__(23);
+	    var ViewSequence = __webpack_require__(24);
+	    var Surface = __webpack_require__(25);
+	    var Modifier = __webpack_require__(26);
+	    var Transform = __webpack_require__(27);
+	    var StockScrollView = __webpack_require__(28);
+	    var ScrollView = __webpack_require__(17);
 	    var ChatLayout = __webpack_require__(2);
-	    var HeaderFooterLayout = __webpack_require__(18);
-	    //var FlowLayoutController = require('famous-flex/FlowLayoutController');
-	    var LayoutController = __webpack_require__(17);
-	    var Lagometer = __webpack_require__(11);
+	    var HeaderFooterLayout = __webpack_require__(19);
+	    var LayoutController = __webpack_require__(18);
+	    var Lagometer = __webpack_require__(12);
 	    var AutosizeTextareaSurface = __webpack_require__(3);
 	    var Console = __webpack_require__(4);
-	    var InputSurface = __webpack_require__(27);
-	    var moment = __webpack_require__(12);
-	    var cuid = __webpack_require__(19);
+	    var InputSurface = __webpack_require__(29);
+	    var moment = __webpack_require__(13);
+	    var cuid = __webpack_require__(20);
+	    var browser = __webpack_require__(33).userAgent(window.navigator.userAgent);
+	    // templates
+	    var chatBubbleTemplate = __webpack_require__(9);
+	    var daySectionTemplate = __webpack_require__(10);
+
+	    // debugging
+	    var flow = true;
+	    var debug = false;
+	    var useContainer = false;
+	    var stockScrollView = false;
+	    var stickySections = true;
+	    var duplicateCount = 1;
+	    var trueSize = true;
+
+	    // On mobile or other devices that have keyboards that slide in, ensure
+	    // that container mode is enabled.
+	    if ((browser.platform === 'tablet') || (browser.platform === 'mobile')) {
+	        useContainer = true;
+	    }
 
 	    // Initialize
+	    //var mobileDetect = new MobileDetect(window.navigator.userAgent);
 	    var mainContext = Engine.createContext();
 	    var viewSequence = new ViewSequence();
 	    _setupFirebase();
 	    mainContext.add(_createMainLayout());
 	    //_createLagometer();
-	    _createConsole();
+	    //_loadDemoData();
+
+	    // Fix for android, which causes a repaint after a resize, which
+	    // repositions the keyboard correctly.
+	    if (browser.os.android) {
+	        _createConsole();
+	    }
 
 	    //
 	    // Main layout, bottom text input, top chat messages
@@ -120,13 +146,6 @@
 	                content: _createScrollView(),
 	                footer: _createMessageBar()
 	            }
-	        });
-	        // IMPORTANT NOTE: For some reason the following code prevents a
-	        // very annoying bug on android from triggering. The bug occurs when the
-	        // keyboard is shown, and the content would become invisible and you
-	        // had to scroll down to make the main layout visible....
-	        mainLayout.on('layoutstart', function(event) {
-	            console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
 	        });
 	        return mainLayout;
 	    }
@@ -227,24 +246,31 @@
 	    //
 	    var scrollView;
 	    function _createScrollView() {
-	        scrollView = new ScrollView({
-	            layout: ChatLayout,
-	            layoutOptions: {
-	                // callback that is called by the layout-function to check
-	                // whether a node is a section
-	                isSectionCallback: function(renderNode) {
-	                    return renderNode.properties.isSection;
+	        if (stockScrollView) {
+	            scrollView = new StockScrollView();
+	            scrollView.sequenceFrom(viewSequence);
+	        }
+	        else {
+	            scrollView = new ScrollView({
+	                layout: ChatLayout,
+	                layoutOptions: {
+	                    // callback that is called by the layout-function to check
+	                    // whether a node is a section
+	                    isSectionCallback: function(renderNode) {
+	                        return renderNode.properties.isSection && stickySections;
+	                    },
+	                    isPullToRefreshCallback: function(renderNode) {
+	                        return renderNode.isPullToRefresh;
+	                    }
 	                },
-	                isPullToRefreshCallback: function(renderNode) {
-	                    return renderNode.isPullToRefresh;
-	                }
-	            },
-	            dataSource: viewSequence,
-	            alignment: 1,
-	            useContainer: false,
-	            mouseMove: true,
-	            debug: false
-	        });
+	                dataSource: viewSequence,
+	                flow: flow,
+	                alignment: 1,
+	                useContainer: useContainer,
+	                mouseMove: true,
+	                debug: debug
+	            });
+	        }
 	        return scrollView;
 	    }
 
@@ -263,6 +289,41 @@
 	    });*/
 
 	    //
+	    // Adds a message to the scrollview
+	    //
+	    function _addMessage(data) {
+	        var time = moment(data.timeStamp || new Date());
+	        data.time = time.format('LT');
+	        if (!data.author || (data.author === '')) {
+	            data.author = 'Anonymous bastard';
+	        }
+
+	        // Insert section
+	        //var day = time.calander();
+	        var day = time.format('LL');
+	        if (day !== lastSectionDay) {
+	            lastSectionDay = day;
+	            var daySection = _createDaySection(day);
+	            if (stockScrollView || !useContainer) {
+	                daySection.pipe(scrollView);
+	            }
+	            viewSequence.push(daySection);
+	        }
+	        //console.log('adding message: ' + JSON.stringify(data));
+	        for (var i = 0; i < duplicateCount; i++) {
+	            var chatBubble = _createChatBubble(data);
+	            if (stockScrollView || !useContainer) {
+	                chatBubble.pipe(scrollView);
+	            }
+	            viewSequence.push(chatBubble);
+	        }
+	        if (!stockScrollView) {
+	            scrollView.goToLastPage();
+	            scrollView.reflowLayout();
+	        }
+	    }
+
+	    //
 	    // setup firebase
 	    //
 	    var fbMessages;
@@ -270,51 +331,31 @@
 	    function _setupFirebase() {
 	        fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
 	        fbMessages.limit(30).on('child_added', function(snapshot) {
-	            var data = snapshot.val();
-	            var time = moment(data.timeStamp);
-	            data.time = time.format('LT');
-	            if (!data.author || (data.author === '')) {
-	                data.author = 'Anonymous bastard';
-	            }
-
-	            // Insert section
-	            //var day = time.calander();
-	            var day = time.format('LL');
-	            if (day !== lastSectionDay) {
-	                lastSectionDay = day;
-	                var daySection = _createDaySection(day);
-	                daySection.pipe(scrollView);
-	                scrollView.insert(-1, daySection);
-	            }
-	            //console.log('adding message: ' + JSON.stringify(data));
-	            for (var i = 0; i < 1; i++) {
-	                var chatBubble = _createChatBubble(data);
-	                chatBubble.pipe(scrollView);
-	                scrollView.insert(-1, chatBubble);
-	                scrollView.goToLastPage();
-	            }
+	            _addMessage(snapshot.val());
 	        });
 	    }
 
 	    //
 	    // Create a chat-bubble
 	    //
-	    var chatBubbleTemplate = __webpack_require__(9);
 	    function _createChatBubble(data) {
-	        return new Surface({
-	            size: [undefined, true],
+	        var surface = new Surface({
+	            size: [undefined, trueSize ? true : 65],
 	            classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
 	            content: chatBubbleTemplate(data),
 	            properties: {
 	                message: data.message
 	            }
 	        });
+	        /*surface.on('onresize', function(event) {
+	            console.log('whut');
+	        });*/
+	        return surface;
 	    }
 
 	    //
 	    // Create a day section
 	    //
-	    var daySectionTemplate = __webpack_require__(10);
 	    function _createDaySection(day) {
 	        return new Surface({
 	            size: [undefined, 42],
@@ -388,15 +429,33 @@
 	    //
 	    // Shows the Console
 	    //
+	    function _loadDemoData() {
+	        var data = __webpack_require__(11);
+	        for (var i = 0 ; i < data.length; i++) {
+	            _addMessage(data[i]);
+	        }
+	    }
+
+	    //
+	    // Shows the Console
+	    //
 	    function _createConsole() {
 	        var consoleMod = new Modifier({
 	            size: [undefined, 2],
-	            align: [0, 0],
-	            origin: [0, 0],
+	            align: [0, 1],
+	            origin: [0, 1],
 	            transform: Transform.translate(0, 0, 1000)
 	        });
 	        var console = new Console();
 	        mainContext.add(consoleMod).add(console);
+
+	        // IMPORTANT NOTE: For some reason the following code prevents a
+	        // very annoying bug on android from triggering. The bug occurs when the
+	        // keyboard is shown, and the content would become invisible and you
+	        // had to scroll down to make the main layout visible....
+	        mainLayout.on('layoutstart', function(event) {
+	            console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
+	        });
 	    }
 
 	    //
@@ -488,7 +547,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(30);
+	    var Utility = __webpack_require__(32);
 
 	    // Define capabilities of this layout function
 	    var capabilities = {
@@ -537,12 +596,18 @@
 	        //
 	        // Process all next nodes
 	        //
+	        //var trueSizeRequested = false;
 	        while (offset < context.scrollEnd) {
 	            node = context.next();
 	            if (!node) {
 	                break;
 	            }
 	            nodeSize = (itemSize === true) ? context.resolveSize(node, size)[direction] : itemSize;
+	            /*if (!nodeSize || node.trueSizeRequested || trueSizeRequested) {
+	                var renderNode = context.getRenderNode(node);
+	                console.log(context.cycle + ': next node size: ' + nodeSize + ', requested: ' + trueSizeRequested, ', scrollOffset:' + context.scrollOffset + ', id: ' + renderNode.id);
+	                trueSizeRequested = true;
+	            }*/
 
 	            //
 	            // Detect the first and last cell
@@ -590,6 +655,7 @@
 	        //
 	        // Process previous nodes
 	        //
+	        //trueSizeRequested = false;
 	        offset = context.scrollOffset;
 	        while (offset > context.scrollStart) {
 	            node = context.prev();
@@ -599,6 +665,11 @@
 
 	            // Get node size
 	            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+	            /*if (!nodeSize || node.trueSizeRequested || trueSizeRequested) {
+	                var renderNode = context.getRenderNode(node);
+	                console.log(context.cycle + ': prev node size: ' + nodeSize + ', requested: ' + trueSizeRequested, ', scrollOffset:' + context.scrollOffset + ', id: ' + renderNode.id);
+	                trueSizeRequested = true;
+	            }*/
 
 	            //
 	            // Keep track of the last section before the first visible cell
@@ -673,9 +744,7 @@
 	            }
 	            set.size[direction] = lastSectionBeforeVisibleCellLength;
 	            set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
-	            set.translate[2] = 1; // put section on top, so that it overlays cells
 	            context.set(lastSectionBeforeVisibleCell, set);
-	            set.translate[2] = 0; // restore..
 	        }
 
 	        //
@@ -738,7 +807,7 @@
 	    'use strict';
 
 	    // import dependencies
-	    var TextareaSurface = __webpack_require__(28);
+	    var TextareaSurface = __webpack_require__(30);
 
 	    /**
 	     * @class
@@ -981,9 +1050,9 @@
 	    'use strict';
 
 	    // import dependencies
-	    var Surface = __webpack_require__(24);
-	    var Modifier = __webpack_require__(25);
-	    var View = __webpack_require__(29);
+	    var Surface = __webpack_require__(25);
+	    var Modifier = __webpack_require__(26);
+	    var View = __webpack_require__(31);
 
 	    // globals
 	    var instance;
@@ -1057,16 +1126,16 @@
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(31);
-	__webpack_require__(32);
-	__webpack_require__(33);
+	__webpack_require__(34);
+	__webpack_require__(35);
+	__webpack_require__(36);
 
 /***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
-	var dispose = __webpack_require__(13)
+	var dispose = __webpack_require__(14)
 		// The css code:
 		(__webpack_require__(7));
 	// Hot Module Replacement
@@ -1080,7 +1149,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
-		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n}\n.message-bubble .author {\n  font-size: 14px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
+		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n}\n.message-bubble .author {\n  font-size: 14px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
 
 /***/ },
 /* 8 */
@@ -1092,30 +1161,83 @@
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(136).default.template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-	  var helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-	  return "<div class=\"back\">\n	<span class=\"author\">"
-	    + escapeExpression(((helper = (helper = helpers.author || (depth0 != null ? depth0.author : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"author","hash":{},"data":data}) : helper)))
-	    + "</span>\n	<div class=\"time\">"
-	    + escapeExpression(((helper = (helper = helpers.time || (depth0 != null ? depth0.time : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"time","hash":{},"data":data}) : helper)))
-	    + "</div>\n	<div class=\"message\">"
-	    + escapeExpression(((helper = (helper = helpers.message || (depth0 != null ? depth0.message : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"message","hash":{},"data":data}) : helper)))
+	module.exports = __webpack_require__(142).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	  this.compilerInfo = [4,'>= 1.0.0'];
+	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+	  buffer += "<div class=\"back\">\n	<span class=\"author\">";
+	  if (helper = helpers.author) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.author); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
+	    + "</span>\n	<div class=\"time\">";
+	  if (helper = helpers.time) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.time); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
+	    + "</div>\n	<div class=\"message\">";
+	  if (helper = helpers.message) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.message); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
 	    + "</div>\n</div>";
-	},"useData":true});
+	  return buffer;
+	  });
 
 /***/ },
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(136).default.template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-	  var helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-	  return "<span class=\"text\">"
-	    + escapeExpression(((helper = (helper = helpers.text || (depth0 != null ? depth0.text : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"text","hash":{},"data":data}) : helper)))
+	module.exports = __webpack_require__(142).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	  this.compilerInfo = [4,'>= 1.0.0'];
+	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+	  buffer += "<span class=\"text\">";
+	  if (helper = helpers.text) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.text); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
 	    + "</span>\n";
-	},"useData":true});
+	  return buffer;
+	  });
 
 /***/ },
 /* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = [
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		}
+	]
+
+/***/ },
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -1135,9 +1257,9 @@
 	    'use strict';
 
 	    // import dependencies
-	    var Engine = __webpack_require__(22);
-	    var CanvasSurface = __webpack_require__(34);
-	    var View = __webpack_require__(29);
+	    var Engine = __webpack_require__(23);
+	    var CanvasSurface = __webpack_require__(37);
+	    var View = __webpack_require__(31);
 
 	    /**
 	     * @class Lagometer
@@ -1371,7 +1493,7 @@
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {//! moment.js
@@ -2143,7 +2265,7 @@
 	        if (!locales[name] && hasModule) {
 	            try {
 	                oldLocale = moment.locale();
-	                __webpack_require__(35)("./" + name);
+	                __webpack_require__(38)("./" + name);
 	                // because defineLocale currently also sets the global locale, we want to undo that for lazy loaded locales
 	                moment.locale(oldLocale);
 	            } catch (e) { }
@@ -4231,10 +4353,10 @@
 	    }
 	}).call(this);
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(137)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(143)(module)))
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -4261,7 +4383,7 @@
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -5088,7 +5210,7 @@
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*! @license Firebase v1.1.2 - License: https://www.firebase.com/terms/terms-of-service.html */ (function() {var k,ba=this;function l(a){return void 0!==a}function ca(){}function da(a){a.ib=function(){return a.Ld?a.Ld:a.Ld=new a}}
@@ -5291,7 +5413,7 @@
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -5325,21 +5447,21 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(38);
-	    var FlowLayoutController = __webpack_require__(41);
-	    var LayoutNode = __webpack_require__(40);
-	    var FlowLayoutNode = __webpack_require__(42);
-	    var LayoutNodeManager = __webpack_require__(39);
-	    var ContainerSurface = __webpack_require__(47);
-	    var Transform = __webpack_require__(26);
-	    var EventHandler = __webpack_require__(37);
-	    var Group = __webpack_require__(48);
-	    var Vector = __webpack_require__(50);
-	    var PhysicsEngine = __webpack_require__(51);
-	    var Particle = __webpack_require__(52);
-	    var Drag = __webpack_require__(53);
-	    var Spring = __webpack_require__(54);
-	    var ScrollSync = __webpack_require__(55);
+	    var LayoutUtility = __webpack_require__(41);
+	    var FlowLayoutController = __webpack_require__(44);
+	    var LayoutNode = __webpack_require__(43);
+	    var FlowLayoutNode = __webpack_require__(45);
+	    var LayoutNodeManager = __webpack_require__(42);
+	    var ContainerSurface = __webpack_require__(51);
+	    var Transform = __webpack_require__(27);
+	    var EventHandler = __webpack_require__(40);
+	    var Group = __webpack_require__(52);
+	    var Vector = __webpack_require__(54);
+	    var PhysicsEngine = __webpack_require__(55);
+	    var Particle = __webpack_require__(56);
+	    var Drag = __webpack_require__(57);
+	    var Spring = __webpack_require__(58);
+	    var ScrollSync = __webpack_require__(59);
 
 	    /**
 	     * Boudary reached detection
@@ -5420,7 +5542,8 @@
 
 	        // Diagnostics
 	        this._debug = {
-	            layoutCount: 0
+	            layoutCount: 0,
+	            commitCount: 0
 	        };
 
 	        // Create groupt for faster rendering
@@ -5481,13 +5604,13 @@
 	        //insertSpec: undefined,
 	        //removeSpec: undefined,
 	        useContainer: false,    // when true embeds inside a ContainerSurface for clipping and capturing input events
-	        offsetRounding: 1.0,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
+	        offsetRounding: 0.5,    // rounds the scroll-offset before deploying it to the DOM (1 = whole numbers, etc...)
 	        visibleItemThresshold: 0.5, // by default, when an item is 50% visible, it is considered visible by `getFirstVisibleItem`
 	        scrollParticle: {
 	            // use defaults
 	        },
 	        scrollDrag: {
-	            strength: 0.001
+	            strength: 0.002
 	        },
 	        scrollSpring: {
 	            dampingRatio: 1.0,
@@ -5573,7 +5696,7 @@
 	        if (!this.options.debug) {
 	            return;
 	        }
-	        var message = this._debug.layoutCount + ': ';
+	        var message = this._debug.commitCount + ': ';
 	        for (var i = 0; i < arguments.length; i++) {
 	            var arg = arguments[i];
 	            if ((arg instanceof Object) || (arg instanceof Array)) {
@@ -5584,22 +5707,6 @@
 	            }
 	        }
 	        console.log(message);
-	    }
-
-	    /**
-	     * Helper function to aid development and find bugs.
-	     */
-	    function _verifyIntegrity(phase, scrollOffset) {
-	        /*phase = phase ? ' (' + phase + ')' : '';
-	        if ((scrollOffset !== undefined) && isNaN(scrollOffset)) {
-	            throw 'invalid scrollOffset: ' + scrollOffset + phase;
-	        }
-	        if (isNaN(this._scroll.particle.getVelocity1D(0))) {
-	            throw 'invalid particle velocity: ' + this._scroll.particle.getVelocity1D(0) + phase;
-	        }
-	        if (isNaN(this._scroll.particle.getPosition1D(0))) {
-	            throw 'invalid particle position: ' + this._scroll.particle.getPosition1D(0) + phase;
-	        }*/
 	    }
 
 	    /**
@@ -5616,7 +5723,7 @@
 	                if (this._scroll.springForceId !== undefined) {
 	                    this._scroll.pe.detach(this._scroll.springForceId);
 	                    this._scroll.springForceId = undefined;
-	                    _log.call(this, 'disabled spring');
+	                    //_log.call(this, 'disabled spring');
 	                }
 	            }
 	            else {
@@ -5625,7 +5732,7 @@
 	                }
 	                this._scroll.springEndState.set1D(springValue);
 	                this._scroll.pe.wake();
-	                _log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
+	                //_log.call(this, 'setting spring to: ', springValue, ' (', this._scroll.springSource, ')');
 	            }
 	        }
 	    }
@@ -5907,6 +6014,7 @@
 	    function _setParticle(position, velocity, phase) {
 	        if (position !== undefined) {
 	            //var oldPosition = this._scroll.particle.getPosition1D();
+	            this._scroll.particleValue = position;
 	            this._scroll.particle.setPosition1D(position);
 	            //_log.call(this, 'setParticle.position: ', position, ' (old: ', oldPosition, ', delta: ', position - oldPosition, ', phase: ', phase, ')');
 	        }
@@ -5922,13 +6030,27 @@
 	    /**
 	     * Get the in-use scroll-offset.
 	     */
-	    function _calcScrollOffset(normalize) {
+	    function _calcScrollOffset(normalize, refreshParticle) {
 
 	        // When moving using touch-gestures, make the offset stick to the
 	        // finger. When the bounds is exceeded, decrease the scroll distance
 	        // by two.
-	        var scrollOffset = this._scroll.particle.getPosition1D();
+	        if (refreshParticle || (this._scroll.particleValue === undefined)) {
+	            var particleValueTime = Date.now();
+	            var particleValue = this._scroll.particle.getPosition1D();
+	            /*if (this._scroll.particleValue !== undefined) {
+	                var diff = (particleValue - this._scroll.particleValue);
+	                if ((this._debug.particleDiff !== undefined) && (Math.abs(diff - this._debug.particleDiff) >= 1)) {
+	                    _log.call(this, 'particle speed variation:', (diff - this._debug.particleDiff), ', diff: ', diff, ', timeDiff: ', (particleValueTime - this._scroll.particleValueTime));
+	                }
+	                this._debug.particleDiff = diff;
+	            }*/
+	            this._scroll.particleValue = particleValue;
+	            this._scroll.particleValueTime = particleValueTime;
+	        }
 
+	        // do stuff
+	        var scrollOffset = this._scroll.particleValue;
 	        if (this._scroll.scrollDelta || this._scroll.normalizedScrollDelta) {
 	            scrollOffset += this._scroll.scrollDelta + this._scroll.normalizedScrollDelta;
 	            if (((this._scroll.boundsReached & Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) ||
@@ -5956,8 +6078,8 @@
 	        }
 
 	        //_log.call(this, 'scrollOffset: ', scrollOffset, ', particle:', this._scroll.particle.getPosition1D(), ', moveToPosition: ', this._scroll.moveToPosition, ', springPosition: ', this._scroll.springPosition);
-	        return _roundScrollOffset.call(this, scrollOffset);
-	        //return scrollOffset;
+	        //return _roundScrollOffset.call(this, scrollOffset);
+	        return scrollOffset;
 	    }
 
 	    /**
@@ -6296,12 +6418,13 @@
 
 	        // Adjust particle and springs
 	        if (normalizedScrollOffset !== scrollOffset) {
-	            //_log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset);
 	            var delta = normalizedScrollOffset - scrollOffset;
 
 	            // Adjust particle
-	            var particleValue = this._scroll.particle.getPosition1D();
+	            //var particleValue = this._scroll.particle.getPosition1D();
+	            var particleValue = this._scroll.particleValue;
 	            _setParticle.call(this, particleValue + delta, undefined, 'normalize');
+	            _log.call(this, 'normalized scrollOffset: ', normalizedScrollOffset, ', old: ', scrollOffset, ', particle: ', particleValue + delta);
 
 	            // Adjust scroll spring
 	            if (this._scroll.springPosition !== undefined) {
@@ -6744,11 +6867,18 @@
 	     * Executes the layout and updates the state of the scrollview.
 	     */
 	    function _layout(size, scrollOffset, nested) {
-	        _verifyIntegrity.call(this, 'layout', scrollOffset);
 
 	        // Track the number of times the layout-function was executed
 	        this._debug.layoutCount++;
 	        //_log.call(this, 'Layout, scrollOffset: ', scrollOffset, ', particle: ', this._scroll.particle.getPosition1D());
+
+	        // Determine start & end
+	        var scrollStart = -size[this._direction];
+	        var scrollEnd = size[this._direction] * 2;
+	        if ((this._scroll.scrollForceCount) || (this._scroll.springPosition !== undefined)) {
+	            scrollStart += scrollOffset;
+	            scrollEnd += scrollOffset;
+	        }
 
 	        // Prepare for layout
 	        var layoutContext = this._nodes.prepareForLayout(
@@ -6758,11 +6888,10 @@
 	                direction: this._direction,
 	                reverse: this.options.alignment ? true : false,
 	                scrollOffset: this.options.alignment ? (scrollOffset + size[this._direction]) : scrollOffset,
-	                scrollStart: Math.min(scrollOffset - size[this._direction], -size[this._direction]),
-	                scrollEnd: Math.max(scrollOffset + (size[this._direction] * 2), size[this._direction] * 2)
+	                scrollStart: scrollStart,
+	                scrollEnd: scrollEnd
 	            }
 	        );
-	        _verifyIntegrity.call(this, 'prepareLayout');
 
 	        // Layout objects
 	        if (this._layout.function) {
@@ -6771,23 +6900,18 @@
 	                this._layout.options    // additional layout-options
 	            );
 	        }
-	        _verifyIntegrity.call(this, 'layout.function', scrollOffset);
 
 	        // Mark non-invalidated nodes for removal
 	        this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
-	        _verifyIntegrity.call(this, 'removeNonInvalidatedNodes', scrollOffset);
 
 	        // Check whether the bounds have been reached
 	        _calcBounds.call(this, size, scrollOffset);
-	        _verifyIntegrity.call(this, 'calcBounds', scrollOffset);
 
 	        // Update scroll-to spring
 	        _calcScrollToOffset.call(this, size, scrollOffset);
-	        _verifyIntegrity.call(this, 'calcScrollToOffset', scrollOffset);
 
 	        // When pagination is enabled, snap to page
 	        _snapToPage.call(this, size, scrollOffset);
-	        _verifyIntegrity.call(this, 'snapToPage', scrollOffset);
 
 	        // If the bounds have changed, and the scroll-offset would be different
 	        // than before, then re-layout entirely using the new offset.
@@ -6799,7 +6923,6 @@
 
 	        // Calculate the spec-output
 	        var result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-	        _verifyIntegrity.call(this, 'buildSpecAndDestroyUnrenderedNodes', scrollOffset);
 	        this._specs = result.specs;
 	        if (result.modified || true) {
 	            this._eventOutput.emit('reflow', {
@@ -6811,11 +6934,9 @@
 	        // top as possible and the layout function will need to process the least amount
 	        // of renderables.
 	        scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
-	        _verifyIntegrity.call(this, 'normalizeViewSequence', scrollOffset);
 
 	        // Update spring
 	        _updateSpring.call(this);
-	        _verifyIntegrity.call(this, 'setSpring', scrollOffset);
 
 	        return scrollOffset;
 	    }
@@ -6841,7 +6962,6 @@
 	    /**
 	     * Inner render function of the Group
 	     */
-	    var newRenderedSpecId = 1;
 	    function _innerRender() {
 	        var specs;
 	        var i;
@@ -6854,17 +6974,17 @@
 	            // Re-use previous spec array if size is the same
 	            if (!this._cachedSpecs || (this._cachedSpecs.length !== this._specs.length)) {
 	                specs = [];
+	                /*if (this._cachedSpecs) {
+	                    //console.log('specs length: ' + this._specs.length + ', old:' + this._cachedSpecs.length);
+	                    //_log.call(this, 'specs length: ', this._specs.length, ', old:', this._cachedSpecs.length);
+	                }*/
 	                this._cachedSpecs = specs;
 	            }
 
-	            // Translate all specs back, and instead use the scroll-offset
-	            // from the `Group`.
-	            var scrollOffset = this._scrollOffsetCache;
-	            var translate = [0, 0, 0];
-	            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+	            // Render the specs (and re-use old spec if possible)
+	            var spec;
 	            for (i = 0; i < this._specs.length; i++) {
-	                var spec = this._specs[i];
-	                var transform = Transform.thenMove(spec.transform, translate);
+	                spec = this._specs[i];
 
 	                // Create or re-use spec
 	                var newSpec;
@@ -6881,30 +7001,29 @@
 	                newSpec.align = spec.align;
 	                newSpec.opacity = spec.opacity;
 	                newSpec.size = spec.size;
-	                newSpec.transform = transform;
+	                newSpec.transform = spec.transform;
 	                newSpec.target = spec.renderNode.render();
-	                newSpec.scrollOffset = scrollOffset;
-	                //newSpec.index = i;
-
-	                // Show new spec position for debugging purposes
-	                /*if (this.options.debug) {
-	                    if (spec._translatedSpec) {
-	                        newSpec._renderedId = spec._translatedSpec._renderedId;
-	                        if (!LayoutUtility.isEqualSpec(newSpec, spec._translatedSpec)) {
-	                            var diff = LayoutUtility.getSpecDiffText(newSpec, spec._translatedSpec);
-	                            _log.call(this, 'spec: ', spec._translatedSpec._renderedId, ', ' + diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
-	                            //console.log(diff + ' (scrollOffset: ' + spec._translatedSpec.scrollOffset + ' != ' + scrollOffset + ', groupStart: ' + this._scroll.groupStart + ')');
-	                        }
-	                    }
-	                    else {
-	                        newSpec._renderedId = newRenderedSpecId++;
-	                        //_log.call(this, 'new spec rendered: ', newSpec._renderedId);
-	                        //console.log('new spec rendered');
-	                    }
-	                    spec._translatedSpec = newSpec;
-	                }*/
 	            }
 	            specs = this._cachedSpecs;
+
+	            // Translate all specs back, and instead use the scroll-offset
+	            // from the `Group`.
+	            var translate = [0, 0, 0];
+	            var scrollOffset = this._scrollOffsetCache;
+	            var newScrollOffset = _calcScrollOffset.call(this);
+	            /*if (scrollOffset !== newScrollOffset) {
+	                //console.log('scrollOffset: ' + scrollOffset + ', new: ' + newScrollOffset + ', diff: ' + (newScrollOffset - scrollOffset));
+	                _log.call(this, 'scrollOffset: ', scrollOffset, ', new: ', newScrollOffset, ', diff: ', (newScrollOffset - scrollOffset));
+	                // Lag correction, when the offset has change in the meantime,
+	                // then adjust the offset at the last possible time before rendering.
+	                //this._scroll.groupStart -= (newScrollOffset - scrollOffset);
+	            }*/
+	            scrollOffset = newScrollOffset;
+	            translate[this._direction] = -this._scroll.groupStart - scrollOffset;
+	            for (i = 0; i < specs.length; i++) {
+	                spec = specs[i];
+	                spec.transform = Transform.thenMove(spec.transform, translate);
+	            }
 	        }
 	        else {
 
@@ -6919,8 +7038,9 @@
 	        /*var now = Date.now();
 	        if (now !== this._now) {
 	            var diff = now - this._now;
-	            if (diff > 2) {
-	                console.log('time execution: ' + diff);
+	            if (diff > 12) {
+	                //console.log('time execution: ' + diff);
+	                _log.call(this, 'time execution: ', diff);
 	            }
 	        }*/
 	        return specs;
@@ -6938,6 +7058,9 @@
 	    ScrollView.prototype.commit = function commit(context) {
 	        var size = context.size;
 
+	        // Update debug info
+	        this._debug.commitCount++;
+
 	        /*var usedHeap = window.performance.memory.usedJSHeapSize;
 	        if (usedHeap !== this._debug.usedHeap) {
 	            console.log('used heap changed: ' + usedHeap);
@@ -6945,10 +7068,10 @@
 	        }*/
 
 	        // Log particle/time diff
-	        this._now = Date.now();
+	        //this._now = Date.now();
 
 	        // Calculate scroll offset
-	        var scrollOffset = _calcScrollOffset.call(this, true);
+	        var scrollOffset = _calcScrollOffset.call(this, true, true);
 
 	        // When the size or layout function has changed, reflow the layout
 	        if (size[0] !== this._contextSizeCache[0] ||
@@ -7052,7 +7175,7 @@
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -7081,16 +7204,16 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(30);
-	    var Entity = __webpack_require__(46);
-	    var ViewSequence = __webpack_require__(23);
-	    var OptionsManager = __webpack_require__(36);
-	    var EventHandler = __webpack_require__(37);
-	    var LayoutUtility = __webpack_require__(38);
-	    var LayoutNodeManager = __webpack_require__(39);
-	    var LayoutNode = __webpack_require__(40);
-	    var Transform = __webpack_require__(26);
-	    __webpack_require__(49);
+	    var Utility = __webpack_require__(32);
+	    var Entity = __webpack_require__(50);
+	    var ViewSequence = __webpack_require__(24);
+	    var OptionsManager = __webpack_require__(39);
+	    var EventHandler = __webpack_require__(40);
+	    var LayoutUtility = __webpack_require__(41);
+	    var LayoutNodeManager = __webpack_require__(42);
+	    var LayoutNode = __webpack_require__(43);
+	    var Transform = __webpack_require__(27);
+	    __webpack_require__(53);
 
 	    /**
 	     * @class
@@ -7611,7 +7734,7 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -7657,7 +7780,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutDockHelper = __webpack_require__(49);
+	    var LayoutDockHelper = __webpack_require__(53);
 
 	    // Layout function
 	    module.exports = function HeaderFooterLayout(context, options) {
@@ -7670,7 +7793,7 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -7786,13 +7909,13 @@
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
-	var dispose = __webpack_require__(13)
+	var dispose = __webpack_require__(14)
 		// The css code:
-		(__webpack_require__(21));
+		(__webpack_require__(22));
 	// Hot Module Replacement
 	if(false) {
 		module.hot.accept();
@@ -7800,14 +7923,14 @@
 	}
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
 		"/* This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/.\n *\n * Owner: mark@famo.us\n * @license MPL 2.0\n * @copyright Famous Industries, Inc. 2014\n */\n\n.famous-root {\n    width: 100%;\n    height: 100%;\n    margin: 0px;\n    padding: 0px;\n    overflow: hidden;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n}\n\n.famous-container, .famous-group {\n    position: absolute;\n    top: 0px;\n    left: 0px;\n    bottom: 0px;\n    right: 0px;\n    overflow: visible;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n    -webkit-backface-visibility: visible;\n    backface-visibility: visible;\n    pointer-events: none;\n}\n\n.famous-group {\n    width: 0px;\n    height: 0px;\n    margin: 0px;\n    padding: 0px;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n}\n\n.famous-surface {\n    position: absolute;\n    -webkit-transform-origin: center center;\n    transform-origin: center center;\n    -webkit-backface-visibility: hidden;\n    backface-visibility: hidden;\n    -webkit-transform-style: preserve-3d;\n    transform-style: preserve-3d;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    -webkit-tap-highlight-color: transparent;\n    pointer-events: auto;\n}\n\n.famous-container-group {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n";
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -7836,9 +7959,9 @@
 	     * @static
 	     * @class Engine
 	     */
-	    var Context = __webpack_require__(43);
-	    var EventHandler = __webpack_require__(37);
-	    var OptionsManager = __webpack_require__(36);
+	    var Context = __webpack_require__(46);
+	    var EventHandler = __webpack_require__(40);
+	    var OptionsManager = __webpack_require__(39);
 
 	    var Engine = {};
 
@@ -8193,7 +8316,7 @@
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -8537,7 +8660,7 @@
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -8550,7 +8673,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var ElementOutput = __webpack_require__(44);
+	    var ElementOutput = __webpack_require__(47);
 
 	    /**
 	     * A base class for viewable content and event
@@ -8991,10 +9114,14 @@
 	    Surface.prototype.deploy = function deploy(target) {
 	        var content = this.getContent();
 	        if (content instanceof Node) {
+	            //console.log('deploy node');
 	            while (target.hasChildNodes()) target.removeChild(target.firstChild);
 	            target.appendChild(content);
 	        }
-	        else target.innerHTML = content;
+	        else {
+	            //console.log('deploy content');
+	            target.innerHTML = content;
+	        }
 	    };
 
 	    /**
@@ -9006,7 +9133,10 @@
 	     */
 	    Surface.prototype.recall = function recall(target) {
 	        var df = document.createDocumentFragment();
-	        while (target.hasChildNodes()) df.appendChild(target.firstChild);
+	        while (target.hasChildNodes()) {
+	            df.appendChild(target.firstChild);
+	            //console.log('recall');
+	        }
 	        this.setContent(df);
 	    };
 
@@ -9038,7 +9168,7 @@
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -9051,11 +9181,11 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transform = __webpack_require__(26);
+	    var Transform = __webpack_require__(27);
 
 	    /* TODO: remove these dependencies when deprecation complete */
-	    var Transitionable = __webpack_require__(56);
-	    var TransitionableTransform = __webpack_require__(57);
+	    var Transitionable = __webpack_require__(62);
+	    var TransitionableTransform = __webpack_require__(63);
 
 	    /**
 	     *
@@ -9478,7 +9608,7 @@
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10166,7 +10296,673 @@
 
 
 /***/ },
-/* 27 */
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: felix@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var PhysicsEngine = __webpack_require__(55);
+	    var Particle = __webpack_require__(56);
+	    var Drag = __webpack_require__(57);
+	    var Spring = __webpack_require__(58);
+
+	    var EventHandler = __webpack_require__(40);
+	    var OptionsManager = __webpack_require__(39);
+	    var ViewSequence = __webpack_require__(24);
+	    var Scroller = __webpack_require__(48);
+	    var Utility = __webpack_require__(32);
+
+	    var GenericSync = __webpack_require__(60);
+	    var ScrollSync = __webpack_require__(59);
+	    var TouchSync = __webpack_require__(61);
+	    GenericSync.register({scroll : ScrollSync, touch : TouchSync});
+
+	    /** @const */
+	    var TOLERANCE = 0.5;
+
+	    /** @enum */
+	    var SpringStates = {
+	        NONE: 0,
+	        EDGE: 1,
+	        PAGE: 2
+	    };
+
+	    /** @enum */
+	    var EdgeStates = {
+	        TOP:   -1,
+	        NONE:   0,
+	        BOTTOM: 1
+	    };
+
+	    /**
+	     * Scrollview will lay out a collection of renderables sequentially in the specified direction, and will
+	     * allow you to scroll through them with mousewheel or touch events.
+	     * @class Scrollview
+	     * @constructor
+	     * @param {Options} [options] An object of configurable options.
+	     * @param {Number} [options.direction=Utility.Direction.Y] Using the direction helper found in the famous Utility
+	     * module, this option will lay out the Scrollview instance's renderables either horizontally
+	     * (x) or vertically (y). Utility's direction is essentially either zero (X) or one (Y), so feel free
+	     * to just use integers as well.
+	     * @param {Boolean} [options.rails=true] When true, Scrollview's genericSync will only process input in it's primary access.
+	     * @param {Number} [clipSize=undefined] The size of the area (in pixels) that Scrollview will display content in.
+	     * @param {Number} [margin=undefined] The size of the area (in pixels) that Scrollview will process renderables' associated calculations in.
+	     * @param {Number} [friction=0.001] Input resistance proportional to the velocity of the input.
+	     * Controls the feel of the Scrollview instance at low velocities.
+	     * @param {Number} [drag=0.0001] Input resistance proportional to the square of the velocity of the input.
+	     * Affects Scrollview instance more prominently at high velocities.
+	     * @param {Number} [edgeGrip=0.5] A coefficient for resistance against after-touch momentum.
+	     * @param {Number} [egePeriod=300] Sets the period on the spring that handles the physics associated
+	     * with hitting the end of a scrollview.
+	     * @param {Number} [edgeDamp=1] Sets the damping on the spring that handles the physics associated
+	     * with hitting the end of a scrollview.
+	     * @param {Boolean} [paginated=false] A paginated scrollview will scroll through items discretely
+	     * rather than continously.
+	     * @param {Number} [pagePeriod=500] Sets the period on the spring that handles the physics associated
+	     * with pagination.
+	     * @param {Number} [pageDamp=0.8] Sets the damping on the spring that handles the physics associated
+	     * with pagination.
+	     * @param {Number} [pageStopSpeed=Infinity] The threshold for determining the amount of velocity
+	     * required to trigger pagination. The lower the threshold, the easier it is to scroll continuosly.
+	     * @param {Number} [pageSwitchSpeed=1] The threshold for momentum-based velocity pagination.
+	     * @param {Number} [speedLimit=10] The highest scrolling speed you can reach.
+	     */
+	    function Scrollview(options) {
+	        // patch options with defaults
+	        this.options = Object.create(Scrollview.DEFAULT_OPTIONS);
+	        this._optionsManager = new OptionsManager(this.options);
+
+	        // create sub-components
+	        this._scroller = new Scroller(this.options);
+
+	        this.sync = new GenericSync(
+	            ['scroll', 'touch'],
+	            {
+	                direction : this.options.direction,
+	                scale : this.options.syncScale,
+	                rails: this.options.rails,
+	                preventDefault: this.options.preventDefault !== undefined
+	                    ? this.options.preventDefault
+	                    : this.options.direction !== Utility.Direction.Y
+	            }
+	        );
+
+	        this._physicsEngine = new PhysicsEngine();
+	        this._particle = new Particle();
+	        this._physicsEngine.addBody(this._particle);
+
+	        this.spring = new Spring({
+	            anchor: [0, 0, 0],
+	            period: this.options.edgePeriod,
+	            dampingRatio: this.options.edgeDamp
+	        });
+	        this.drag = new Drag({
+	            forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,
+	            strength: this.options.drag
+	        });
+	        this.friction = new Drag({
+	            forceFunction: Drag.FORCE_FUNCTIONS.LINEAR,
+	            strength: this.options.friction
+	        });
+
+	        // state
+	        this._node = null;
+	        this._touchCount = 0;
+	        this._springState = SpringStates.NONE;
+	        this._onEdge = EdgeStates.NONE;
+	        this._pageSpringPosition = 0;
+	        this._edgeSpringPosition = 0;
+	        this._touchVelocity = 0;
+	        this._earlyEnd = false;
+	        this._needsPaginationCheck = false;
+	        this._displacement = 0;
+	        this._totalShift = 0;
+	        this._cachedIndex = 0;
+
+	        // subcomponent logic
+	        this._scroller.positionFrom(this.getPosition.bind(this));
+
+	        // eventing
+	        this._eventInput = new EventHandler();
+	        this._eventOutput = new EventHandler();
+
+	        this._eventInput.pipe(this.sync);
+	        this.sync.pipe(this._eventInput);
+
+	        EventHandler.setInputHandler(this, this._eventInput);
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+
+	        _bindEvents.call(this);
+
+	        // override default options with passed-in custom options
+	        if (options) this.setOptions(options);
+	    }
+
+	    Scrollview.DEFAULT_OPTIONS = {
+	        direction: Utility.Direction.Y,
+	        rails: true,
+	        friction: 0.005,
+	        drag: 0.0001,
+	        edgeGrip: 0.2,
+	        edgePeriod: 300,
+	        edgeDamp: 1,
+	        margin: 1000,       // mostly safe
+	        paginated: false,
+	        pagePeriod: 500,
+	        pageDamp: 0.8,
+	        pageStopSpeed: 10,
+	        pageSwitchSpeed: 0.5,
+	        speedLimit: 5,
+	        groupScroll: false,
+	        syncScale: 1
+	    };
+
+	    function _handleStart(event) {
+	        this._touchCount = event.count;
+	        if (event.count === undefined) this._touchCount = 1;
+
+	        _detachAgents.call(this);
+
+	        this.setVelocity(0);
+	        this._touchVelocity = 0;
+	        this._earlyEnd = false;
+	    }
+
+	    function _handleMove(event) {
+	        var velocity = -event.velocity;
+	        var delta = -event.delta;
+
+	        if (this._onEdge !== EdgeStates.NONE && event.slip) {
+	            if ((velocity < 0 && this._onEdge === EdgeStates.TOP) || (velocity > 0 && this._onEdge === EdgeStates.BOTTOM)) {
+	                if (!this._earlyEnd) {
+	                    _handleEnd.call(this, event);
+	                    this._earlyEnd = true;
+	                }
+	            }
+	            else if (this._earlyEnd && (Math.abs(velocity) > Math.abs(this.getVelocity()))) {
+	                _handleStart.call(this, event);
+	            }
+	        }
+	        if (this._earlyEnd) return;
+	        this._touchVelocity = velocity;
+
+	        if (event.slip) {
+	            var speedLimit = this.options.speedLimit;
+	            if (velocity < -speedLimit) velocity = -speedLimit;
+	            else if (velocity > speedLimit) velocity = speedLimit;
+
+	            this.setVelocity(velocity);
+
+	            var deltaLimit = speedLimit * 16;
+	            if (delta > deltaLimit) delta = deltaLimit;
+	            else if (delta < -deltaLimit) delta = -deltaLimit;
+	        }
+
+	        this.setPosition(this.getPosition() + delta);
+	        this._displacement += delta;
+
+	        if (this._springState === SpringStates.NONE) _normalizeState.call(this);
+	    }
+
+	    function _handleEnd(event) {
+	        this._touchCount = event.count || 0;
+	        if (!this._touchCount) {
+	            _detachAgents.call(this);
+	            if (this._onEdge !== EdgeStates.NONE) _setSpring.call(this, this._edgeSpringPosition, SpringStates.EDGE);
+	            _attachAgents.call(this);
+	            var velocity = -event.velocity;
+	            var speedLimit = this.options.speedLimit;
+	            if (event.slip) speedLimit *= this.options.edgeGrip;
+	            if (velocity < -speedLimit) velocity = -speedLimit;
+	            else if (velocity > speedLimit) velocity = speedLimit;
+	            this.setVelocity(velocity);
+	            this._touchVelocity = 0;
+	            this._needsPaginationCheck = true;
+	        }
+	    }
+
+	    function _bindEvents() {
+	        this._eventInput.bindThis(this);
+	        this._eventInput.on('start', _handleStart);
+	        this._eventInput.on('update', _handleMove);
+	        this._eventInput.on('end', _handleEnd);
+
+	        this._eventInput.on('resize', function() {
+	            this._node._.calculateSize();
+	        }.bind(this));
+
+	        this._scroller.on('onEdge', function(data) {
+	            this._edgeSpringPosition = data.position;
+	            _handleEdge.call(this, this._scroller.onEdge());
+	            this._eventOutput.emit('onEdge');
+	        }.bind(this));
+
+	        this._scroller.on('offEdge', function() {
+	            this.sync.setOptions({scale: this.options.syncScale});
+	            this._onEdge = this._scroller.onEdge();
+	            this._eventOutput.emit('offEdge');
+	        }.bind(this));
+
+	        this._particle.on('update', function(particle) {
+	            if (this._springState === SpringStates.NONE) _normalizeState.call(this);
+	            this._displacement = particle.position.x - this._totalShift;
+	        }.bind(this));
+
+	        this._particle.on('end', function() {
+	            if (!this.options.paginated || (this.options.paginated && this._springState !== SpringStates.NONE))
+	                this._eventOutput.emit('settle');
+	        }.bind(this));
+	    }
+
+	    function _attachAgents() {
+	        if (this._springState) this._physicsEngine.attach([this.spring], this._particle);
+	        else {
+	            //this._physicsEngine.attach([this.drag, this.friction], this._particle);  
+	        } 
+	    }
+
+	    function _detachAgents() {
+	        this._springState = SpringStates.NONE;
+	        this._physicsEngine.detachAll();
+	    }
+
+	    function _nodeSizeForDirection(node) {
+	        var direction = this.options.direction;
+	        var nodeSize = node.getSize();
+	        return (!nodeSize) ? this._scroller.getSize()[direction] : nodeSize[direction];
+	    }
+
+	    function _handleEdge(edge) {
+	        this.sync.setOptions({scale: this.options.edgeGrip});
+	        this._onEdge = edge;
+
+	        if (!this._touchCount && this._springState !== SpringStates.EDGE) {
+	            _setSpring.call(this, this._edgeSpringPosition, SpringStates.EDGE);
+	        }
+
+	        if (this._springState && Math.abs(this.getVelocity()) < 0.001) {
+	            // reset agents, detaching the spring
+	            _detachAgents.call(this);
+	            _attachAgents.call(this);
+	        }
+	    }
+
+	    function _handlePagination() {
+	        if (this._touchCount) return;
+	        if (this._springState === SpringStates.EDGE) return;
+
+	        var velocity = this.getVelocity();
+	        if (Math.abs(velocity) >= this.options.pageStopSpeed) return;
+
+	        var position = this.getPosition();
+	        var velocitySwitch = Math.abs(velocity) > this.options.pageSwitchSpeed;
+
+	        // parameters to determine when to switch
+	        var nodeSize = _nodeSizeForDirection.call(this, this._node);
+	        var positionNext = position > 0.5 * nodeSize;
+	        var positionPrev = position < 0.5 * nodeSize;
+
+	        var velocityNext = velocity > 0;
+	        var velocityPrev = velocity < 0;
+
+	        this._needsPaginationCheck = false;
+
+	        if ((positionNext && !velocitySwitch) || (velocitySwitch && velocityNext)) {
+	            this.goToNextPage();
+	        }
+	        else if (velocitySwitch && velocityPrev) {
+	            this.goToPreviousPage();
+	        }
+	        else _setSpring.call(this, 0, SpringStates.PAGE);
+	    }
+
+	    function _setSpring(position, springState) {
+	        var springOptions;
+	        if (springState === SpringStates.EDGE) {
+	            this._edgeSpringPosition = position;
+	            springOptions = {
+	                anchor: [this._edgeSpringPosition, 0, 0],
+	                period: this.options.edgePeriod,
+	                dampingRatio: this.options.edgeDamp
+	            };
+	        }
+	        else if (springState === SpringStates.PAGE) {
+	            this._pageSpringPosition = position;
+	            springOptions = {
+	                anchor: [this._pageSpringPosition, 0, 0],
+	                period: this.options.pagePeriod,
+	                dampingRatio: this.options.pageDamp
+	            };
+	        }
+
+	        this.spring.setOptions(springOptions);
+	        if (springState && !this._springState) {
+	            _detachAgents.call(this);
+	            this._springState = springState;
+	            _attachAgents.call(this);
+	        }
+	        this._springState = springState;
+	    }
+
+	    function _normalizeState() {
+	        var offset = 0;
+
+	        var position = this.getPosition();
+	        position += (position < 0 ? -0.5 : 0.5) >> 0;
+
+	        var nodeSize = _nodeSizeForDirection.call(this, this._node);
+	        var nextNode = this._node.getNext();
+
+	        while (offset + position >= nodeSize && nextNode) {
+	            offset -= nodeSize;
+	            this._scroller.sequenceFrom(nextNode);
+	            this._node = nextNode;
+	            nextNode = this._node.getNext();
+	            nodeSize = _nodeSizeForDirection.call(this, this._node);
+	        }
+
+	        var previousNode = this._node.getPrevious();
+	        var previousNodeSize;
+
+	        while (offset + position <= 0 && previousNode) {
+	            previousNodeSize = _nodeSizeForDirection.call(this, previousNode);
+	            this._scroller.sequenceFrom(previousNode);
+	            this._node = previousNode;
+	            offset += previousNodeSize;
+	            previousNode = this._node.getPrevious();
+	        }
+
+	        if (offset) _shiftOrigin.call(this, offset);
+
+	        if (this._node) {
+	            if (this._node.index !== this._cachedIndex) {
+	                if (this.getPosition() < 0.5 * nodeSize) {
+	                    this._cachedIndex = this._node.index;
+	                    this._eventOutput.emit('pageChange', {direction: -1, index: this._cachedIndex});
+	                }
+	            } else {
+	                if (this.getPosition() > 0.5 * nodeSize) {
+	                    this._cachedIndex = this._node.index + 1;
+	                    this._eventOutput.emit('pageChange', {direction: 1, index: this._cachedIndex});
+	                }
+	            }
+	        }
+	    }
+
+	    function _shiftOrigin(amount) {
+	        this._edgeSpringPosition += amount;
+	        this._pageSpringPosition += amount;
+	        this.setPosition(this.getPosition() + amount);
+	        this._totalShift += amount;
+
+	        if (this._springState === SpringStates.EDGE) {
+	            this.spring.setOptions({anchor: [this._edgeSpringPosition, 0, 0]});
+	        }
+	        else if (this._springState === SpringStates.PAGE) {
+	            this.spring.setOptions({anchor: [this._pageSpringPosition, 0, 0]});
+	        }
+	    }
+
+	    /**
+	     * Returns the index of the first visible renderable
+	     *
+	     * @method getCurrentIndex
+	     * @return {Number} The current index of the ViewSequence
+	     */
+	    Scrollview.prototype.getCurrentIndex = function getCurrentIndex() {
+	        return this._node.index;
+	    };
+
+	    /**
+	     * goToPreviousPage paginates your Scrollview instance backwards by one item.
+	     *
+	     * @method goToPreviousPage
+	     * @return {ViewSequence} The previous node.
+	     */
+	    Scrollview.prototype.goToPreviousPage = function goToPreviousPage() {
+	        if (!this._node || this._onEdge === EdgeStates.TOP) return null;
+
+	        // if moving back to the current node
+	        if (this.getPosition() > 1 && this._springState === SpringStates.NONE) {
+	            _setSpring.call(this, 0, SpringStates.PAGE);
+	            return this._node;
+	        }
+
+	        // if moving to the previous node
+	        var previousNode = this._node.getPrevious();
+	        if (previousNode) {
+	            var previousNodeSize = _nodeSizeForDirection.call(this, previousNode);
+	            this._scroller.sequenceFrom(previousNode);
+	            this._node = previousNode;
+	            _shiftOrigin.call(this, previousNodeSize);
+	            _setSpring.call(this, 0, SpringStates.PAGE);
+	        }
+	        return previousNode;
+	    };
+
+	    /**
+	     * goToNextPage paginates your Scrollview instance forwards by one item.
+	     *
+	     * @method goToNextPage
+	     * @return {ViewSequence} The next node.
+	     */
+	    Scrollview.prototype.goToNextPage = function goToNextPage() {
+	        if (!this._node || this._onEdge === EdgeStates.BOTTOM) return null;
+	        var nextNode = this._node.getNext();
+	        if (nextNode) {
+	            var currentNodeSize = _nodeSizeForDirection.call(this, this._node);
+	            this._scroller.sequenceFrom(nextNode);
+	            this._node = nextNode;
+	            _shiftOrigin.call(this, -currentNodeSize);
+	            _setSpring.call(this, 0, SpringStates.PAGE);
+	        }
+	        return nextNode;
+	    };
+
+	    /**
+	     * Paginates the Scrollview to an absolute page index.
+	     *
+	     * @method goToPage
+	     */
+	    Scrollview.prototype.goToPage = function goToPage(index) {
+	        var currentIndex = this.getCurrentIndex();
+	        var i;
+
+	        if (currentIndex > index) {
+	            for (i = 0; i < currentIndex - index; i++)
+	                this.goToPreviousPage();
+	        }
+
+	        if (currentIndex < index) {
+	            for (i = 0; i < index - currentIndex; i++)
+	                this.goToNextPage();
+	        }
+	    };
+
+	    Scrollview.prototype.outputFrom = function outputFrom() {
+	        return this._scroller.outputFrom.apply(this._scroller, arguments);
+	    };
+
+	    /**
+	     * Returns the position associated with the Scrollview instance's current node
+	     *  (generally the node currently at the top).
+	     *
+	     * @deprecated
+	     * @method getPosition
+	     * @param {number} [node] If specified, returns the position of the node at that index in the
+	     * Scrollview instance's currently managed collection.
+	     * @return {number} The position of either the specified node, or the Scrollview's current Node,
+	     * in pixels translated.
+	     */
+	    Scrollview.prototype.getPosition = function getPosition() {
+	        return this._particle.getPosition1D();
+	    };
+
+	    /**
+	     * Returns the absolute position associated with the Scrollview instance
+	     *
+	     * @method getAbsolutePosition
+	     * @return {number} The position of the Scrollview's current Node,
+	     * in pixels translated.
+	     */
+	    Scrollview.prototype.getAbsolutePosition = function getAbsolutePosition() {
+	        return this._scroller.getCumulativeSize(this.getCurrentIndex())[this.options.direction] + this.getPosition();
+	    };
+
+	    /**
+	     * Returns the offset associated with the Scrollview instance's current node
+	     *  (generally the node currently at the top).
+	     *
+	     * @method getOffset
+	     * @param {number} [node] If specified, returns the position of the node at that index in the
+	     * Scrollview instance's currently managed collection.
+	     * @return {number} The position of either the specified node, or the Scrollview's current Node,
+	     * in pixels translated.
+	     */
+	    Scrollview.prototype.getOffset = Scrollview.prototype.getPosition;
+
+	    /**
+	     * Sets the position of the physics particle that controls Scrollview instance's "position"
+	     *
+	     * @deprecated
+	     * @method setPosition
+	     * @param {number} x The amount of pixels you want your scrollview to progress by.
+	     */
+	    Scrollview.prototype.setPosition = function setPosition(x) {
+	        this._particle.setPosition1D(x);
+	    };
+
+	    /**
+	     * Sets the offset of the physics particle that controls Scrollview instance's "position"
+	     *
+	     * @method setPosition
+	     * @param {number} x The amount of pixels you want your scrollview to progress by.
+	     */
+	    Scrollview.prototype.setOffset = Scrollview.prototype.setPosition;
+
+	    /**
+	     * Returns the Scrollview instance's velocity.
+	     *
+	     * @method getVelocity
+	     * @return {Number} The velocity.
+	     */
+
+	    Scrollview.prototype.getVelocity = function getVelocity() {
+	        return this._touchCount ? this._touchVelocity : this._particle.getVelocity1D();
+	    };
+
+	    /**
+	     * Sets the Scrollview instance's velocity. Until affected by input or another call of setVelocity
+	     *  the Scrollview instance will scroll at the passed-in velocity.
+	     *
+	     * @method setVelocity
+	     * @param {number} v The magnitude of the velocity.
+	     */
+	    Scrollview.prototype.setVelocity = function setVelocity(v) {
+	        this._particle.setVelocity1D(v);
+	    };
+
+	    /**
+	     * Patches the Scrollview instance's options with the passed-in ones.
+	     *
+	     * @method setOptions
+	     * @param {Options} options An object of configurable options for the Scrollview instance.
+	     */
+	    Scrollview.prototype.setOptions = function setOptions(options) {
+	        // preprocess custom options
+	        if (options.direction !== undefined) {
+	            if (options.direction === 'x') options.direction = Utility.Direction.X;
+	            else if (options.direction === 'y') options.direction = Utility.Direction.Y;
+	        }
+
+	        if (options.groupScroll !== this.options.groupScroll) {
+	            if (options.groupScroll)
+	                this.subscribe(this._scroller);
+	            else
+	                this.unsubscribe(this._scroller);
+	        }
+
+	        // patch custom options
+	        this._optionsManager.setOptions(options);
+
+	        // propagate options to sub-components
+
+	        // scroller sub-component
+	        this._scroller.setOptions(options);
+
+	        // physics sub-components
+	        if (options.drag !== undefined) this.drag.setOptions({strength: this.options.drag});
+	        if (options.friction !== undefined) this.friction.setOptions({strength: this.options.friction});
+	        if (options.edgePeriod !== undefined || options.edgeDamp !== undefined) {
+	            this.spring.setOptions({
+	                period: this.options.edgePeriod,
+	                dampingRatio: this.options.edgeDamp
+	            });
+	        }
+
+	        // sync sub-component
+	        if (options.rails || options.direction !== undefined || options.syncScale !== undefined || options.preventDefault) {
+	            this.sync.setOptions({
+	                rails: this.options.rails,
+	                direction: (this.options.direction === Utility.Direction.X) ? GenericSync.DIRECTION_X : GenericSync.DIRECTION_Y,
+	                scale: this.options.syncScale,
+	                preventDefault: this.options.preventDefault
+	            });
+	        }
+	    };
+
+	    /**
+	     * Sets the collection of renderables under the Scrollview instance's control, by
+	     *  setting its current node to the passed in ViewSequence. If you
+	     *  pass in an array, the Scrollview instance will set its node as a ViewSequence instantiated with
+	     *  the passed-in array.
+	     *
+	     * @method sequenceFrom
+	     * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
+	     */
+	    Scrollview.prototype.sequenceFrom = function sequenceFrom(node) {
+	        if (node instanceof Array) node = new ViewSequence({array: node, trackSize: true});
+	        this._node = node;
+	        return this._scroller.sequenceFrom(node);
+	    };
+
+	    /**
+	     * Returns the width and the height of the Scrollview instance.
+	     *
+	     * @method getSize
+	     * @return {Array} A two value array of the Scrollview instance's current width and height (in that order).
+	     */
+	    Scrollview.prototype.getSize = function getSize() {
+	        return this._scroller.getSize.apply(this._scroller, arguments);
+	    };
+
+	    /**
+	     * Generate a render spec from the contents of this component.
+	     *
+	     * @private
+	     * @method render
+	     * @return {number} Render spec for this component
+	     */
+	    Scrollview.prototype.render = function render() {
+	        if (this.options.paginated && this._needsPaginationCheck) _handlePagination.call(this);
+
+	        return this._scroller.render();
+	    };
+
+	    module.exports = Scrollview;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10179,7 +10975,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(24);
+	    var Surface = __webpack_require__(25);
 
 	    /**
 	     * A Famo.us surface in the form of an HTML input element.
@@ -10333,7 +11129,7 @@
 
 
 /***/ },
-/* 28 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10346,7 +11142,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(24);
+	    var Surface = __webpack_require__(25);
 
 	    /**
 	     * A Famo.us surface in the form of an HTML textarea element.
@@ -10533,7 +11329,7 @@
 
 
 /***/ },
-/* 29 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10546,10 +11342,10 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(37);
-	    var OptionsManager = __webpack_require__(36);
-	    var RenderNode = __webpack_require__(45);
-	    var Utility = __webpack_require__(30);
+	    var EventHandler = __webpack_require__(40);
+	    var OptionsManager = __webpack_require__(39);
+	    var RenderNode = __webpack_require__(49);
+	    var Utility = __webpack_require__(32);
 
 	    /**
 	     * Useful for quickly creating elements within applications
@@ -10649,7 +11445,7 @@
 
 
 /***/ },
-/* 30 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10776,7 +11572,161 @@
 
 
 /***/ },
-/* 31 */
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*jshint browser: true, node: true
+	*/
+
+	(function (exports) {
+	    'use strict';
+
+	    var userAgent = exports.userAgent = function (ua) {
+	        ua = (ua || window.navigator.userAgent).toString().toLowerCase();
+	        function checkUserAgent(ua) {
+	            var browser = {};
+	            var match = /(dolfin)[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(opera)(?:.*version)?[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(webkit)(?:.*version)?[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(msie) ([\w.]+)/.exec( ua ) ||
+	                    ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+))?/.exec( ua ) ||
+	                    ["","unknown"];
+	            if (match[1] === "webkit") {
+	                match = /(iphone|ipad|ipod)[\S\s]*os ([\w._\-]+) like/.exec(ua) ||
+	                    /(android)[ \/]([\w._\-]+);/.exec(ua) || [match[0], "safari", match[2]];
+	            } else if (match[1] === "mozilla") {
+	                if (/trident/.test(ua)) {
+	                    match[1] = "msie";
+	                } else {
+	                    match[1] = "firefox";
+	                }
+	            } else if (/polaris|natebrowser|([010|011|016|017|018|019]{3}\d{3,4}\d{4}$)/.test(ua)) {
+	                match[1] = "polaris";
+	            }
+
+	            browser[match[1]] = true;
+	            browser.name = match[1];
+	            browser.version = setVersion(match[2]);
+
+	            return browser;
+	        }
+
+	        function setVersion(versionString) {
+	            var version = {};
+
+	            var versions = versionString ? versionString.split(/\.|-|_/) : ["0","0","0"];
+	            version.info = versions.join(".");
+	            version.major = versions[0] || "0";
+	            version.minor = versions[1] || "0";
+	            version.patch = versions[2] || "0";
+
+	            return version;
+	        }
+
+	        function checkPlatform (ua) {
+	            if (isPc(ua)) {
+	                return "pc";
+	            } else if (isTablet(ua)) {
+	                return "tablet";
+	            } else if (isMobile(ua)) {
+	                return "mobile";
+	            } else {
+	                return "";
+	            }
+	        }
+	        function isPc (ua) {
+	            if (ua.match(/linux|windows (nt|98)|macintosh/) && !ua.match(/android|mobile|polaris|lgtelecom|uzard|natebrowser|ktf;|skt;/)) {
+	                return true;
+	            }
+	            return false;
+	        }
+	        function isTablet (ua) {
+	            if (ua.match(/ipad/) || (ua.match(/android/) && !ua.match(/mobi|mini|fennec/))) {
+	                return true;
+	            }
+	            return false;
+	        }
+	        function isMobile (ua) {
+	            if (!!ua.match(/ip(hone|od)|android.+mobile|windows (ce|phone)|blackberry|bb10|symbian|webos|firefox.+fennec|opera m(ob|in)i|polaris|iemobile|lgtelecom|nokia|sonyericsson|dolfin|uzard|natebrowser|ktf;|skt;/)) {
+	                return true;
+	            } else {
+	                return false;
+	            }
+	        }
+
+	        function checkOs (ua) {
+	            var os = {},
+	                match = /(iphone|ipad|ipod)[\S\s]*os ([\w._\-]+) like/.exec(ua) ||
+	                        /(android)[ \/]([\w._\-]+);/.exec(ua) ||
+	                        (/android/.test(ua)? ["", "android", "0.0.0"] : false) ||
+	                        (/polaris|natebrowser|([010|011|016|017|018|019]{3}\d{3,4}\d{4}$)/.test(ua)? ["", "polaris", "0.0.0"] : false) ||
+	                        /(windows)(?: nt | phone(?: os){0,1} | )([\w._\-]+)/.exec(ua) ||
+	                        (/(windows)/.test(ua)? ["", "windows", "0.0.0"] : false) ||
+	                        /(mac) os x ([\w._\-]+)/.exec(ua) ||
+	                        (/(linux)/.test(ua)? ["", "linux", "0.0.0"] : false) ||
+	                        (/webos/.test(ua)? ["", "webos", "0.0.0"] : false) ||
+	                        /(bada)[ \/]([\w._\-]+)/.exec(ua) ||
+	                        (/bada/.test(ua)? ["", "bada", "0.0.0"] : false) ||
+	                        (/(rim|blackberry|bb10)/.test(ua)? ["", "blackberry", "0.0.0"] : false) ||
+	                        ["", "unknown", "0.0.0"];
+
+	            if (match[1] === "iphone" || match[1] === "ipad" || match[1] === "ipod") {
+	                match[1] = "ios";
+	            } else if (match[1] === "windows" && match[2] === "98") {
+	                match[2] = "0.98.0";
+	            }
+	            os[match[1]] = true;
+	            os.name = match[1];
+	            os.version = setVersion(match[2]);
+	            return os;
+	        }
+
+	        function checkApp (ua) {
+	            var app = {},
+	                match = /(crios)[ \/]([\w.]+)/.exec( ua ) ||
+	                        /(daumapps)[ \/]([\w.]+)/.exec( ua ) ||
+	                        ["",""];
+
+	            if (match[1]) {
+	                app.isApp = true;
+	                app.name = match[1];
+	                app.version = setVersion(match[2]);
+	            } else {
+	                app.isApp = false;
+	            }
+
+	            return app;
+	        }
+
+	        return {
+	            ua: ua,
+	            browser: checkUserAgent(ua),
+	            platform: checkPlatform(ua),
+	            os: checkOs(ua),
+	            app: checkApp(ua)
+	        };
+	    };
+
+	    if (typeof window === 'object' && window.navigator.userAgent) {
+	        window.ua_result = userAgent(window.navigator.userAgent) || null;
+	    }
+
+	})((function (){
+	    // Make userAgent a Node module, if possible.
+	    if (true) {
+	        exports.daumtools = exports;
+	        exports.util = exports;
+	        return exports;
+	    } else if (typeof window === 'object') {
+	        window.daumtools = (typeof window.daumtools === 'undefined') ? {} : window.daumtools;
+	        window.util = (typeof window.util === 'undefined') ? window.daumtools : window.util;
+	        return window.daumtools;
+	    }
+	})());
+
+/***/ },
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -10920,7 +11870,7 @@
 
 
 /***/ },
-/* 32 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (!Function.prototype.bind) {
@@ -10949,7 +11899,7 @@
 
 
 /***/ },
-/* 33 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// adds requestAnimationFrame functionality
@@ -10968,7 +11918,7 @@
 
 
 /***/ },
-/* 34 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10981,7 +11931,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(24);
+	    var Surface = __webpack_require__(25);
 
 	    /**
 	     * A surface containing an HTML5 Canvas element.
@@ -11091,166 +12041,166 @@
 
 
 /***/ },
-/* 35 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var map = {
-		"./af": 58,
-		"./af.js": 58,
-		"./ar": 61,
-		"./ar-ma": 59,
-		"./ar-ma.js": 59,
-		"./ar-sa": 60,
-		"./ar-sa.js": 60,
-		"./ar.js": 61,
-		"./az": 62,
-		"./az.js": 62,
-		"./be": 63,
-		"./be.js": 63,
-		"./bg": 64,
-		"./bg.js": 64,
-		"./bn": 65,
-		"./bn.js": 65,
-		"./bo": 66,
-		"./bo.js": 66,
-		"./br": 67,
-		"./br.js": 67,
-		"./bs": 68,
-		"./bs.js": 68,
-		"./ca": 69,
-		"./ca.js": 69,
-		"./cs": 70,
-		"./cs.js": 70,
-		"./cv": 71,
-		"./cv.js": 71,
-		"./cy": 72,
-		"./cy.js": 72,
-		"./da": 73,
-		"./da.js": 73,
-		"./de": 75,
-		"./de-at": 74,
-		"./de-at.js": 74,
-		"./de.js": 75,
-		"./el": 76,
-		"./el.js": 76,
-		"./en-au": 77,
-		"./en-au.js": 77,
-		"./en-ca": 78,
-		"./en-ca.js": 78,
-		"./en-gb": 79,
-		"./en-gb.js": 79,
-		"./eo": 80,
-		"./eo.js": 80,
-		"./es": 81,
-		"./es.js": 81,
-		"./et": 82,
-		"./et.js": 82,
-		"./eu": 83,
-		"./eu.js": 83,
-		"./fa": 84,
-		"./fa.js": 84,
-		"./fi": 85,
-		"./fi.js": 85,
-		"./fo": 86,
-		"./fo.js": 86,
-		"./fr": 88,
-		"./fr-ca": 87,
-		"./fr-ca.js": 87,
-		"./fr.js": 88,
-		"./gl": 89,
-		"./gl.js": 89,
-		"./he": 90,
-		"./he.js": 90,
-		"./hi": 91,
-		"./hi.js": 91,
-		"./hr": 92,
-		"./hr.js": 92,
-		"./hu": 93,
-		"./hu.js": 93,
-		"./hy-am": 94,
-		"./hy-am.js": 94,
-		"./id": 95,
-		"./id.js": 95,
-		"./is": 96,
-		"./is.js": 96,
-		"./it": 97,
-		"./it.js": 97,
-		"./ja": 98,
-		"./ja.js": 98,
-		"./ka": 99,
-		"./ka.js": 99,
-		"./km": 100,
-		"./km.js": 100,
-		"./ko": 101,
-		"./ko.js": 101,
-		"./lb": 102,
-		"./lb.js": 102,
-		"./lt": 103,
-		"./lt.js": 103,
-		"./lv": 104,
-		"./lv.js": 104,
-		"./mk": 105,
-		"./mk.js": 105,
-		"./ml": 106,
-		"./ml.js": 106,
-		"./mr": 107,
-		"./mr.js": 107,
-		"./ms-my": 108,
-		"./ms-my.js": 108,
-		"./my": 109,
-		"./my.js": 109,
-		"./nb": 110,
-		"./nb.js": 110,
-		"./ne": 111,
-		"./ne.js": 111,
-		"./nl": 112,
-		"./nl.js": 112,
-		"./nn": 113,
-		"./nn.js": 113,
-		"./pl": 114,
-		"./pl.js": 114,
-		"./pt": 116,
-		"./pt-br": 115,
-		"./pt-br.js": 115,
-		"./pt.js": 116,
-		"./ro": 117,
-		"./ro.js": 117,
-		"./ru": 118,
-		"./ru.js": 118,
-		"./sk": 119,
-		"./sk.js": 119,
-		"./sl": 120,
-		"./sl.js": 120,
-		"./sq": 121,
-		"./sq.js": 121,
-		"./sr": 123,
-		"./sr-cyrl": 122,
-		"./sr-cyrl.js": 122,
-		"./sr.js": 123,
-		"./sv": 124,
-		"./sv.js": 124,
-		"./ta": 125,
-		"./ta.js": 125,
-		"./th": 126,
-		"./th.js": 126,
-		"./tl-ph": 127,
-		"./tl-ph.js": 127,
-		"./tr": 128,
-		"./tr.js": 128,
-		"./tzm": 130,
-		"./tzm-latn": 129,
-		"./tzm-latn.js": 129,
-		"./tzm.js": 130,
-		"./uk": 131,
-		"./uk.js": 131,
-		"./uz": 132,
-		"./uz.js": 132,
-		"./vi": 133,
-		"./vi.js": 133,
-		"./zh-cn": 134,
-		"./zh-cn.js": 134,
-		"./zh-tw": 135,
-		"./zh-tw.js": 135
+		"./af": 64,
+		"./af.js": 64,
+		"./ar": 67,
+		"./ar-ma": 65,
+		"./ar-ma.js": 65,
+		"./ar-sa": 66,
+		"./ar-sa.js": 66,
+		"./ar.js": 67,
+		"./az": 68,
+		"./az.js": 68,
+		"./be": 69,
+		"./be.js": 69,
+		"./bg": 70,
+		"./bg.js": 70,
+		"./bn": 71,
+		"./bn.js": 71,
+		"./bo": 72,
+		"./bo.js": 72,
+		"./br": 73,
+		"./br.js": 73,
+		"./bs": 74,
+		"./bs.js": 74,
+		"./ca": 75,
+		"./ca.js": 75,
+		"./cs": 76,
+		"./cs.js": 76,
+		"./cv": 77,
+		"./cv.js": 77,
+		"./cy": 78,
+		"./cy.js": 78,
+		"./da": 79,
+		"./da.js": 79,
+		"./de": 81,
+		"./de-at": 80,
+		"./de-at.js": 80,
+		"./de.js": 81,
+		"./el": 82,
+		"./el.js": 82,
+		"./en-au": 83,
+		"./en-au.js": 83,
+		"./en-ca": 84,
+		"./en-ca.js": 84,
+		"./en-gb": 85,
+		"./en-gb.js": 85,
+		"./eo": 86,
+		"./eo.js": 86,
+		"./es": 87,
+		"./es.js": 87,
+		"./et": 88,
+		"./et.js": 88,
+		"./eu": 89,
+		"./eu.js": 89,
+		"./fa": 90,
+		"./fa.js": 90,
+		"./fi": 91,
+		"./fi.js": 91,
+		"./fo": 92,
+		"./fo.js": 92,
+		"./fr": 94,
+		"./fr-ca": 93,
+		"./fr-ca.js": 93,
+		"./fr.js": 94,
+		"./gl": 95,
+		"./gl.js": 95,
+		"./he": 96,
+		"./he.js": 96,
+		"./hi": 97,
+		"./hi.js": 97,
+		"./hr": 98,
+		"./hr.js": 98,
+		"./hu": 99,
+		"./hu.js": 99,
+		"./hy-am": 100,
+		"./hy-am.js": 100,
+		"./id": 101,
+		"./id.js": 101,
+		"./is": 102,
+		"./is.js": 102,
+		"./it": 103,
+		"./it.js": 103,
+		"./ja": 104,
+		"./ja.js": 104,
+		"./ka": 105,
+		"./ka.js": 105,
+		"./km": 106,
+		"./km.js": 106,
+		"./ko": 107,
+		"./ko.js": 107,
+		"./lb": 108,
+		"./lb.js": 108,
+		"./lt": 109,
+		"./lt.js": 109,
+		"./lv": 110,
+		"./lv.js": 110,
+		"./mk": 111,
+		"./mk.js": 111,
+		"./ml": 112,
+		"./ml.js": 112,
+		"./mr": 113,
+		"./mr.js": 113,
+		"./ms-my": 114,
+		"./ms-my.js": 114,
+		"./my": 115,
+		"./my.js": 115,
+		"./nb": 116,
+		"./nb.js": 116,
+		"./ne": 117,
+		"./ne.js": 117,
+		"./nl": 118,
+		"./nl.js": 118,
+		"./nn": 119,
+		"./nn.js": 119,
+		"./pl": 120,
+		"./pl.js": 120,
+		"./pt": 122,
+		"./pt-br": 121,
+		"./pt-br.js": 121,
+		"./pt.js": 122,
+		"./ro": 123,
+		"./ro.js": 123,
+		"./ru": 124,
+		"./ru.js": 124,
+		"./sk": 125,
+		"./sk.js": 125,
+		"./sl": 126,
+		"./sl.js": 126,
+		"./sq": 127,
+		"./sq.js": 127,
+		"./sr": 129,
+		"./sr-cyrl": 128,
+		"./sr-cyrl.js": 128,
+		"./sr.js": 129,
+		"./sv": 130,
+		"./sv.js": 130,
+		"./ta": 131,
+		"./ta.js": 131,
+		"./th": 132,
+		"./th.js": 132,
+		"./tl-ph": 133,
+		"./tl-ph.js": 133,
+		"./tr": 134,
+		"./tr.js": 134,
+		"./tzm": 136,
+		"./tzm-latn": 135,
+		"./tzm-latn.js": 135,
+		"./tzm.js": 136,
+		"./uk": 137,
+		"./uk.js": 137,
+		"./uz": 138,
+		"./uz.js": 138,
+		"./vi": 139,
+		"./vi.js": 139,
+		"./zh-cn": 140,
+		"./zh-cn.js": 140,
+		"./zh-tw": 141,
+		"./zh-tw.js": 141
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -11263,11 +12213,11 @@
 	};
 	webpackContext.resolve = webpackContextResolve;
 	module.exports = webpackContext;
-	webpackContext.id = 35;
+	webpackContext.id = 38;
 
 
 /***/ },
-/* 36 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11280,7 +12230,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(37);
+	    var EventHandler = __webpack_require__(40);
 
 	    /**
 	     *  A collection of methods for setting options which can be extended
@@ -11474,7 +12424,7 @@
 
 
 /***/ },
-/* 37 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11487,7 +12437,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(138);
+	    var EventEmitter = __webpack_require__(144);
 
 	    /**
 	     * EventHandler forwards received events to a set of provided callback functions.
@@ -11686,7 +12636,7 @@
 
 
 /***/ },
-/* 38 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -11950,7 +12900,7 @@
 
 
 /***/ },
-/* 39 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -11983,8 +12933,8 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutContext = __webpack_require__(139);
-	    var LayoutUtility = __webpack_require__(38);
+	    var LayoutContext = __webpack_require__(145);
+	    var LayoutUtility = __webpack_require__(41);
 
 	    var MAX_POOL_SIZE = 100;
 	    var LOG_PREFIX = 'Nodes: ';
@@ -12006,6 +12956,7 @@
 	            getRenderNode: _contextGetRenderNode.bind(this),
 	            resolveSize: _contextResolveSize.bind(this),
 	            size: [0, 0]
+	            //,cycle: 0
 	        });
 	        this._contextState = {
 	            // enumation state for the context
@@ -12081,6 +13032,7 @@
 	        this._context.scrollOffset = contextData.scrollOffset || 0;
 	        this._context.scrollStart = contextData.scrollStart || 0;
 	        this._context.scrollEnd = contextData.scrollEnd || this._context.size[this._context.direction];
+	        //this._context.cycle++;
 	        return this._context;
 	    };
 
@@ -12608,12 +13560,47 @@
 
 	        // Check if true-size is used and it must be reavaluated
 	        var configSize = contextNode.renderNode.size && (contextNode.renderNode._trueSizeCheck !== undefined) ? contextNode.renderNode.size : undefined;
-	        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) { // && this._reevalTrueSize
+	        if (configSize && ((configSize[0] === true) || (configSize[1] === true))) {
 	            contextNode.usesTrueSize = true;
+	            if (contextNode.renderNode._trueSizeCheck) {
+
+	                // Fix for true-size renderables. When true-size is used, the size
+	                // is incorrect for one render-cycle due to the fact that Surface.commit
+	                // updates the content after asking the DOM for the offsetHeight/offsetWidth.
+	                // The code below backs the size up, and re-uses that when this scenario
+	                // occurs.
+	                if (contextNode.renderNode._backupSize) {
+	                    if (configSize[0] === true) {
+	                        contextNode.renderNode._backupSize[0] = Math.max(contextNode.renderNode._backupSize[0], size[0]);
+	                    }
+	                    else {
+	                        contextNode.renderNode._backupSize[0] = size[0];
+	                    }
+	                    if (configSize[1] === true) {
+	                        contextNode.renderNode._backupSize[1] = Math.max(contextNode.renderNode._backupSize[1], size[1]);
+	                    }
+	                    else {
+	                        contextNode.renderNode._backupSize[1] = size[1];
+	                    }
+	                    size = contextNode.renderNode._backupSize;
+	                    contextNode.renderNode._backupSize = undefined;
+	                }
+	                this._trueSizeRequested = true;
+	                contextNode.trueSizeRequested = true;
+	                //console.log('true size requested on node: ' + JSON.stringify(size));
+	            }
+	            if (this._reevalTrueSize) {
+	                contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
+	            }
 	            //this._trueSizeRequested = true;
-	            contextNode.renderNode._trueSizeCheck = true; // force request of true-size from DOM
-	            //contextNode.renderNode._size = undefined; // fix for bug #428
 	        }
+
+	        // Backup the size of the node
+	        if (!contextNode.renderNode._backupSize) {
+	            contextNode.renderNode._backupSize = [0, 0];
+	        }
+	        contextNode.renderNode._backupSize[0] = size[0];
+	        contextNode.renderNode._backupSize[1] = size[1];
 
 	        // Resolve 'undefined' to parent-size and true to 0
 	        if ((size[0] === undefined) || (size[0] === true) || (size[1] === undefined) || (size[1] === true)) {
@@ -12641,7 +13628,7 @@
 
 
 /***/ },
-/* 40 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -12665,8 +13652,8 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Transform = __webpack_require__(26);
-	    var LayoutUtility = __webpack_require__(38);
+	    var Transform = __webpack_require__(27);
+	    var LayoutUtility = __webpack_require__(41);
 
 	    /**
 	     * @class
@@ -12767,7 +13754,7 @@
 
 
 /***/ },
-/* 41 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -12795,10 +13782,10 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutController = __webpack_require__(17);
-	    var LayoutNodeManager = __webpack_require__(39);
-	    var FlowLayoutNode = __webpack_require__(42);
-	    var Transform = __webpack_require__(26);
+	    var LayoutController = __webpack_require__(18);
+	    var LayoutNodeManager = __webpack_require__(42);
+	    var FlowLayoutNode = __webpack_require__(45);
+	    var Transform = __webpack_require__(27);
 
 	    /**
 	     * @class
@@ -12983,7 +13970,7 @@
 
 
 /***/ },
-/* 42 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -13007,14 +13994,14 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var OptionsManager = __webpack_require__(36);
-	    var Transform = __webpack_require__(26);
-	    var Vector = __webpack_require__(50);
-	    var Particle = __webpack_require__(52);
-	    var Spring = __webpack_require__(54);
-	    var PhysicsEngine = __webpack_require__(51);
-	    var LayoutNode = __webpack_require__(40);
-	    var Transitionable = __webpack_require__(56);
+	    var OptionsManager = __webpack_require__(39);
+	    var Transform = __webpack_require__(27);
+	    var Vector = __webpack_require__(54);
+	    var Particle = __webpack_require__(56);
+	    var Spring = __webpack_require__(58);
+	    var PhysicsEngine = __webpack_require__(55);
+	    var LayoutNode = __webpack_require__(43);
+	    var Transitionable = __webpack_require__(62);
 
 	    /**
 	     * @class
@@ -13454,7 +14441,7 @@
 
 
 /***/ },
-/* 43 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13467,11 +14454,11 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var RenderNode = __webpack_require__(45);
-	    var EventHandler = __webpack_require__(37);
-	    var ElementAllocator = __webpack_require__(140);
-	    var Transform = __webpack_require__(26);
-	    var Transitionable = __webpack_require__(56);
+	    var RenderNode = __webpack_require__(49);
+	    var EventHandler = __webpack_require__(40);
+	    var ElementAllocator = __webpack_require__(146);
+	    var Transform = __webpack_require__(27);
+	    var Transitionable = __webpack_require__(62);
 
 	    var _zeroZero = [0, 0];
 	    var usePrefix = !('perspective' in document.documentElement.style);
@@ -13693,7 +14680,7 @@
 
 
 /***/ },
-/* 44 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -13706,9 +14693,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(46);
-	    var EventHandler = __webpack_require__(37);
-	    var Transform = __webpack_require__(26);
+	    var Entity = __webpack_require__(50);
+	    var EventHandler = __webpack_require__(40);
+	    var Transform = __webpack_require__(27);
 
 	    var usePrefix = !('transform' in document.documentElement.style);
 	    var devicePixelRatio = window.devicePixelRatio || 1;
@@ -13976,6 +14963,9 @@
 	            }
 
 	            if (!matrix) matrix = Transform.identity;
+	            if (this._transformDirty && this._matrix) {
+	                //console.log('transform dirty, old: ' + this._matrix[13] + ', new: ' + matrix[13]);
+	            }
 	            this._matrix = matrix;
 	            var aaMatrix = this._size ? Transform.thenMove(matrix, [-this._size[0]*origin[0], -this._size[1]*origin[1], 0]) : matrix;
 	            _setMatrix(target, aaMatrix);
@@ -14027,7 +15017,323 @@
 
 
 /***/ },
-/* 45 */
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Entity = __webpack_require__(50);
+	    var Group = __webpack_require__(52);
+	    var OptionsManager = __webpack_require__(39);
+	    var Transform = __webpack_require__(27);
+	    var Utility = __webpack_require__(32);
+	    var ViewSequence = __webpack_require__(24);
+	    var EventHandler = __webpack_require__(40);
+
+	    /**
+	     * Scroller lays out a collection of renderables, and will browse through them based on
+	     * accessed position. Scroller also broadcasts an 'edgeHit' event, with a position property of the location of the edge,
+	     * when you've hit the 'edges' of it's renderable collection.
+	     * @class Scroller
+	     * @constructor
+	      * @event error
+	     * @param {Options} [options] An object of configurable options.
+	     * @param {Number} [options.direction=Utility.Direction.Y] Using the direction helper found in the famous Utility
+	     * module, this option will lay out the Scroller instance's renderables either horizontally
+	     * (x) or vertically (y). Utility's direction is essentially either zero (X) or one (Y), so feel free
+	     * to just use integers as well.
+	     * @param {Number} [clipSize=undefined] The size of the area (in pixels) that Scroller will display content in.
+	     * @param {Number} [margin=undefined] The size of the area (in pixels) that Scroller will process renderables' associated calculations in.
+	     */
+	    function Scroller(options) {
+	        this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
+	        this._optionsManager = new OptionsManager(this.options);
+	        if (options) this._optionsManager.setOptions(options);
+
+	        this._node = null;
+	        this._position = 0;
+
+	        // used for shifting nodes
+	        this._positionOffset = 0;
+
+	        this._positionGetter = null;
+	        this._outputFunction = null;
+	        this._masterOutputFunction = null;
+	        this.outputFrom();
+
+	        this._onEdge = 0; // -1 for top, 1 for bottom
+
+	        this.group = new Group();
+	        this.group.add({render: _innerRender.bind(this)});
+
+	        this._entityId = Entity.register(this);
+	        this._size = [undefined, undefined];
+	        this._contextSize = [undefined, undefined];
+
+	        this._eventInput = new EventHandler();
+	        this._eventOutput = new EventHandler();
+
+	        EventHandler.setInputHandler(this, this._eventInput);
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+	    }
+
+	    Scroller.DEFAULT_OPTIONS = {
+	        direction: Utility.Direction.Y,
+	        margin: 0,
+	        clipSize: undefined,
+	        groupScroll: false
+	    };
+
+	    var EDGE_TOLERANCE = 0; //slop for detecting passing the edge
+
+	    function _sizeForDir(size) {
+	        if (!size) size = this._contextSize;
+	        var dimension = this.options.direction;
+	        return (size[dimension] === undefined) ? this._contextSize[dimension] : size[dimension];
+	    }
+
+	    function _output(node, offset, target) {
+	        var size = node.getSize ? node.getSize() : this._contextSize;
+	        var transform = this._outputFunction(offset);
+	        target.push({transform: transform, target: node.render()});
+	        return _sizeForDir.call(this, size);
+	    }
+
+	    function _getClipSize() {
+	        if (this.options.clipSize !== undefined) return this.options.clipSize;
+	        if (this._contextSize[this.options.direction] > this.getCumulativeSize()[this.options.direction]) {
+	            return _sizeForDir.call(this, this.getCumulativeSize());
+	        } else {
+	            return _sizeForDir.call(this, this._contextSize);
+	        }
+	    }
+
+	    /**
+	    * Returns the cumulative size of the renderables in the view sequence
+	    * @method getCumulativeSize
+	    * @return {array} a two value array of the view sequence's cumulative size up to the index.
+	    */
+	    Scroller.prototype.getCumulativeSize = function(index) {
+	        if (index === undefined) index = this._node._.cumulativeSizes.length - 1;
+	        return this._node._.getSize(index);
+	    };
+
+	    /**
+	     * Patches the Scroller instance's options with the passed-in ones.
+	     * @method setOptions
+	     * @param {Options} options An object of configurable options for the Scroller instance.
+	     */
+	    Scroller.prototype.setOptions = function setOptions(options) {
+	        if (options.groupScroll !== this.options.groupScroll) {
+	            if (options.groupScroll)
+	                this.group.pipe(this._eventOutput);
+	            else
+	                this.group.unpipe(this._eventOutput);
+	        }
+	        this._optionsManager.setOptions(options);
+	    };
+
+	    /**
+	     * Tells you if the Scroller instance is on an edge.
+	     * @method onEdge
+	     * @return {Boolean} Whether the Scroller instance is on an edge or not.
+	     */
+	    Scroller.prototype.onEdge = function onEdge() {
+	        return this._onEdge;
+	    };
+
+	    /**
+	     * Allows you to overwrite the way Scroller lays out it's renderables. Scroller will
+	     * pass an offset into the function. By default the Scroller instance just translates each node
+	     * in it's direction by the passed-in offset.
+	     * Scroller will translate each renderable down
+	     * @method outputFrom
+	     * @param {Function} fn A function that takes an offset and returns a transform.
+	     * @param {Function} [masterFn]
+	     */
+	    Scroller.prototype.outputFrom = function outputFrom(fn, masterFn) {
+	        if (!fn) {
+	            fn = function(offset) {
+	                return (this.options.direction === Utility.Direction.X) ? Transform.translate(offset, 0) : Transform.translate(0, offset);
+	            }.bind(this);
+	            if (!masterFn) masterFn = fn;
+	        }
+	        this._outputFunction = fn;
+	        this._masterOutputFunction = masterFn ? masterFn : function(offset) {
+	            return Transform.inverse(fn(-offset));
+	        };
+	    };
+
+	    /**
+	     * The Scroller instance's method for reading from an external position. Scroller uses
+	     * the external position to actually scroll through it's renderables.
+	     * @method positionFrom
+	     * @param {Getter} position Can be either a function that returns a position,
+	     * or an object with a get method that returns a position.
+	     */
+	    Scroller.prototype.positionFrom = function positionFrom(position) {
+	        if (position instanceof Function) this._positionGetter = position;
+	        else if (position && position.get) this._positionGetter = position.get.bind(position);
+	        else {
+	            this._positionGetter = null;
+	            this._position = position;
+	        }
+	        if (this._positionGetter) this._position = this._positionGetter.call(this);
+	    };
+
+	    /**
+	     * Sets the collection of renderables under the Scroller instance's control.
+	     *
+	     * @method sequenceFrom
+	     * @param node {Array|ViewSequence} Either an array of renderables or a Famous viewSequence.
+	     * @chainable
+	     */
+	    Scroller.prototype.sequenceFrom = function sequenceFrom(node) {
+	        if (node instanceof Array) node = new ViewSequence({array: node});
+	        this._node = node;
+	        this._positionOffset = 0;
+	    };
+
+	    /**
+	     * Returns the width and the height of the Scroller instance.
+	     *
+	     * @method getSize
+	     * @return {Array} A two value array of the Scroller instance's current width and height (in that order).
+	     */
+	    Scroller.prototype.getSize = function getSize(actual) {
+	        return actual ? this._contextSize : this._size;
+	    };
+
+	    /**
+	     * Generate a render spec from the contents of this component.
+	     *
+	     * @private
+	     * @method render
+	     * @return {number} Render spec for this component
+	     */
+	    Scroller.prototype.render = function render() {
+	        if (!this._node) return null;
+	        if (this._positionGetter) this._position = this._positionGetter.call(this);
+	        return this._entityId;
+	    };
+
+	    /**
+	     * Apply changes from this component to the corresponding document element.
+	     * This includes changes to classes, styles, size, content, opacity, origin,
+	     * and matrix transforms.
+	     *
+	     * @private
+	     * @method commit
+	     * @param {Context} context commit context
+	     */
+	    Scroller.prototype.commit = function commit(context) {
+	        var transform = context.transform;
+	        var opacity = context.opacity;
+	        var origin = context.origin;
+	        var size = context.size;
+
+	        // reset edge detection on size change
+	        if (!this.options.clipSize && (size[0] !== this._contextSize[0] || size[1] !== this._contextSize[1])) {
+	            this._onEdge = 0;
+	            this._contextSize[0] = size[0];
+	            this._contextSize[1] = size[1];
+
+	            if (this.options.direction === Utility.Direction.X) {
+	                this._size[0] = _getClipSize.call(this);
+	                this._size[1] = undefined;
+	            }
+	            else {
+	                this._size[0] = undefined;
+	                this._size[1] = _getClipSize.call(this);
+	            }
+	        }
+
+	        var scrollTransform = this._masterOutputFunction(-this._position);
+
+	        return {
+	            transform: Transform.multiply(transform, scrollTransform),
+	            size: size,
+	            opacity: opacity,
+	            origin: origin,
+	            target: this.group.render()
+	        };
+	    };
+
+	    function _innerRender() {
+	        var size = null;
+	        var position = this._position;
+	        var result = [];
+
+	        var offset = -this._positionOffset;
+	        var clipSize = _getClipSize.call(this);
+	        var currNode = this._node;
+	        while (currNode && offset - position < clipSize + this.options.margin) {
+	            offset += _output.call(this, currNode, offset, result);
+	            currNode = currNode.getNext ? currNode.getNext() : null;
+	        }
+
+	        var sizeNode = this._node;
+	        var nodesSize = _sizeForDir.call(this, sizeNode.getSize());
+	        if (offset < clipSize) {
+	            while (sizeNode && nodesSize < clipSize) {
+	                sizeNode = sizeNode.getPrevious();
+	                if (sizeNode) nodesSize += _sizeForDir.call(this, sizeNode.getSize());
+	            }
+	            sizeNode = this._node;
+	            while (sizeNode && nodesSize < clipSize) {
+	                sizeNode = sizeNode.getNext();
+	                if (sizeNode) nodesSize += _sizeForDir.call(this, sizeNode.getSize());
+	            }
+	        }
+
+	        if (!currNode && offset - position < clipSize - EDGE_TOLERANCE) {
+	            if (this._onEdge !== 1){
+	                this._onEdge = 1;
+	                this._eventOutput.emit('onEdge', {
+	                    position: offset - clipSize
+	                });
+	            }
+	        }
+	        else if (!this._node.getPrevious() && position < -EDGE_TOLERANCE) {
+	            if (this._onEdge !== -1) {
+	                this._onEdge = -1;
+	                this._eventOutput.emit('onEdge', {
+	                    position: 0
+	                });
+	            }
+	        }
+	        else {
+	            if (this._onEdge !== 0){
+	                this._onEdge = 0;
+	                this._eventOutput.emit('offEdge');
+	            }
+	        }
+
+	        // backwards
+	        currNode = (this._node && this._node.getPrevious) ? this._node.getPrevious() : null;
+	        offset = -this._positionOffset;
+	        if (currNode) {
+	            size = currNode.getSize ? currNode.getSize() : this._contextSize;
+	            offset -= _sizeForDir.call(this, size);
+	        }
+
+	        while (currNode && ((offset - position) > -(clipSize + this.options.margin))) {
+	            _output.call(this, currNode, offset, result);
+	            currNode = currNode.getPrevious ? currNode.getPrevious() : null;
+	            if (currNode) {
+	                size = currNode.getSize ? currNode.getSize() : this._contextSize;
+	                offset -= _sizeForDir.call(this, size);
+	            }
+	        }
+
+	        return result;
+	    }
+
+	    module.exports = Scroller;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -14040,8 +15346,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(46);
-	    var SpecParser = __webpack_require__(141);
+	    var Entity = __webpack_require__(50);
+	    var SpecParser = __webpack_require__(147);
 
 	    /**
 	     * A wrapper for inserting a renderable component (like a Modifer or
@@ -14200,7 +15506,7 @@
 
 
 /***/ },
-/* 46 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -14283,7 +15589,7 @@
 
 
 /***/ },
-/* 47 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;
@@ -14297,8 +15603,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(24);
-	    var Context = __webpack_require__(43);
+	    var Surface = __webpack_require__(25);
+	    var Context = __webpack_require__(46);
 
 	    /**
 	     * ContainerSurface is an object designed to contain surfaces and
@@ -14404,7 +15710,7 @@
 
 
 /***/ },
-/* 48 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -14417,9 +15723,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Context = __webpack_require__(43);
-	    var Transform = __webpack_require__(26);
-	    var Surface = __webpack_require__(24);
+	    var Context = __webpack_require__(46);
+	    var Transform = __webpack_require__(27);
+	    var Surface = __webpack_require__(25);
 
 	    /**
 	     * A Context designed to contain surfaces and set properties
@@ -14534,7 +15840,7 @@
 
 
 /***/ },
-/* 49 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -14587,7 +15893,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(38);
+	    var LayoutUtility = __webpack_require__(41);
 
 	    /**
 	     * @class
@@ -14784,7 +16090,7 @@
 
 
 /***/ },
-/* 50 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15170,7 +16476,7 @@
 
 
 /***/ },
-/* 51 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15181,7 +16487,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(37);
+	    var EventHandler = __webpack_require__(40);
 
 	    /**
 	     * The Physics Engine is responsible for mediating bodies with their
@@ -15699,7 +17005,7 @@
 
 
 /***/ },
-/* 52 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15712,10 +17018,10 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(50);
-	    var Transform = __webpack_require__(26);
-	    var EventHandler = __webpack_require__(37);
-	    var Integrator = __webpack_require__(145);
+	    var Vector = __webpack_require__(54);
+	    var Transform = __webpack_require__(27);
+	    var EventHandler = __webpack_require__(40);
+	    var Integrator = __webpack_require__(152);
 
 	    /**
 	     * A point body that is controlled by the Physics Engine. A particle has
@@ -16092,7 +17398,7 @@
 
 
 /***/ },
-/* 53 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16105,7 +17411,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(142);
+	    var Force = __webpack_require__(148);
 
 	    /**
 	     * Drag is a force that opposes velocity. Attach it to the physics engine
@@ -16217,7 +17523,7 @@
 
 
 /***/ },
-/* 54 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16232,8 +17538,8 @@
 	/*global console */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(142);
-	    var Vector = __webpack_require__(50);
+	    var Force = __webpack_require__(148);
+	    var Vector = __webpack_require__(54);
 
 	    /**
 	     *  A force that moves a physics body to a location with a spring motion.
@@ -16490,7 +17796,7 @@
 
 
 /***/ },
-/* 55 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16502,9 +17808,9 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(37);
-	    var Engine = __webpack_require__(22);
-	    var OptionsManager = __webpack_require__(36);
+	    var EventHandler = __webpack_require__(40);
+	    var Engine = __webpack_require__(23);
+	    var OptionsManager = __webpack_require__(39);
 
 	    /**
 	     * Handles piped in mousewheel events.
@@ -16693,7 +17999,365 @@
 
 
 /***/ },
-/* 56 */
+/* 60 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    var EventHandler = __webpack_require__(40);
+
+	    /**
+	     * Combines multiple types of sync classes (e.g. mouse, touch,
+	     *  scrolling) into one standardized interface for inclusion in widgets.
+	     *
+	     *  Sync classes are first registered with a key, and then can be accessed
+	     *  globally by key.
+	     *
+	     *  Emits 'start', 'update' and 'end' events as a union of the sync class
+	     *  providers.
+	     *
+	     * @class GenericSync
+	     * @constructor
+	     * @param syncs {Object|Array} object with fields {sync key : sync options}
+	     *    or an array of registered sync keys
+	     * @param [options] {Object|Array} options object to set on all syncs
+	     */
+	    function GenericSync(syncs, options) {
+	        this._eventInput = new EventHandler();
+	        this._eventOutput = new EventHandler();
+
+	        EventHandler.setInputHandler(this, this._eventInput);
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+
+	        this._syncs = {};
+	        if (syncs) this.addSync(syncs);
+	        if (options) this.setOptions(options);
+	    }
+
+	    GenericSync.DIRECTION_X = 0;
+	    GenericSync.DIRECTION_Y = 1;
+	    GenericSync.DIRECTION_Z = 2;
+
+	    // Global registry of sync classes. Append only.
+	    var registry = {};
+
+	    /**
+	     * Register a global sync class with an identifying key
+	     *
+	     * @static
+	     * @method register
+	     *
+	     * @param syncObject {Object} an object of {sync key : sync options} fields
+	     */
+	    GenericSync.register = function register(syncObject) {
+	        for (var key in syncObject){
+	            if (registry[key]){
+	                if (registry[key] === syncObject[key]) return; // redundant registration
+	                else throw new Error('this key is registered to a different sync class');
+	            }
+	            else registry[key] = syncObject[key];
+	        }
+	    };
+
+	    /**
+	     * Helper to set options on all sync instances
+	     *
+	     * @method setOptions
+	     * @param options {Object} options object
+	     */
+	    GenericSync.prototype.setOptions = function(options) {
+	        for (var key in this._syncs){
+	            this._syncs[key].setOptions(options);
+	        }
+	    };
+
+	    /**
+	     * Pipe events to a sync class
+	     *
+	     * @method pipeSync
+	     * @param key {String} identifier for sync class
+	     */
+	    GenericSync.prototype.pipeSync = function pipeToSync(key) {
+	        var sync = this._syncs[key];
+	        this._eventInput.pipe(sync);
+	        sync.pipe(this._eventOutput);
+	    };
+
+	    /**
+	     * Unpipe events from a sync class
+	     *
+	     * @method unpipeSync
+	     * @param key {String} identifier for sync class
+	     */
+	    GenericSync.prototype.unpipeSync = function unpipeFromSync(key) {
+	        var sync = this._syncs[key];
+	        this._eventInput.unpipe(sync);
+	        sync.unpipe(this._eventOutput);
+	    };
+
+	    function _addSingleSync(key, options) {
+	        if (!registry[key]) return;
+	        this._syncs[key] = new (registry[key])(options);
+	        this.pipeSync(key);
+	    }
+
+	    /**
+	     * Add a sync class to from the registered classes
+	     *
+	     * @method addSync
+	     * @param syncs {Object|Array.String} an array of registered sync keys
+	     *    or an object with fields {sync key : sync options}
+	     */
+	    GenericSync.prototype.addSync = function addSync(syncs) {
+	        if (syncs instanceof Array)
+	            for (var i = 0; i < syncs.length; i++)
+	                _addSingleSync.call(this, syncs[i]);
+	        else if (syncs instanceof Object)
+	            for (var key in syncs)
+	                _addSingleSync.call(this, key, syncs[key]);
+	    };
+
+	    module.exports = GenericSync;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 61 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var TouchTracker = __webpack_require__(149);
+	    var EventHandler = __webpack_require__(40);
+	    var OptionsManager = __webpack_require__(39);
+
+	    /**
+	     * Handles piped in touch events. Emits 'start', 'update', and 'events'
+	     *   events with delta, position, velocity, acceleration, clientX, clientY, count, and touch id.
+	     *   Useful for dealing with inputs on touch devices. Designed to be used either as standalone, or
+	     *   included in a GenericSync.
+	     *
+	     * @class TouchSync
+	     * @constructor
+	     *
+	     * @example
+	     *   var Surface = require('../core/Surface');
+	     *   var TouchSync = require('../inputs/TouchSync');
+	     *
+	     *   var surface = new Surface({ size: [100, 100] });
+	     *   var touchSync = new TouchSync();
+	     *   surface.pipe(touchSync);
+	     *
+	     *   touchSync.on('start', function (e) { // react to start });
+	     *   touchSync.on('update', function (e) { // react to update });
+	     *   touchSync.on('end', function (e) { // react to end });*
+	     *
+	     * @param [options] {Object}             default options overrides
+	     * @param [options.direction] {Number}   read from a particular axis
+	     * @param [options.rails] {Boolean}      read from axis with greatest differential
+	     * @param [options.velocitySampleLength] {Number}  Number of previous frames to check velocity against.
+	     * @param [options.scale] {Number}       constant factor to scale velocity output
+	     * @param [options.touchLimit] {Number}  touchLimit upper bound for emitting events based on number of touches
+	     */
+	    function TouchSync(options) {
+	        this.options =  Object.create(TouchSync.DEFAULT_OPTIONS);
+	        this._optionsManager = new OptionsManager(this.options);
+	        if (options) this.setOptions(options);
+
+	        this._eventOutput = new EventHandler();
+	        this._touchTracker = new TouchTracker({
+	            touchLimit: this.options.touchLimit
+	        });
+
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+	        EventHandler.setInputHandler(this, this._touchTracker);
+
+	        this._touchTracker.on('trackstart', _handleStart.bind(this));
+	        this._touchTracker.on('trackmove', _handleMove.bind(this));
+	        this._touchTracker.on('trackend', _handleEnd.bind(this));
+
+	        this._payload = {
+	            delta    : null,
+	            position : null,
+	            velocity : null,
+	            clientX  : undefined,
+	            clientY  : undefined,
+	            count    : 0,
+	            touch    : undefined
+	        };
+
+	        this._position = null; // to be deprecated
+	    }
+
+	    TouchSync.DEFAULT_OPTIONS = {
+	        direction: undefined,
+	        rails: false,
+	        touchLimit: 1,
+	        velocitySampleLength: 10,
+	        scale: 1
+	    };
+
+	    TouchSync.DIRECTION_X = 0;
+	    TouchSync.DIRECTION_Y = 1;
+
+	    var MINIMUM_TICK_TIME = 8;
+
+	    /**
+	     *  Triggered by trackstart.
+	     *  @method _handleStart
+	     *  @private
+	     */
+	    function _handleStart(data) {
+	        var velocity;
+	        var delta;
+	        if (this.options.direction !== undefined){
+	            this._position = 0;
+	            velocity = 0;
+	            delta = 0;
+	        }
+	        else {
+	            this._position = [0, 0];
+	            velocity = [0, 0];
+	            delta = [0, 0];
+	        }
+
+	        var payload = this._payload;
+	        payload.delta = delta;
+	        payload.position = this._position;
+	        payload.velocity = velocity;
+	        payload.clientX = data.x;
+	        payload.clientY = data.y;
+	        payload.count = data.count;
+	        payload.touch = data.identifier;
+
+	        this._eventOutput.emit('start', payload);
+	    }
+
+	    /**
+	     *  Triggered by trackmove.
+	     *  @method _handleMove
+	     *  @private
+	     */
+	    function _handleMove(data) {
+	        var history = data.history;
+
+	        var currHistory = history[history.length - 1];
+	        var prevHistory = history[history.length - 2];
+
+	        var distantHistory = history[history.length - this.options.velocitySampleLength] ?
+	          history[history.length - this.options.velocitySampleLength] :
+	          history[history.length - 2];
+
+	        var distantTime = distantHistory.timestamp;
+	        var currTime = currHistory.timestamp;
+
+	        var diffX = currHistory.x - prevHistory.x;
+	        var diffY = currHistory.y - prevHistory.y;
+
+	        var velDiffX = currHistory.x - distantHistory.x;
+	        var velDiffY = currHistory.y - distantHistory.y;
+
+	        if (this.options.rails) {
+	            if (Math.abs(diffX) > Math.abs(diffY)) diffY = 0;
+	            else diffX = 0;
+
+	            if (Math.abs(velDiffX) > Math.abs(velDiffY)) velDiffY = 0;
+	            else velDiffX = 0;
+	        }
+
+	        var diffTime = Math.max(currTime - distantTime, MINIMUM_TICK_TIME);
+
+	        var velX = velDiffX / diffTime;
+	        var velY = velDiffY / diffTime;
+
+	        var scale = this.options.scale;
+	        var nextVel;
+	        var nextDelta;
+
+	        if (this.options.direction === TouchSync.DIRECTION_X) {
+	            nextDelta = scale * diffX;
+	            nextVel = scale * velX;
+	            this._position += nextDelta;
+	        }
+	        else if (this.options.direction === TouchSync.DIRECTION_Y) {
+	            nextDelta = scale * diffY;
+	            nextVel = scale * velY;
+	            this._position += nextDelta;
+	        }
+	        else {
+	            nextDelta = [scale * diffX, scale * diffY];
+	            nextVel = [scale * velX, scale * velY];
+	            this._position[0] += nextDelta[0];
+	            this._position[1] += nextDelta[1];
+	        }
+
+	        var payload = this._payload;
+	        payload.delta    = nextDelta;
+	        payload.velocity = nextVel;
+	        payload.position = this._position;
+	        payload.clientX  = data.x;
+	        payload.clientY  = data.y;
+	        payload.count    = data.count;
+	        payload.touch    = data.identifier;
+
+	        this._eventOutput.emit('update', payload);
+	    }
+
+	    /**
+	     *  Triggered by trackend.
+	     *  @method _handleEnd
+	     *  @private
+	     */
+	    function _handleEnd(data) {
+	        this._payload.count = data.count;
+	        this._eventOutput.emit('end', this._payload);
+	    }
+
+	    /**
+	     * Set internal options, overriding any default options
+	     *
+	     * @method setOptions
+	     *
+	     * @param [options] {Object}             default options overrides
+	     * @param [options.direction] {Number}   read from a particular axis
+	     * @param [options.rails] {Boolean}      read from axis with greatest differential
+	     * @param [options.scale] {Number}       constant factor to scale velocity output
+	     */
+	    TouchSync.prototype.setOptions = function setOptions(options) {
+	        return this._optionsManager.setOptions(options);
+	    };
+
+	    /**
+	     * Return entire options dictionary, including defaults.
+	     *
+	     * @method getOptions
+	     * @return {Object} configuration options
+	     */
+	    TouchSync.prototype.getOptions = function getOptions() {
+	        return this.options;
+	    };
+
+	    module.exports = TouchSync;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16706,8 +18370,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var MultipleTransition = __webpack_require__(143);
-	    var TweenTransition = __webpack_require__(144);
+	    var MultipleTransition = __webpack_require__(150);
+	    var TweenTransition = __webpack_require__(151);
 
 	    /**
 	     * A state maintainer for a smooth transition between
@@ -16921,7 +18585,7 @@
 
 
 /***/ },
-/* 57 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16934,9 +18598,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transitionable = __webpack_require__(56);
-	    var Transform = __webpack_require__(26);
-	    var Utility = __webpack_require__(30);
+	    var Transitionable = __webpack_require__(62);
+	    var Transform = __webpack_require__(27);
+	    var Utility = __webpack_require__(32);
 
 	    /**
 	     * A class for transitioning the state of a Transform by transitioning
@@ -17157,7 +18821,7 @@
 
 
 /***/ },
-/* 58 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17166,7 +18830,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17228,7 +18892,7 @@
 
 
 /***/ },
-/* 59 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17238,7 +18902,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17290,7 +18954,7 @@
 
 
 /***/ },
-/* 60 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17299,7 +18963,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17392,7 +19056,7 @@
 
 
 /***/ },
-/* 61 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17403,7 +19067,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17527,7 +19191,7 @@
 
 
 /***/ },
-/* 62 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17536,7 +19200,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17634,7 +19298,7 @@
 
 
 /***/ },
-/* 63 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17645,7 +19309,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17790,7 +19454,7 @@
 
 
 /***/ },
-/* 64 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17799,7 +19463,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17882,7 +19546,7 @@
 
 
 /***/ },
-/* 65 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17891,7 +19555,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -17994,7 +19658,7 @@
 
 
 /***/ },
-/* 66 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18003,7 +19667,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18103,7 +19767,7 @@
 
 
 /***/ },
-/* 67 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18112,7 +19776,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18216,7 +19880,7 @@
 
 
 /***/ },
-/* 68 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18226,7 +19890,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18360,7 +20024,7 @@
 
 
 /***/ },
-/* 69 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18369,7 +20033,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18432,7 +20096,7 @@
 
 
 /***/ },
-/* 70 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18441,7 +20105,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18593,7 +20257,7 @@
 
 
 /***/ },
-/* 71 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18602,7 +20266,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18658,7 +20322,7 @@
 
 
 /***/ },
-/* 72 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18667,7 +20331,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18741,7 +20405,7 @@
 
 
 /***/ },
-/* 73 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18750,7 +20414,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18803,7 +20467,7 @@
 
 
 /***/ },
-/* 74 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18814,7 +20478,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18881,7 +20545,7 @@
 
 
 /***/ },
-/* 75 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18891,7 +20555,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -18958,7 +20622,7 @@
 
 
 /***/ },
-/* 76 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18967,7 +20631,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19058,7 +20722,7 @@
 
 
 /***/ },
-/* 77 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19066,7 +20730,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19126,7 +20790,7 @@
 
 
 /***/ },
-/* 78 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19135,7 +20799,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19191,7 +20855,7 @@
 
 
 /***/ },
-/* 79 */
+/* 85 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19200,7 +20864,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19260,7 +20924,7 @@
 
 
 /***/ },
-/* 80 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19271,7 +20935,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19331,7 +20995,7 @@
 
 
 /***/ },
-/* 81 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19340,7 +21004,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19412,7 +21076,7 @@
 
 
 /***/ },
-/* 82 */
+/* 88 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19422,7 +21086,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19494,7 +21158,7 @@
 
 
 /***/ },
-/* 83 */
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19503,7 +21167,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19560,7 +21224,7 @@
 
 
 /***/ },
-/* 84 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19569,7 +21233,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19663,7 +21327,7 @@
 
 
 /***/ },
-/* 85 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19672,7 +21336,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19774,7 +21438,7 @@
 
 
 /***/ },
-/* 86 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19783,7 +21447,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19836,7 +21500,7 @@
 
 
 /***/ },
-/* 87 */
+/* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19845,7 +21509,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19896,7 +21560,7 @@
 
 
 /***/ },
-/* 88 */
+/* 94 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19905,7 +21569,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -19960,7 +21624,7 @@
 
 
 /***/ },
-/* 89 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19969,7 +21633,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20037,7 +21701,7 @@
 
 
 /***/ },
-/* 90 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20048,7 +21712,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20120,7 +21784,7 @@
 
 
 /***/ },
-/* 91 */
+/* 97 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20129,7 +21793,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20231,7 +21895,7 @@
 
 
 /***/ },
-/* 92 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20242,7 +21906,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20376,7 +22040,7 @@
 
 
 /***/ },
-/* 93 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20385,7 +22049,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20487,7 +22151,7 @@
 
 
 /***/ },
-/* 94 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20496,7 +22160,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20605,7 +22269,7 @@
 
 
 /***/ },
-/* 95 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20615,7 +22279,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20678,7 +22342,7 @@
 
 
 /***/ },
-/* 96 */
+/* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20687,7 +22351,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20808,7 +22472,7 @@
 
 
 /***/ },
-/* 97 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20818,7 +22482,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20873,7 +22537,7 @@
 
 
 /***/ },
-/* 98 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20882,7 +22546,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -20937,7 +22601,7 @@
 
 
 /***/ },
-/* 99 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20946,7 +22610,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21050,7 +22714,7 @@
 
 
 /***/ },
-/* 100 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21059,7 +22723,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21111,7 +22775,7 @@
 
 
 /***/ },
-/* 101 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21123,7 +22787,7 @@
 	// - Jeeeyul Lee <jeeeyul@gmail.com>
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21180,7 +22844,7 @@
 
 
 /***/ },
-/* 102 */
+/* 108 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21193,7 +22857,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21323,7 +22987,7 @@
 
 
 /***/ },
-/* 103 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21332,7 +22996,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21447,7 +23111,7 @@
 
 
 /***/ },
-/* 104 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21456,7 +23120,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21530,7 +23194,7 @@
 
 
 /***/ },
-/* 105 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21539,7 +23203,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21622,7 +23286,7 @@
 
 
 /***/ },
-/* 106 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21631,7 +23295,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21692,7 +23356,7 @@
 
 
 /***/ },
-/* 107 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21701,7 +23365,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21802,7 +23466,7 @@
 
 
 /***/ },
-/* 108 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21811,7 +23475,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21874,7 +23538,7 @@
 
 
 /***/ },
-/* 109 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21883,7 +23547,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -21968,7 +23632,7 @@
 
 
 /***/ },
-/* 110 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21978,7 +23642,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22031,7 +23695,7 @@
 
 
 /***/ },
-/* 111 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22040,7 +23704,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22142,7 +23806,7 @@
 
 
 /***/ },
-/* 112 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22151,7 +23815,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22215,7 +23879,7 @@
 
 
 /***/ },
-/* 113 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22224,7 +23888,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22277,7 +23941,7 @@
 
 
 /***/ },
-/* 114 */
+/* 120 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22286,7 +23950,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22381,7 +24045,7 @@
 
 
 /***/ },
-/* 115 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22390,7 +24054,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22443,7 +24107,7 @@
 
 
 /***/ },
-/* 116 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22452,7 +24116,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22509,7 +24173,7 @@
 
 
 /***/ },
-/* 117 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22519,7 +24183,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22587,7 +24251,7 @@
 
 
 /***/ },
-/* 118 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22597,7 +24261,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22759,7 +24423,7 @@
 
 
 /***/ },
-/* 119 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22769,7 +24433,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -22921,7 +24585,7 @@
 
 
 /***/ },
-/* 120 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22930,7 +24594,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23071,7 +24735,7 @@
 
 
 /***/ },
-/* 121 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23082,7 +24746,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23138,7 +24802,7 @@
 
 
 /***/ },
-/* 122 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23147,7 +24811,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23249,7 +24913,7 @@
 
 
 /***/ },
-/* 123 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23258,7 +24922,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23360,7 +25024,7 @@
 
 
 /***/ },
-/* 124 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23369,7 +25033,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23429,7 +25093,7 @@
 
 
 /***/ },
-/* 125 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23438,7 +25102,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23547,7 +25211,7 @@
 
 
 /***/ },
-/* 126 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23556,7 +25220,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23611,7 +25275,7 @@
 
 
 /***/ },
-/* 127 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23620,7 +25284,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23675,7 +25339,7 @@
 
 
 /***/ },
-/* 128 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23685,7 +25349,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23773,7 +25437,7 @@
 
 
 /***/ },
-/* 129 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23782,7 +25446,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23834,7 +25498,7 @@
 
 
 /***/ },
-/* 130 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23843,7 +25507,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -23895,7 +25559,7 @@
 
 
 /***/ },
-/* 131 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23905,7 +25569,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -24058,7 +25722,7 @@
 
 
 /***/ },
-/* 132 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24067,7 +25731,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -24119,7 +25783,7 @@
 
 
 /***/ },
-/* 133 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24128,7 +25792,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -24187,7 +25851,7 @@
 
 
 /***/ },
-/* 134 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24197,7 +25861,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -24301,7 +25965,7 @@
 
 
 /***/ },
-/* 135 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24310,7 +25974,7 @@
 
 	(function (factory) {
 	    if (true) {
-	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(12)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(13)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)); // AMD
 	    } else if (typeof exports === 'object') {
 	        module.exports = factory(require('../moment')); // Node
 	    } else {
@@ -24391,16 +26055,16 @@
 
 
 /***/ },
-/* 136 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Create a simple path alias to allow browserify to resolve
 	// the runtime on a supported path.
-	module.exports = __webpack_require__(146);
+	module.exports = __webpack_require__(153);
 
 
 /***/ },
-/* 137 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -24416,7 +26080,7 @@
 
 
 /***/ },
-/* 138 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -24517,7 +26181,7 @@
 
 
 /***/ },
-/* 139 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -24794,7 +26458,7 @@
 
 
 /***/ },
-/* 140 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -24906,7 +26570,7 @@
 
 
 /***/ },
-/* 141 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -24919,7 +26583,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transform = __webpack_require__(26);
+	    var Transform = __webpack_require__(27);
 
 	    /**
 	     *
@@ -25088,7 +26752,7 @@
 
 
 /***/ },
-/* 142 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25101,8 +26765,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(50);
-	    var EventHandler = __webpack_require__(37);
+	    var Vector = __webpack_require__(54);
+	    var EventHandler = __webpack_require__(40);
 
 	    /**
 	     * Force base class.
@@ -25155,7 +26819,137 @@
 
 
 /***/ },
-/* 143 */
+/* 149 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(40);
+
+	    var _now = Date.now;
+
+	    function _timestampTouch(touch, event, history) {
+	        return {
+	            x: touch.clientX,
+	            y: touch.clientY,
+	            identifier : touch.identifier,
+	            origin: event.origin,
+	            timestamp: _now(),
+	            count: event.touches.length,
+	            history: history
+	        };
+	    }
+
+	    function _handleStart(event) {
+	        if (event.touches.length > this.touchLimit) return;
+	        this.isTouched = true;
+
+	        for (var i = 0; i < event.changedTouches.length; i++) {
+	            var touch = event.changedTouches[i];
+	            var data = _timestampTouch(touch, event, null);
+	            this.eventOutput.emit('trackstart', data);
+	            if (!this.selective && !this.touchHistory[touch.identifier]) this.track(data);
+	        }
+	    }
+
+	    function _handleMove(event) {
+	        if (event.touches.length > this.touchLimit) return;
+
+	        for (var i = 0; i < event.changedTouches.length; i++) {
+	            var touch = event.changedTouches[i];
+	            var history = this.touchHistory[touch.identifier];
+	            if (history) {
+	                var data = _timestampTouch(touch, event, history);
+	                this.touchHistory[touch.identifier].push(data);
+	                this.eventOutput.emit('trackmove', data);
+	            }
+	        }
+	    }
+
+	    function _handleEnd(event) {
+	        if (!this.isTouched) return;
+
+	        for (var i = 0; i < event.changedTouches.length; i++) {
+	            var touch = event.changedTouches[i];
+	            var history = this.touchHistory[touch.identifier];
+	            if (history) {
+	                var data = _timestampTouch(touch, event, history);
+	                this.eventOutput.emit('trackend', data);
+	                delete this.touchHistory[touch.identifier];
+	            }
+	        }
+
+	        this.isTouched = false;
+	    }
+
+	    function _handleUnpipe() {
+	        for (var i in this.touchHistory) {
+	            var history = this.touchHistory[i];
+	            this.eventOutput.emit('trackend', {
+	                touch: history[history.length - 1].touch,
+	                timestamp: Date.now(),
+	                count: 0,
+	                history: history
+	            });
+	            delete this.touchHistory[i];
+	        }
+	    }
+
+	    /**
+	     * Helper to TouchSync – tracks piped in touch events, organizes touch
+	     *   events by ID, and emits track events back to TouchSync.
+	     *   Emits 'trackstart', 'trackmove', and 'trackend' events upstream.
+	     *
+	     * @class TouchTracker
+	     * @constructor
+	     * @param {Object} options default options overrides
+	     * @param [options.selective] {Boolean} selective if false, saves state for each touch
+	     * @param [options.touchLimit] {Number} touchLimit upper bound for emitting events based on number of touches
+	     */
+	    function TouchTracker(options) {
+	        this.selective = options.selective;
+	        this.touchLimit = options.touchLimit || 1;
+
+	        this.touchHistory = {};
+
+	        this.eventInput = new EventHandler();
+	        this.eventOutput = new EventHandler();
+
+	        EventHandler.setInputHandler(this, this.eventInput);
+	        EventHandler.setOutputHandler(this, this.eventOutput);
+
+	        this.eventInput.on('touchstart', _handleStart.bind(this));
+	        this.eventInput.on('touchmove', _handleMove.bind(this));
+	        this.eventInput.on('touchend', _handleEnd.bind(this));
+	        this.eventInput.on('touchcancel', _handleEnd.bind(this));
+	        this.eventInput.on('unpipe', _handleUnpipe.bind(this));
+
+	        this.isTouched = false;
+	    }
+
+	    /**
+	     * Record touch data, if selective is false.
+	     * @private
+	     * @method track
+	     * @param {Object} data touch data
+	     */
+	    TouchTracker.prototype.track = function track(data) {
+	        this.touchHistory[data.identifier] = [data];
+	    };
+
+	    module.exports = TouchTracker;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25168,7 +26962,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Utility = __webpack_require__(30);
+	    var Utility = __webpack_require__(32);
 
 	    /**
 	     * Transition meta-method to support transitioning multiple
@@ -25238,7 +27032,7 @@
 
 
 /***/ },
-/* 144 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25670,7 +27464,7 @@
 
 
 /***/ },
-/* 145 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25778,19 +27572,19 @@
 
 
 /***/ },
-/* 146 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*globals Handlebars: true */
-	var base = __webpack_require__(147);
+	var base = __webpack_require__(154);
 
 	// Each of these augment the Handlebars object. No need to setup here.
 	// (This is done to easily share code between commonjs and browse envs)
-	var SafeString = __webpack_require__(148)["default"];
-	var Exception = __webpack_require__(149)["default"];
-	var Utils = __webpack_require__(150);
-	var runtime = __webpack_require__(151);
+	var SafeString = __webpack_require__(155)["default"];
+	var Exception = __webpack_require__(156)["default"];
+	var Utils = __webpack_require__(157);
+	var runtime = __webpack_require__(158);
 
 	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
 	var create = function() {
@@ -25800,7 +27594,6 @@
 	  hb.SafeString = SafeString;
 	  hb.Exception = Exception;
 	  hb.Utils = Utils;
-	  hb.escapeExpression = Utils.escapeExpression;
 
 	  hb.VM = runtime;
 	  hb.template = function(spec) {
@@ -25813,28 +27606,24 @@
 	var Handlebars = create();
 	Handlebars.create = create;
 
-	Handlebars['default'] = Handlebars;
-
 	exports["default"] = Handlebars;
 
 /***/ },
-/* 147 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(150);
-	var Exception = __webpack_require__(149)["default"];
+	var Utils = __webpack_require__(157);
+	var Exception = __webpack_require__(156)["default"];
 
-	var VERSION = "2.0.0";
-	exports.VERSION = VERSION;var COMPILER_REVISION = 6;
+	var VERSION = "1.3.0";
+	exports.VERSION = VERSION;var COMPILER_REVISION = 4;
 	exports.COMPILER_REVISION = COMPILER_REVISION;
 	var REVISION_CHANGES = {
 	  1: '<= 1.0.rc.2', // 1.0.rc.2 is actually rev2 but doesn't report it
 	  2: '== 1.0.0-rc.3',
 	  3: '== 1.0.0-rc.4',
-	  4: '== 1.x.x',
-	  5: '== 2.0.0-alpha.x',
-	  6: '>= 2.0.0-beta.1'
+	  4: '>= 1.0.0'
 	};
 	exports.REVISION_CHANGES = REVISION_CHANGES;
 	var isArray = Utils.isArray,
@@ -25855,44 +27644,38 @@
 	  logger: logger,
 	  log: log,
 
-	  registerHelper: function(name, fn) {
+	  registerHelper: function(name, fn, inverse) {
 	    if (toString.call(name) === objectType) {
-	      if (fn) { throw new Exception('Arg not supported with multiple helpers'); }
+	      if (inverse || fn) { throw new Exception('Arg not supported with multiple helpers'); }
 	      Utils.extend(this.helpers, name);
 	    } else {
+	      if (inverse) { fn.not = inverse; }
 	      this.helpers[name] = fn;
 	    }
 	  },
-	  unregisterHelper: function(name) {
-	    delete this.helpers[name];
-	  },
 
-	  registerPartial: function(name, partial) {
+	  registerPartial: function(name, str) {
 	    if (toString.call(name) === objectType) {
 	      Utils.extend(this.partials,  name);
 	    } else {
-	      this.partials[name] = partial;
+	      this.partials[name] = str;
 	    }
-	  },
-	  unregisterPartial: function(name) {
-	    delete this.partials[name];
 	  }
 	};
 
 	function registerDefaultHelpers(instance) {
-	  instance.registerHelper('helperMissing', function(/* [args, ]options */) {
-	    if(arguments.length === 1) {
-	      // A missing field in a {{foo}} constuct.
+	  instance.registerHelper('helperMissing', function(arg) {
+	    if(arguments.length === 2) {
 	      return undefined;
 	    } else {
-	      // Someone is actually trying to call something, blow up.
-	      throw new Exception("Missing helper: '" + arguments[arguments.length-1].name + "'");
+	      throw new Exception("Missing helper: '" + arg + "'");
 	    }
 	  });
 
 	  instance.registerHelper('blockHelperMissing', function(context, options) {
-	    var inverse = options.inverse,
-	        fn = options.fn;
+	    var inverse = options.inverse || function() {}, fn = options.fn;
+
+	    if (isFunction(context)) { context = context.call(this); }
 
 	    if(context === true) {
 	      return fn(this);
@@ -25900,37 +27683,18 @@
 	      return inverse(this);
 	    } else if (isArray(context)) {
 	      if(context.length > 0) {
-	        if (options.ids) {
-	          options.ids = [options.name];
-	        }
-
 	        return instance.helpers.each(context, options);
 	      } else {
 	        return inverse(this);
 	      }
 	    } else {
-	      if (options.data && options.ids) {
-	        var data = createFrame(options.data);
-	        data.contextPath = Utils.appendContextPath(options.data.contextPath, options.name);
-	        options = {data: data};
-	      }
-
-	      return fn(context, options);
+	      return fn(context);
 	    }
 	  });
 
 	  instance.registerHelper('each', function(context, options) {
-	    if (!options) {
-	      throw new Exception('Must pass iterator to #each');
-	    }
-
 	    var fn = options.fn, inverse = options.inverse;
 	    var i = 0, ret = "", data;
-
-	    var contextPath;
-	    if (options.data && options.ids) {
-	      contextPath = Utils.appendContextPath(options.data.contextPath, options.ids[0]) + '.';
-	    }
 
 	    if (isFunction(context)) { context = context.call(this); }
 
@@ -25945,24 +27709,16 @@
 	            data.index = i;
 	            data.first = (i === 0);
 	            data.last  = (i === (context.length-1));
-
-	            if (contextPath) {
-	              data.contextPath = contextPath + i;
-	            }
 	          }
 	          ret = ret + fn(context[i], { data: data });
 	        }
 	      } else {
 	        for(var key in context) {
 	          if(context.hasOwnProperty(key)) {
-	            if(data) {
-	              data.key = key;
+	            if(data) { 
+	              data.key = key; 
 	              data.index = i;
 	              data.first = (i === 0);
-
-	              if (contextPath) {
-	                data.contextPath = contextPath + key;
-	              }
 	            }
 	            ret = ret + fn(context[key], {data: data});
 	            i++;
@@ -25998,28 +27754,12 @@
 	  instance.registerHelper('with', function(context, options) {
 	    if (isFunction(context)) { context = context.call(this); }
 
-	    var fn = options.fn;
-
-	    if (!Utils.isEmpty(context)) {
-	      if (options.data && options.ids) {
-	        var data = createFrame(options.data);
-	        data.contextPath = Utils.appendContextPath(options.data.contextPath, options.ids[0]);
-	        options = {data:data};
-	      }
-
-	      return fn(context, options);
-	    } else {
-	      return options.inverse(this);
-	    }
+	    if (!Utils.isEmpty(context)) return options.fn(context);
 	  });
 
-	  instance.registerHelper('log', function(message, options) {
+	  instance.registerHelper('log', function(context, options) {
 	    var level = options.data && options.data.level != null ? parseInt(options.data.level, 10) : 1;
-	    instance.log(level, message);
-	  });
-
-	  instance.registerHelper('lookup', function(obj, field) {
-	    return obj && obj[field];
+	    instance.log(level, context);
 	  });
 	}
 
@@ -26034,27 +27774,27 @@
 	  level: 3,
 
 	  // can be overridden in the host environment
-	  log: function(level, message) {
+	  log: function(level, obj) {
 	    if (logger.level <= level) {
 	      var method = logger.methodMap[level];
 	      if (typeof console !== 'undefined' && console[method]) {
-	        console[method].call(console, message);
+	        console[method].call(console, obj);
 	      }
 	    }
 	  }
 	};
 	exports.logger = logger;
-	var log = logger.log;
-	exports.log = log;
-	var createFrame = function(object) {
-	  var frame = Utils.extend({}, object);
-	  frame._parent = object;
-	  return frame;
+	function log(level, obj) { logger.log(level, obj); }
+
+	exports.log = log;var createFrame = function(object) {
+	  var obj = {};
+	  Utils.extend(obj, object);
+	  return obj;
 	};
 	exports.createFrame = createFrame;
 
 /***/ },
-/* 148 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -26070,7 +27810,7 @@
 	exports["default"] = SafeString;
 
 /***/ },
-/* 149 */
+/* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -26103,12 +27843,12 @@
 	exports["default"] = Exception;
 
 /***/ },
-/* 150 */
+/* 157 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*jshint -W004 */
-	var SafeString = __webpack_require__(148)["default"];
+	var SafeString = __webpack_require__(155)["default"];
 
 	var escape = {
 	  "&": "&amp;",
@@ -26123,19 +27863,15 @@
 	var possible = /[&<>"'`]/;
 
 	function escapeChar(chr) {
-	  return escape[chr];
+	  return escape[chr] || "&amp;";
 	}
 
-	function extend(obj /* , ...source */) {
-	  for (var i = 1; i < arguments.length; i++) {
-	    for (var key in arguments[i]) {
-	      if (Object.prototype.hasOwnProperty.call(arguments[i], key)) {
-	        obj[key] = arguments[i][key];
-	      }
+	function extend(obj, value) {
+	  for(var key in value) {
+	    if(Object.prototype.hasOwnProperty.call(value, key)) {
+	      obj[key] = value[key];
 	    }
 	  }
-
-	  return obj;
 	}
 
 	exports.extend = extend;var toString = Object.prototype.toString;
@@ -26146,7 +27882,6 @@
 	  return typeof value === 'function';
 	};
 	// fallback for older versions of Chrome and Safari
-	/* istanbul ignore next */
 	if (isFunction(/x/)) {
 	  isFunction = function(value) {
 	    return typeof value === 'function' && toString.call(value) === '[object Function]';
@@ -26154,7 +27889,6 @@
 	}
 	var isFunction;
 	exports.isFunction = isFunction;
-	/* istanbul ignore next */
 	var isArray = Array.isArray || function(value) {
 	  return (value && typeof value === 'object') ? toString.call(value) === '[object Array]' : false;
 	};
@@ -26164,10 +27898,8 @@
 	  // don't escape SafeStrings, since they're already safe
 	  if (string instanceof SafeString) {
 	    return string.toString();
-	  } else if (string == null) {
+	  } else if (!string && string !== 0) {
 	    return "";
-	  } else if (!string) {
-	    return string + '';
 	  }
 
 	  // Force a string conversion as this will be done by the append regardless and
@@ -26189,22 +27921,17 @@
 	  }
 	}
 
-	exports.isEmpty = isEmpty;function appendContextPath(contextPath, id) {
-	  return (contextPath ? contextPath + '.' : '') + id;
-	}
-
-	exports.appendContextPath = appendContextPath;
+	exports.isEmpty = isEmpty;
 
 /***/ },
-/* 151 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(150);
-	var Exception = __webpack_require__(149)["default"];
-	var COMPILER_REVISION = __webpack_require__(147).COMPILER_REVISION;
-	var REVISION_CHANGES = __webpack_require__(147).REVISION_CHANGES;
-	var createFrame = __webpack_require__(147).createFrame;
+	var Utils = __webpack_require__(157);
+	var Exception = __webpack_require__(156)["default"];
+	var COMPILER_REVISION = __webpack_require__(154).COMPILER_REVISION;
+	var REVISION_CHANGES = __webpack_require__(154).REVISION_CHANGES;
 
 	function checkRevision(compilerInfo) {
 	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
@@ -26227,43 +27954,20 @@
 	exports.checkRevision = checkRevision;// TODO: Remove this line and break up compilePartial
 
 	function template(templateSpec, env) {
-	  /* istanbul ignore next */
 	  if (!env) {
 	    throw new Exception("No environment passed to template");
-	  }
-	  if (!templateSpec || !templateSpec.main) {
-	    throw new Exception('Unknown template object: ' + typeof templateSpec);
 	  }
 
 	  // Note: Using env.VM references rather than local var references throughout this section to allow
 	  // for external users to override these as psuedo-supported APIs.
-	  env.VM.checkRevision(templateSpec.compiler);
+	  var invokePartialWrapper = function(partial, name, context, helpers, partials, data) {
+	    var result = env.VM.invokePartial.apply(this, arguments);
+	    if (result != null) { return result; }
 
-	  var invokePartialWrapper = function(partial, indent, name, context, hash, helpers, partials, data, depths) {
-	    if (hash) {
-	      context = Utils.extend({}, context, hash);
-	    }
-
-	    var result = env.VM.invokePartial.call(this, partial, name, context, helpers, partials, data, depths);
-
-	    if (result == null && env.compile) {
-	      var options = { helpers: helpers, partials: partials, data: data, depths: depths };
-	      partials[name] = env.compile(partial, { data: data !== undefined, compat: templateSpec.compat }, env);
-	      result = partials[name](context, options);
-	    }
-	    if (result != null) {
-	      if (indent) {
-	        var lines = result.split('\n');
-	        for (var i = 0, l = lines.length; i < l; i++) {
-	          if (!lines[i] && i + 1 === l) {
-	            break;
-	          }
-
-	          lines[i] = indent + lines[i];
-	        }
-	        result = lines.join('\n');
-	      }
-	      return result;
+	    if (env.compile) {
+	      var options = { helpers: helpers, partials: partials, data: data };
+	      partials[name] = env.compile(partial, { data: data !== undefined }, env);
+	      return partials[name](context, options);
 	    } else {
 	      throw new Exception("The partial " + name + " could not be compiled when running in runtime-only mode");
 	    }
@@ -26271,110 +27975,84 @@
 
 	  // Just add water
 	  var container = {
-	    lookup: function(depths, name) {
-	      var len = depths.length;
-	      for (var i = 0; i < len; i++) {
-	        if (depths[i] && depths[i][name] != null) {
-	          return depths[i][name];
-	        }
-	      }
-	    },
-	    lambda: function(current, context) {
-	      return typeof current === 'function' ? current.call(context) : current;
-	    },
-
 	    escapeExpression: Utils.escapeExpression,
 	    invokePartial: invokePartialWrapper,
-
-	    fn: function(i) {
-	      return templateSpec[i];
-	    },
-
 	    programs: [],
-	    program: function(i, data, depths) {
-	      var programWrapper = this.programs[i],
-	          fn = this.fn(i);
-	      if (data || depths) {
-	        programWrapper = program(this, i, fn, data, depths);
+	    program: function(i, fn, data) {
+	      var programWrapper = this.programs[i];
+	      if(data) {
+	        programWrapper = program(i, fn, data);
 	      } else if (!programWrapper) {
-	        programWrapper = this.programs[i] = program(this, i, fn);
+	        programWrapper = this.programs[i] = program(i, fn);
 	      }
 	      return programWrapper;
-	    },
-
-	    data: function(data, depth) {
-	      while (data && depth--) {
-	        data = data._parent;
-	      }
-	      return data;
 	    },
 	    merge: function(param, common) {
 	      var ret = param || common;
 
 	      if (param && common && (param !== common)) {
-	        ret = Utils.extend({}, common, param);
+	        ret = {};
+	        Utils.extend(ret, common);
+	        Utils.extend(ret, param);
 	      }
-
 	      return ret;
 	    },
-
+	    programWithDepth: env.VM.programWithDepth,
 	    noop: env.VM.noop,
-	    compilerInfo: templateSpec.compiler
+	    compilerInfo: null
 	  };
 
-	  var ret = function(context, options) {
+	  return function(context, options) {
 	    options = options || {};
-	    var data = options.data;
+	    var namespace = options.partial ? options : env,
+	        helpers,
+	        partials;
 
-	    ret._setup(options);
-	    if (!options.partial && templateSpec.useData) {
-	      data = initData(context, data);
-	    }
-	    var depths;
-	    if (templateSpec.useDepths) {
-	      depths = options.depths ? [context].concat(options.depths) : [context];
-	    }
-
-	    return templateSpec.main.call(container, context, container.helpers, container.partials, data, depths);
-	  };
-	  ret.isTop = true;
-
-	  ret._setup = function(options) {
 	    if (!options.partial) {
-	      container.helpers = container.merge(options.helpers, env.helpers);
-
-	      if (templateSpec.usePartial) {
-	        container.partials = container.merge(options.partials, env.partials);
-	      }
-	    } else {
-	      container.helpers = options.helpers;
-	      container.partials = options.partials;
+	      helpers = options.helpers;
+	      partials = options.partials;
 	    }
-	  };
+	    var result = templateSpec.call(
+	          container,
+	          namespace, context,
+	          helpers,
+	          partials,
+	          options.data);
 
-	  ret._child = function(i, data, depths) {
-	    if (templateSpec.useDepths && !depths) {
-	      throw new Exception('must pass parent depths');
+	    if (!options.partial) {
+	      env.VM.checkRevision(container.compilerInfo);
 	    }
 
-	    return program(container, i, templateSpec[i], data, depths);
+	    return result;
 	  };
-	  return ret;
 	}
 
-	exports.template = template;function program(container, i, fn, data, depths) {
+	exports.template = template;function programWithDepth(i, fn, data /*, $depth */) {
+	  var args = Array.prototype.slice.call(arguments, 3);
+
 	  var prog = function(context, options) {
 	    options = options || {};
 
-	    return fn.call(container, context, container.helpers, container.partials, options.data || data, depths && [context].concat(depths));
+	    return fn.apply(this, [context, options.data || data].concat(args));
 	  };
 	  prog.program = i;
-	  prog.depth = depths ? depths.length : 0;
+	  prog.depth = args.length;
 	  return prog;
 	}
 
-	exports.program = program;function invokePartial(partial, name, context, helpers, partials, data, depths) {
-	  var options = { partial: true, helpers: helpers, partials: partials, data: data, depths: depths };
+	exports.programWithDepth = programWithDepth;function program(i, fn, data) {
+	  var prog = function(context, options) {
+	    options = options || {};
+
+	    return fn(context, options.data || data);
+	  };
+	  prog.program = i;
+	  prog.depth = 0;
+	  return prog;
+	}
+
+	exports.program = program;function invokePartial(partial, name, context, helpers, partials, data) {
+	  var options = { partial: true, helpers: helpers, partials: partials, data: data };
 
 	  if(partial === undefined) {
 	    throw new Exception("The partial " + name + " could not be found");
@@ -26385,13 +28063,7 @@
 
 	exports.invokePartial = invokePartial;function noop() { return ""; }
 
-	exports.noop = noop;function initData(context, data) {
-	  if (!data || !('root' in data)) {
-	    data = data ? createFrame(data) : {};
-	    data.root = context;
-	  }
-	  return data;
-	}
+	exports.noop = noop;
 
 /***/ }
 /******/ ])
