@@ -91,11 +91,12 @@
 	    var LayoutController = __webpack_require__(18);
 	    var Lagometer = __webpack_require__(12);
 	    var AutosizeTextareaSurface = __webpack_require__(3);
+	    var Timer = __webpack_require__(29);
 	    var Console = __webpack_require__(4);
-	    var InputSurface = __webpack_require__(29);
+	    var InputSurface = __webpack_require__(30);
 	    var moment = __webpack_require__(13);
 	    var cuid = __webpack_require__(20);
-	    var browser = __webpack_require__(33).userAgent(window.navigator.userAgent);
+	    var browser = __webpack_require__(34).userAgent(window.navigator.userAgent);
 	    // templates
 	    var chatBubbleTemplate = __webpack_require__(9);
 	    var daySectionTemplate = __webpack_require__(10);
@@ -291,6 +292,8 @@
 	    //
 	    // Adds a message to the scrollview
 	    //
+	    var afterInitialRefreshTimerId;
+	    var afterInitialRefresh;
 	    function _addMessage(data) {
 	        var time = moment(data.timeStamp || new Date());
 	        data.time = time.format('LT');
@@ -318,8 +321,20 @@
 	            viewSequence.push(chatBubble);
 	        }
 	        if (!stockScrollView) {
-	            scrollView.goToLastPage();
-	            scrollView.reflowLayout();
+	            if (afterInitialRefresh) {
+	                scrollView.goToLastPage();
+	                scrollView.reflowLayout();
+	            }
+	            else {
+	                viewSequence = viewSequence.getNext() || viewSequence;
+	                scrollView.setDataSource(viewSequence);
+	                scrollView.goToLastPage();
+	                if (afterInitialRefreshTimerId === undefined) {
+	                    afterInitialRefreshTimerId = Timer.setTimeout(function() {
+	                        afterInitialRefresh = true;
+	                    }, 100);
+	                }
+	            }
 	        }
 	    }
 
@@ -547,7 +562,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(32);
+	    var Utility = __webpack_require__(31);
 
 	    // Define capabilities of this layout function
 	    var capabilities = {
@@ -807,7 +822,7 @@
 	    'use strict';
 
 	    // import dependencies
-	    var TextareaSurface = __webpack_require__(30);
+	    var TextareaSurface = __webpack_require__(32);
 
 	    /**
 	     * @class
@@ -1052,7 +1067,7 @@
 	    // import dependencies
 	    var Surface = __webpack_require__(25);
 	    var Modifier = __webpack_require__(26);
-	    var View = __webpack_require__(31);
+	    var View = __webpack_require__(33);
 
 	    // globals
 	    var instance;
@@ -1126,9 +1141,9 @@
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(34);
 	__webpack_require__(35);
 	__webpack_require__(36);
+	__webpack_require__(37);
 
 /***/ },
 /* 6 */
@@ -1161,7 +1176,7 @@
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(142).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
@@ -1187,7 +1202,7 @@
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(142).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
@@ -1258,8 +1273,8 @@
 
 	    // import dependencies
 	    var Engine = __webpack_require__(23);
-	    var CanvasSurface = __webpack_require__(37);
-	    var View = __webpack_require__(31);
+	    var CanvasSurface = __webpack_require__(38);
+	    var View = __webpack_require__(33);
 
 	    /**
 	     * @class Lagometer
@@ -2265,7 +2280,7 @@
 	        if (!locales[name] && hasModule) {
 	            try {
 	                oldLocale = moment.locale();
-	                __webpack_require__(38)("./" + name);
+	                __webpack_require__(39)("./" + name);
 	                // because defineLocale currently also sets the global locale, we want to undo that for lazy loaded locales
 	                moment.locale(oldLocale);
 	            } catch (e) { }
@@ -4353,7 +4368,7 @@
 	    }
 	}).call(this);
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(143)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(144)(module)))
 
 /***/ },
 /* 14 */
@@ -5447,14 +5462,14 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(41);
-	    var FlowLayoutController = __webpack_require__(44);
-	    var LayoutNode = __webpack_require__(43);
-	    var FlowLayoutNode = __webpack_require__(45);
-	    var LayoutNodeManager = __webpack_require__(42);
+	    var LayoutUtility = __webpack_require__(40);
+	    var FlowLayoutController = __webpack_require__(41);
+	    var LayoutNode = __webpack_require__(42);
+	    var FlowLayoutNode = __webpack_require__(43);
+	    var LayoutNodeManager = __webpack_require__(44);
 	    var ContainerSurface = __webpack_require__(51);
 	    var Transform = __webpack_require__(27);
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 	    var Group = __webpack_require__(52);
 	    var Vector = __webpack_require__(54);
 	    var PhysicsEngine = __webpack_require__(55);
@@ -7204,16 +7219,16 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(32);
-	    var Entity = __webpack_require__(50);
+	    var Utility = __webpack_require__(31);
+	    var Entity = __webpack_require__(53);
 	    var ViewSequence = __webpack_require__(24);
-	    var OptionsManager = __webpack_require__(39);
-	    var EventHandler = __webpack_require__(40);
-	    var LayoutUtility = __webpack_require__(41);
-	    var LayoutNodeManager = __webpack_require__(42);
-	    var LayoutNode = __webpack_require__(43);
+	    var OptionsManager = __webpack_require__(46);
+	    var EventHandler = __webpack_require__(45);
+	    var LayoutUtility = __webpack_require__(40);
+	    var LayoutNodeManager = __webpack_require__(44);
+	    var LayoutNode = __webpack_require__(42);
 	    var Transform = __webpack_require__(27);
-	    __webpack_require__(53);
+	    __webpack_require__(62);
 
 	    /**
 	     * @class
@@ -7780,7 +7795,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutDockHelper = __webpack_require__(53);
+	    var LayoutDockHelper = __webpack_require__(62);
 
 	    // Layout function
 	    module.exports = function HeaderFooterLayout(context, options) {
@@ -7959,9 +7974,9 @@
 	     * @static
 	     * @class Engine
 	     */
-	    var Context = __webpack_require__(46);
-	    var EventHandler = __webpack_require__(40);
-	    var OptionsManager = __webpack_require__(39);
+	    var Context = __webpack_require__(47);
+	    var EventHandler = __webpack_require__(45);
+	    var OptionsManager = __webpack_require__(46);
 
 	    var Engine = {};
 
@@ -8673,7 +8688,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var ElementOutput = __webpack_require__(47);
+	    var ElementOutput = __webpack_require__(48);
 
 	    /**
 	     * A base class for viewable content and event
@@ -9184,8 +9199,8 @@
 	    var Transform = __webpack_require__(27);
 
 	    /* TODO: remove these dependencies when deprecation complete */
-	    var Transitionable = __webpack_require__(62);
-	    var TransitionableTransform = __webpack_require__(63);
+	    var Transitionable = __webpack_require__(63);
+	    var TransitionableTransform = __webpack_require__(64);
 
 	    /**
 	     *
@@ -10314,11 +10329,11 @@
 	    var Drag = __webpack_require__(57);
 	    var Spring = __webpack_require__(58);
 
-	    var EventHandler = __webpack_require__(40);
-	    var OptionsManager = __webpack_require__(39);
+	    var EventHandler = __webpack_require__(45);
+	    var OptionsManager = __webpack_require__(46);
 	    var ViewSequence = __webpack_require__(24);
-	    var Scroller = __webpack_require__(48);
-	    var Utility = __webpack_require__(32);
+	    var Scroller = __webpack_require__(49);
+	    var Utility = __webpack_require__(31);
 
 	    var GenericSync = __webpack_require__(60);
 	    var ScrollSync = __webpack_require__(59);
@@ -10973,6 +10988,215 @@
 	 * @license MPL 2.0
 	 * @copyright Famous Industries, Inc. 2014
 	 */
+	// TODO fix func-style
+	/*eslint func-style: [0, "declaration"] */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * An internal library to reproduce javascript time-based scheduling.
+	     *   Using standard javascript setTimeout methods can have a negative performance impact
+	     *   when combined with the Famous rendering process, so instead require Timer and call
+	     *   Timer.setTimeout, Timer.setInterval, etc.
+	     *
+	     * @class Timer
+	     * @constructor
+	     */
+	    var FamousEngine = __webpack_require__(23);
+
+	    var _event  = 'prerender';
+
+	    var getTime = (window.performance && window.performance.now) ?
+	        function() {
+	            return window.performance.now();
+	        }
+	        : function() {
+	            return Date.now();
+	        };
+
+	    /**
+	     * Add a function to be run on every prerender
+	     *
+	     * @method addTimerFunction
+	     *
+	     * @param {function} fn function to be run every prerender
+	     *
+	     * @return {function} function passed in as parameter
+	     */
+	    function addTimerFunction(fn) {
+	        FamousEngine.on(_event, fn);
+	        return fn;
+	    }
+
+	    /**
+	     * Wraps a function to be invoked after a certain amount of time.
+	     *  After a set duration has passed, it executes the function and
+	     *  removes it as a listener to 'prerender'.
+	     *
+	     * @method setTimeout
+	     *
+	     * @param {function} fn function to be run after a specified duration
+	     * @param {number} duration milliseconds from now to execute the function
+	     *
+	     * @return {function} function passed in as parameter
+	     */
+	    function setTimeout(fn, duration) {
+	        var t = getTime();
+	        var callback = function() {
+	            var t2 = getTime();
+	            if (t2 - t >= duration) {
+	                fn.apply(this, arguments);
+	                FamousEngine.removeListener(_event, callback);
+	            }
+	        };
+	        return addTimerFunction(callback);
+	    }
+
+	    /**
+	     * Wraps a function to be invoked after a certain amount of time.
+	     *  After a set duration has passed, it executes the function and
+	     *  resets the execution time.
+	     *
+	     * @method setInterval
+	     *
+	     * @param {function} fn function to be run after a specified duration
+	     * @param {number} duration interval to execute function in milliseconds
+	     *
+	     * @return {function} function passed in as parameter
+	     */
+	    function setInterval(fn, duration) {
+	        var t = getTime();
+	        var callback = function() {
+	            var t2 = getTime();
+	            if (t2 - t >= duration) {
+	                fn.apply(this, arguments);
+	                t = getTime();
+	            }
+	        };
+	        return addTimerFunction(callback);
+	    }
+
+	    /**
+	     * Wraps a function to be invoked after a certain amount of prerender ticks.
+	     *  Similar use to setTimeout but tied to the engine's run speed.
+	     *
+	     * @method after
+	     *
+	     * @param {function} fn function to be run after a specified amount of ticks
+	     * @param {number} numTicks number of prerender frames to wait
+	     *
+	     * @return {function} function passed in as parameter
+	     */
+	    function after(fn, numTicks) {
+	        if (numTicks === undefined) return undefined;
+	        var callback = function() {
+	            numTicks--;
+	            if (numTicks <= 0) { //in case numTicks is fraction or negative
+	                fn.apply(this, arguments);
+	                clear(callback);
+	            }
+	        };
+	        return addTimerFunction(callback);
+	    }
+
+	    /**
+	     * Wraps a function to be continually invoked after a certain amount of prerender ticks.
+	     *  Similar use to setInterval but tied to the engine's run speed.
+	     *
+	     * @method every
+	     *
+	     * @param {function} fn function to be run after a specified amount of ticks
+	     * @param {number} numTicks number of prerender frames to wait
+	     *
+	     * @return {function} function passed in as parameter
+	     */
+	    function every(fn, numTicks) {
+	        numTicks = numTicks || 1;
+	        var initial = numTicks;
+	        var callback = function() {
+	            numTicks--;
+	            if (numTicks <= 0) { //in case numTicks is fraction or negative
+	                fn.apply(this, arguments);
+	                numTicks = initial;
+	            }
+	        };
+	        return addTimerFunction(callback);
+	    }
+
+	    /**
+	     * Remove a function that gets called every prerender
+	     *
+	     * @method clear
+	     *
+	     * @param {function} fn event linstener
+	     */
+	    function clear(fn) {
+	        FamousEngine.removeListener(_event, fn);
+	    }
+
+	    /**
+	     * Executes a function after a certain amount of time. Makes sure
+	     *  the function is not run multiple times.
+	     *
+	     * @method debounce
+	     *
+	     * @param {function} func function to run after certain amount of time
+	     * @param {number} wait amount of time
+	     *
+	     * @return {function} function that is not able to debounce
+	     */
+	    function debounce(func, wait) {
+	        var timeout;
+	        var ctx;
+	        var timestamp;
+	        var result;
+	        var args;
+	        return function() {
+	            ctx = this;
+	            args = arguments;
+	            timestamp = getTime();
+
+	            var fn = function() {
+	                var last = getTime - timestamp;
+
+	                if (last < wait) {
+	                    timeout = setTimeout(fn, wait - last);
+	                } else {
+	                    timeout = null;
+	                    result = func.apply(ctx, args);
+	                }
+	            };
+
+	            clear(timeout);
+	            timeout = setTimeout(fn, wait);
+
+	            return result;
+	        };
+	    }
+
+	    module.exports = {
+	        setTimeout : setTimeout,
+	        setInterval : setInterval,
+	        debounce : debounce,
+	        after : after,
+	        every : every,
+	        clear : clear
+	    };
+
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Surface = __webpack_require__(25);
@@ -11129,7 +11353,134 @@
 
 
 /***/ },
-/* 30 */
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * This namespace holds standalone functionality.
+	     *  Currently includes name mapping for transition curves,
+	     *  name mapping for origin pairs, and the after() function.
+	     *
+	     * @class Utility
+	     * @static
+	     */
+	    var Utility = {};
+
+	    /**
+	     * Table of direction array positions
+	     *
+	     * @property {object} Direction
+	     * @final
+	     */
+	    Utility.Direction = {
+	        X: 0,
+	        Y: 1,
+	        Z: 2
+	    };
+
+	    /**
+	     * Return wrapper around callback function. Once the wrapper is called N
+	     *   times, invoke the callback function. Arguments and scope preserved.
+	     *
+	     * @method after
+	     *
+	     * @param {number} count number of calls before callback function invoked
+	     * @param {Function} callback wrapped callback function
+	     *
+	     * @return {function} wrapped callback with coundown feature
+	     */
+	    Utility.after = function after(count, callback) {
+	        var counter = count;
+	        return function() {
+	            counter--;
+	            if (counter === 0) callback.apply(this, arguments);
+	        };
+	    };
+
+	    /**
+	     * Load a URL and return its contents in a callback
+	     *
+	     * @method loadURL
+	     *
+	     * @param {string} url URL of object
+	     * @param {function} callback callback to dispatch with content
+	     */
+	    Utility.loadURL = function loadURL(url, callback) {
+	        var xhr = new XMLHttpRequest();
+	        xhr.onreadystatechange = function onreadystatechange() {
+	            if (this.readyState === 4) {
+	                if (callback) callback(this.responseText);
+	            }
+	        };
+	        xhr.open('GET', url);
+	        xhr.send();
+	    };
+
+	    /**
+	     * Create a document fragment from a string of HTML
+	     *
+	     * @method createDocumentFragmentFromHTML
+	     *
+	     * @param {string} html HTML to convert to DocumentFragment
+	     *
+	     * @return {DocumentFragment} DocumentFragment representing input HTML
+	     */
+	    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
+	        var element = document.createElement('div');
+	        element.innerHTML = html;
+	        var result = document.createDocumentFragment();
+	        while (element.hasChildNodes()) result.appendChild(element.firstChild);
+	        return result;
+	    };
+
+	    /*
+	     *  Deep clone an object.
+	     *  @param b {Object} Object to clone
+	     *  @return a {Object} Cloned object.
+	     */
+	    Utility.clone = function clone(b) {
+	        var a;
+	        if (typeof b === 'object') {
+	            a = (b instanceof Array) ? [] : {};
+	            for (var key in b) {
+	                if (typeof b[key] === 'object' && b[key] !== null) {
+	                    if (b[key] instanceof Array) {
+	                        a[key] = new Array(b[key].length);
+	                        for (var i = 0; i < b[key].length; i++) {
+	                            a[key][i] = Utility.clone(b[key][i]);
+	                        }
+	                    }
+	                    else {
+	                      a[key] = Utility.clone(b[key]);
+	                    }
+	                }
+	                else {
+	                    a[key] = b[key];
+	                }
+	            }
+	        }
+	        else {
+	            a = b;
+	        }
+	        return a;
+	    };
+
+	    module.exports = Utility;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11329,7 +11680,7 @@
 
 
 /***/ },
-/* 31 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11342,10 +11693,10 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
-	    var OptionsManager = __webpack_require__(39);
-	    var RenderNode = __webpack_require__(49);
-	    var Utility = __webpack_require__(32);
+	    var EventHandler = __webpack_require__(45);
+	    var OptionsManager = __webpack_require__(46);
+	    var RenderNode = __webpack_require__(50);
+	    var Utility = __webpack_require__(31);
 
 	    /**
 	     * Useful for quickly creating elements within applications
@@ -11445,134 +11796,7 @@
 
 
 /***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * This namespace holds standalone functionality.
-	     *  Currently includes name mapping for transition curves,
-	     *  name mapping for origin pairs, and the after() function.
-	     *
-	     * @class Utility
-	     * @static
-	     */
-	    var Utility = {};
-
-	    /**
-	     * Table of direction array positions
-	     *
-	     * @property {object} Direction
-	     * @final
-	     */
-	    Utility.Direction = {
-	        X: 0,
-	        Y: 1,
-	        Z: 2
-	    };
-
-	    /**
-	     * Return wrapper around callback function. Once the wrapper is called N
-	     *   times, invoke the callback function. Arguments and scope preserved.
-	     *
-	     * @method after
-	     *
-	     * @param {number} count number of calls before callback function invoked
-	     * @param {Function} callback wrapped callback function
-	     *
-	     * @return {function} wrapped callback with coundown feature
-	     */
-	    Utility.after = function after(count, callback) {
-	        var counter = count;
-	        return function() {
-	            counter--;
-	            if (counter === 0) callback.apply(this, arguments);
-	        };
-	    };
-
-	    /**
-	     * Load a URL and return its contents in a callback
-	     *
-	     * @method loadURL
-	     *
-	     * @param {string} url URL of object
-	     * @param {function} callback callback to dispatch with content
-	     */
-	    Utility.loadURL = function loadURL(url, callback) {
-	        var xhr = new XMLHttpRequest();
-	        xhr.onreadystatechange = function onreadystatechange() {
-	            if (this.readyState === 4) {
-	                if (callback) callback(this.responseText);
-	            }
-	        };
-	        xhr.open('GET', url);
-	        xhr.send();
-	    };
-
-	    /**
-	     * Create a document fragment from a string of HTML
-	     *
-	     * @method createDocumentFragmentFromHTML
-	     *
-	     * @param {string} html HTML to convert to DocumentFragment
-	     *
-	     * @return {DocumentFragment} DocumentFragment representing input HTML
-	     */
-	    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
-	        var element = document.createElement('div');
-	        element.innerHTML = html;
-	        var result = document.createDocumentFragment();
-	        while (element.hasChildNodes()) result.appendChild(element.firstChild);
-	        return result;
-	    };
-
-	    /*
-	     *  Deep clone an object.
-	     *  @param b {Object} Object to clone
-	     *  @return a {Object} Cloned object.
-	     */
-	    Utility.clone = function clone(b) {
-	        var a;
-	        if (typeof b === 'object') {
-	            a = (b instanceof Array) ? [] : {};
-	            for (var key in b) {
-	                if (typeof b[key] === 'object' && b[key] !== null) {
-	                    if (b[key] instanceof Array) {
-	                        a[key] = new Array(b[key].length);
-	                        for (var i = 0; i < b[key].length; i++) {
-	                            a[key][i] = Utility.clone(b[key][i]);
-	                        }
-	                    }
-	                    else {
-	                      a[key] = Utility.clone(b[key]);
-	                    }
-	                }
-	                else {
-	                    a[key] = b[key];
-	                }
-	            }
-	        }
-	        else {
-	            a = b;
-	        }
-	        return a;
-	    };
-
-	    module.exports = Utility;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*jshint browser: true, node: true
@@ -11726,7 +11950,7 @@
 	})());
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -11870,7 +12094,7 @@
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (!Function.prototype.bind) {
@@ -11899,7 +12123,7 @@
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// adds requestAnimationFrame functionality
@@ -11918,7 +12142,7 @@
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -12041,166 +12265,166 @@
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var map = {
-		"./af": 64,
-		"./af.js": 64,
-		"./ar": 67,
-		"./ar-ma": 65,
-		"./ar-ma.js": 65,
-		"./ar-sa": 66,
-		"./ar-sa.js": 66,
-		"./ar.js": 67,
-		"./az": 68,
-		"./az.js": 68,
-		"./be": 69,
-		"./be.js": 69,
-		"./bg": 70,
-		"./bg.js": 70,
-		"./bn": 71,
-		"./bn.js": 71,
-		"./bo": 72,
-		"./bo.js": 72,
-		"./br": 73,
-		"./br.js": 73,
-		"./bs": 74,
-		"./bs.js": 74,
-		"./ca": 75,
-		"./ca.js": 75,
-		"./cs": 76,
-		"./cs.js": 76,
-		"./cv": 77,
-		"./cv.js": 77,
-		"./cy": 78,
-		"./cy.js": 78,
-		"./da": 79,
-		"./da.js": 79,
-		"./de": 81,
-		"./de-at": 80,
-		"./de-at.js": 80,
-		"./de.js": 81,
-		"./el": 82,
-		"./el.js": 82,
-		"./en-au": 83,
-		"./en-au.js": 83,
-		"./en-ca": 84,
-		"./en-ca.js": 84,
-		"./en-gb": 85,
-		"./en-gb.js": 85,
-		"./eo": 86,
-		"./eo.js": 86,
-		"./es": 87,
-		"./es.js": 87,
-		"./et": 88,
-		"./et.js": 88,
-		"./eu": 89,
-		"./eu.js": 89,
-		"./fa": 90,
-		"./fa.js": 90,
-		"./fi": 91,
-		"./fi.js": 91,
-		"./fo": 92,
-		"./fo.js": 92,
-		"./fr": 94,
-		"./fr-ca": 93,
-		"./fr-ca.js": 93,
-		"./fr.js": 94,
-		"./gl": 95,
-		"./gl.js": 95,
-		"./he": 96,
-		"./he.js": 96,
-		"./hi": 97,
-		"./hi.js": 97,
-		"./hr": 98,
-		"./hr.js": 98,
-		"./hu": 99,
-		"./hu.js": 99,
-		"./hy-am": 100,
-		"./hy-am.js": 100,
-		"./id": 101,
-		"./id.js": 101,
-		"./is": 102,
-		"./is.js": 102,
-		"./it": 103,
-		"./it.js": 103,
-		"./ja": 104,
-		"./ja.js": 104,
-		"./ka": 105,
-		"./ka.js": 105,
-		"./km": 106,
-		"./km.js": 106,
-		"./ko": 107,
-		"./ko.js": 107,
-		"./lb": 108,
-		"./lb.js": 108,
-		"./lt": 109,
-		"./lt.js": 109,
-		"./lv": 110,
-		"./lv.js": 110,
-		"./mk": 111,
-		"./mk.js": 111,
-		"./ml": 112,
-		"./ml.js": 112,
-		"./mr": 113,
-		"./mr.js": 113,
-		"./ms-my": 114,
-		"./ms-my.js": 114,
-		"./my": 115,
-		"./my.js": 115,
-		"./nb": 116,
-		"./nb.js": 116,
-		"./ne": 117,
-		"./ne.js": 117,
-		"./nl": 118,
-		"./nl.js": 118,
-		"./nn": 119,
-		"./nn.js": 119,
-		"./pl": 120,
-		"./pl.js": 120,
-		"./pt": 122,
-		"./pt-br": 121,
-		"./pt-br.js": 121,
-		"./pt.js": 122,
-		"./ro": 123,
-		"./ro.js": 123,
-		"./ru": 124,
-		"./ru.js": 124,
-		"./sk": 125,
-		"./sk.js": 125,
-		"./sl": 126,
-		"./sl.js": 126,
-		"./sq": 127,
-		"./sq.js": 127,
-		"./sr": 129,
-		"./sr-cyrl": 128,
-		"./sr-cyrl.js": 128,
-		"./sr.js": 129,
-		"./sv": 130,
-		"./sv.js": 130,
-		"./ta": 131,
-		"./ta.js": 131,
-		"./th": 132,
-		"./th.js": 132,
-		"./tl-ph": 133,
-		"./tl-ph.js": 133,
-		"./tr": 134,
-		"./tr.js": 134,
-		"./tzm": 136,
-		"./tzm-latn": 135,
-		"./tzm-latn.js": 135,
-		"./tzm.js": 136,
-		"./uk": 137,
-		"./uk.js": 137,
-		"./uz": 138,
-		"./uz.js": 138,
-		"./vi": 139,
-		"./vi.js": 139,
-		"./zh-cn": 140,
-		"./zh-cn.js": 140,
-		"./zh-tw": 141,
-		"./zh-tw.js": 141
+		"./af": 65,
+		"./af.js": 65,
+		"./ar": 68,
+		"./ar-ma": 66,
+		"./ar-ma.js": 66,
+		"./ar-sa": 67,
+		"./ar-sa.js": 67,
+		"./ar.js": 68,
+		"./az": 69,
+		"./az.js": 69,
+		"./be": 70,
+		"./be.js": 70,
+		"./bg": 71,
+		"./bg.js": 71,
+		"./bn": 72,
+		"./bn.js": 72,
+		"./bo": 73,
+		"./bo.js": 73,
+		"./br": 74,
+		"./br.js": 74,
+		"./bs": 75,
+		"./bs.js": 75,
+		"./ca": 76,
+		"./ca.js": 76,
+		"./cs": 77,
+		"./cs.js": 77,
+		"./cv": 78,
+		"./cv.js": 78,
+		"./cy": 79,
+		"./cy.js": 79,
+		"./da": 80,
+		"./da.js": 80,
+		"./de": 82,
+		"./de-at": 81,
+		"./de-at.js": 81,
+		"./de.js": 82,
+		"./el": 83,
+		"./el.js": 83,
+		"./en-au": 84,
+		"./en-au.js": 84,
+		"./en-ca": 85,
+		"./en-ca.js": 85,
+		"./en-gb": 86,
+		"./en-gb.js": 86,
+		"./eo": 87,
+		"./eo.js": 87,
+		"./es": 88,
+		"./es.js": 88,
+		"./et": 89,
+		"./et.js": 89,
+		"./eu": 90,
+		"./eu.js": 90,
+		"./fa": 91,
+		"./fa.js": 91,
+		"./fi": 92,
+		"./fi.js": 92,
+		"./fo": 93,
+		"./fo.js": 93,
+		"./fr": 95,
+		"./fr-ca": 94,
+		"./fr-ca.js": 94,
+		"./fr.js": 95,
+		"./gl": 96,
+		"./gl.js": 96,
+		"./he": 97,
+		"./he.js": 97,
+		"./hi": 98,
+		"./hi.js": 98,
+		"./hr": 99,
+		"./hr.js": 99,
+		"./hu": 100,
+		"./hu.js": 100,
+		"./hy-am": 101,
+		"./hy-am.js": 101,
+		"./id": 102,
+		"./id.js": 102,
+		"./is": 103,
+		"./is.js": 103,
+		"./it": 104,
+		"./it.js": 104,
+		"./ja": 105,
+		"./ja.js": 105,
+		"./ka": 106,
+		"./ka.js": 106,
+		"./km": 107,
+		"./km.js": 107,
+		"./ko": 108,
+		"./ko.js": 108,
+		"./lb": 109,
+		"./lb.js": 109,
+		"./lt": 110,
+		"./lt.js": 110,
+		"./lv": 111,
+		"./lv.js": 111,
+		"./mk": 112,
+		"./mk.js": 112,
+		"./ml": 113,
+		"./ml.js": 113,
+		"./mr": 114,
+		"./mr.js": 114,
+		"./ms-my": 115,
+		"./ms-my.js": 115,
+		"./my": 116,
+		"./my.js": 116,
+		"./nb": 117,
+		"./nb.js": 117,
+		"./ne": 118,
+		"./ne.js": 118,
+		"./nl": 119,
+		"./nl.js": 119,
+		"./nn": 120,
+		"./nn.js": 120,
+		"./pl": 121,
+		"./pl.js": 121,
+		"./pt": 123,
+		"./pt-br": 122,
+		"./pt-br.js": 122,
+		"./pt.js": 123,
+		"./ro": 124,
+		"./ro.js": 124,
+		"./ru": 125,
+		"./ru.js": 125,
+		"./sk": 126,
+		"./sk.js": 126,
+		"./sl": 127,
+		"./sl.js": 127,
+		"./sq": 128,
+		"./sq.js": 128,
+		"./sr": 130,
+		"./sr-cyrl": 129,
+		"./sr-cyrl.js": 129,
+		"./sr.js": 130,
+		"./sv": 131,
+		"./sv.js": 131,
+		"./ta": 132,
+		"./ta.js": 132,
+		"./th": 133,
+		"./th.js": 133,
+		"./tl-ph": 134,
+		"./tl-ph.js": 134,
+		"./tr": 135,
+		"./tr.js": 135,
+		"./tzm": 137,
+		"./tzm-latn": 136,
+		"./tzm-latn.js": 136,
+		"./tzm.js": 137,
+		"./uk": 138,
+		"./uk.js": 138,
+		"./uz": 139,
+		"./uz.js": 139,
+		"./vi": 140,
+		"./vi.js": 140,
+		"./zh-cn": 141,
+		"./zh-cn.js": 141,
+		"./zh-tw": 142,
+		"./zh-tw.js": 142
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -12213,430 +12437,11 @@
 	};
 	webpackContext.resolve = webpackContextResolve;
 	module.exports = webpackContext;
-	webpackContext.id = 38;
-
-
-/***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
-
-	    /**
-	     *  A collection of methods for setting options which can be extended
-	     *  onto other classes.
-	     *
-	     *
-	     *  **** WARNING ****
-	     *  You can only pass through objects that will compile into valid JSON.
-	     *
-	     *  Valid options:
-	     *      Strings,
-	     *      Arrays,
-	     *      Objects,
-	     *      Numbers,
-	     *      Nested Objects,
-	     *      Nested Arrays.
-	     *
-	     *    This excludes:
-	     *        Document Fragments,
-	     *        Functions
-	     * @class OptionsManager
-	     * @constructor
-	     * @param {Object} value options dictionary
-	     */
-	    function OptionsManager(value) {
-	        this._value = value;
-	        this.eventOutput = null;
-	    }
-
-	    /**
-	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
-	     *
-	     * @static
-	     * @method OptionsManager.patch
-	     *
-	     * @param {Object} source source arguments
-	     * @param {...Object} data argument additions and overwrites
-	     * @return {Object} source object
-	     */
-	    OptionsManager.patch = function patchObject(source, data) {
-	        var manager = new OptionsManager(source);
-	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
-	        return source;
-	    };
-
-	    function _createEventOutput() {
-	        this.eventOutput = new EventHandler();
-	        this.eventOutput.bindThis(this);
-	        EventHandler.setOutputHandler(this, this.eventOutput);
-	    }
-
-	    /**
-	     * Create OptionsManager from source with arguments overriden by patches.
-	     *   Triggers 'change' event on this object's event handler if the state of
-	     *   the OptionsManager changes as a result.
-	     *
-	     * @method patch
-	     *
-	     * @param {...Object} arguments list of patch objects
-	     * @return {OptionsManager} this
-	     */
-	    OptionsManager.prototype.patch = function patch() {
-	        var myState = this._value;
-	        for (var i = 0; i < arguments.length; i++) {
-	            var data = arguments[i];
-	            for (var k in data) {
-	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
-	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
-	                    this.key(k).patch(data[k]);
-	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
-	                }
-	                else this.set(k, data[k]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for patch
-	     *
-	     * @method setOptions
-	     *
-	     */
-	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
-
-	    /**
-	     * Return OptionsManager based on sub-object retrieved by key
-	     *
-	     * @method key
-	     *
-	     * @param {string} identifier key
-	     * @return {OptionsManager} new options manager with the value
-	     */
-	    OptionsManager.prototype.key = function key(identifier) {
-	        var result = new OptionsManager(this._value[identifier]);
-	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
-	        return result;
-	    };
-
-	    /**
-	     * Look up value by key or get the full options hash
-	     * @method get
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object or full options hash
-	     */
-	    OptionsManager.prototype.get = function get(key) {
-	        return key ? this._value[key] : this._value;
-	    };
-
-	    /**
-	     * Alias for get
-	     * @method getOptions
-	     */
-	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
-
-	    /**
-	     * Set key to value.  Outputs 'change' event if a value is overwritten.
-	     *
-	     * @method set
-	     *
-	     * @param {string} key key string
-	     * @param {Object} value value object
-	     * @return {OptionsManager} new options manager based on the value object
-	     */
-	    OptionsManager.prototype.set = function set(key, value) {
-	        var originalValue = this.get(key);
-	        this._value[key] = value;
-	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
-	        return this;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    OptionsManager.prototype.on = function on() {
-	        _createEventOutput.call(this);
-	        return this.on.apply(this, arguments);
-	    };
-
-	    /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function} handler function object to remove
-	     * @return {EventHandler} internal event handler object (for chaining)
-	     */
-	    OptionsManager.prototype.removeListener = function removeListener() {
-	        _createEventOutput.call(this);
-	        return this.removeListener.apply(this, arguments);
-	    };
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    OptionsManager.prototype.pipe = function pipe() {
-	        _createEventOutput.call(this);
-	        return this.pipe.apply(this, arguments);
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     * Undoes work of "pipe"
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    OptionsManager.prototype.unpipe = function unpipe() {
-	        _createEventOutput.call(this);
-	        return this.unpipe.apply(this, arguments);
-	    };
-
-	    module.exports = OptionsManager;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	webpackContext.id = 39;
 
 
 /***/ },
 /* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(144);
-
-	    /**
-	     * EventHandler forwards received events to a set of provided callback functions.
-	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
-	     *
-	     * @class EventHandler
-	     * @extends EventEmitter
-	     * @constructor
-	     */
-	    function EventHandler() {
-	        EventEmitter.apply(this, arguments);
-
-	        this.downstream = []; // downstream event handlers
-	        this.downstreamFn = []; // downstream functions
-
-	        this.upstream = []; // upstream event handlers
-	        this.upstreamListeners = {}; // upstream listeners
-	    }
-	    EventHandler.prototype = Object.create(EventEmitter.prototype);
-	    EventHandler.prototype.constructor = EventHandler;
-
-	    /**
-	     * Assign an event handler to receive an object's input events.
-	     *
-	     * @method setInputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
-	        object.trigger = handler.trigger.bind(handler);
-	        if (handler.subscribe && handler.unsubscribe) {
-	            object.subscribe = handler.subscribe.bind(handler);
-	            object.unsubscribe = handler.unsubscribe.bind(handler);
-	        }
-	    };
-
-	    /**
-	     * Assign an event handler to receive an object's output events.
-	     *
-	     * @method setOutputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
-	        if (handler instanceof EventHandler) handler.bindThis(object);
-	        object.pipe = handler.pipe.bind(handler);
-	        object.unpipe = handler.unpipe.bind(handler);
-	        object.on = handler.on.bind(handler);
-	        object.addListener = object.on;
-	        object.removeListener = handler.removeListener.bind(handler);
-	    };
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.emit = function emit(type, event) {
-	        EventEmitter.prototype.emit.apply(this, arguments);
-	        var i = 0;
-	        for (i = 0; i < this.downstream.length; i++) {
-	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
-	        }
-	        for (i = 0; i < this.downstreamFn.length; i++) {
-	            this.downstreamFn[i](type, event);
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for emit
-	     * @method addListener
-	     */
-	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
-
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    EventHandler.prototype.pipe = function pipe(target) {
-	        if (target.subscribe instanceof Function) return target.subscribe(this);
-
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index < 0) downstreamCtx.push(target);
-
-	        if (target instanceof Function) target('pipe', null);
-	        else if (target.trigger) target.trigger('pipe', null);
-
-	        return target;
-	    };
-
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     *   Undoes work of "pipe".
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    EventHandler.prototype.unpipe = function unpipe(target) {
-	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
-
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index >= 0) {
-	            downstreamCtx.splice(index, 1);
-	            if (target instanceof Function) target('unpipe', null);
-	            else if (target.trigger) target.trigger('unpipe', null);
-	            return target;
-	        }
-	        else return false;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.on = function on(type, handler) {
-	        EventEmitter.prototype.on.apply(this, arguments);
-	        if (!(type in this.upstreamListeners)) {
-	            var upstreamListener = this.trigger.bind(this, type);
-	            this.upstreamListeners[type] = upstreamListener;
-	            for (var i = 0; i < this.upstream.length; i++) {
-	                this.upstream[i].on(type, upstreamListener);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Alias for "on"
-	     * @method addListener
-	     */
-	    EventHandler.prototype.addListener = EventHandler.prototype.on;
-
-	    /**
-	     * Listen for events from an upstream event handler.
-	     *
-	     * @method subscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.subscribe = function subscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index < 0) {
-	            this.upstream.push(source);
-	            for (var type in this.upstreamListeners) {
-	                source.on(type, this.upstreamListeners[type]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Stop listening to events from an upstream event handler.
-	     *
-	     * @method unsubscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index >= 0) {
-	            this.upstream.splice(index, 1);
-	            for (var type in this.upstreamListeners) {
-	                source.removeListener(type, this.upstreamListeners[type]);
-	            }
-	        }
-	        return this;
-	    };
-
-	    module.exports = EventHandler;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -12900,7 +12705,820 @@
 
 
 /***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * FlowLayoutController transitions renderables smoothly from one
+	 * layout to another. When the data-source or layout is changed,
+	 * the renderables are transitioned from their old state (size,
+	 * transform, origin, etc..) to the new state.
+	 *
+	 * Inherited from: [LayoutController](./LayoutController.md)
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var LayoutController = __webpack_require__(18);
+	    var LayoutNodeManager = __webpack_require__(44);
+	    var FlowLayoutNode = __webpack_require__(43);
+	    var Transform = __webpack_require__(27);
+
+	    /**
+	     * @class
+	     * @extends LayoutController
+	     * @param {Object} options Options.
+	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
+	     * @alias module:FlowLayoutController
+	     */
+	    function FlowLayoutController(options, nodeManager) {
+	        LayoutController.call(this, FlowLayoutController.DEFAULT_OPTIONS, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
+	        if (options) {
+	            this.setOptions(options);
+	        }
+	    }
+	    FlowLayoutController.prototype = Object.create(LayoutController.prototype);
+	    FlowLayoutController.prototype.constructor = FlowLayoutController;
+
+	    FlowLayoutController.DEFAULT_OPTIONS = {
+	        nodeSpring: {
+	            dampingRatio: 0.8,
+	            period: 300
+	        }
+	        /*insertSpec: {
+	            opacity: undefined,
+	            size: undefined,
+	            transform: undefined,
+	            origin: undefined,
+	            align: undefined
+	        },
+	        removeSpec: {
+	            opacity: undefined,
+	            size: undefined,
+	            transform: undefined,
+	            origin: undefined,
+	            align: undefined
+	        }*/
+	    };
+
+	    /**
+	     * Called whenever a layout-node is created/re-used. Initializes
+	     * the node with the `insertSpec` if it has been defined.
+	     */
+	    function _initLayoutNode(node, spec) {
+	        if (node.setOptions) {
+	            node.setOptions({
+	                spring: this.options.nodeSpring
+	            });
+	        }
+	        if (!spec && this.options.insertSpec) {
+	            node.setSpec(this.options.insertSpec);
+	        }
+	    }
+
+	    var oldSetOptions = FlowLayoutController.prototype.setOptions;
+	    /**
+	     * Patches the FlowLayoutController instance's options with the passed-in ones.
+	     *
+	     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
+	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
+	     * @return {FlowLayoutController} this
+	     */
+	    FlowLayoutController.prototype.setOptions = function setOptions(options) {
+	        oldSetOptions.call(this, options);
+	        if (options.nodeSpring) {
+	            this._nodes.forEach(function(node) {
+	                node.setOptions({spring: options.nodeSpring});
+	            });
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Apply changes from this component to the corresponding document element.
+	     * This includes changes to classes, styles, size, content, opacity, origin,
+	     * and matrix transforms.
+	     *
+	     * @private
+	     * @method commit
+	     * @param {Context} context commit context
+	     */
+	    FlowLayoutController.prototype.commit = function commit(context) {
+	        var transform = context.transform;
+	        var origin = context.origin;
+	        var size = context.size;
+	        var opacity = context.opacity;
+	        var result;
+
+	        // When the size or layout function has changed, reflow the layout
+	        if (size[0] !== this._contextSizeCache[0] ||
+	            size[1] !== this._contextSizeCache[1] ||
+	            this._isDirty ||
+	            this._nodes._trueSizeRequested) {
+
+	            // Emit start event
+	            var eventData = {
+	                target: this,
+	                oldSize: this._contextSizeCache,
+	                size: size,
+	                dirty: this._isDirty,
+	                trueSizeRequested: this._nodes._trueSizeRequested
+	            };
+	            this._eventOutput.emit('layoutstart', eventData);
+
+	            // Update state
+	            this._contextSizeCache[0] = size[0];
+	            this._contextSizeCache[1] = size[1];
+	            this._isDirty = false;
+
+	            // Prepare for layout
+	            var layoutContext = this._nodes.prepareForLayout(
+	                this._viewSequence,     // first node to layout
+	                this._nodesById, {      // so we can do fast id lookups
+	                    size: size,
+	                    direction: this._direction
+	                }
+	            );
+
+	            // Layout objects
+	            if (this._layout.function) {
+	                this._layout.function(
+	                    layoutContext,          // context which the layout-function can use
+	                    this._layout.options    // additional layout-options
+	                );
+	            }
+
+	            // Mark non-invalidated nodes for removal
+	            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+
+	            // Update output and optionally emit event
+	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+	            this._commitOutput.target = result.specs;
+	            if (result.modified || true) {
+	                this._eventOutput.emit('reflow', {
+	                    target: this
+	                });
+	            }
+
+	            // Emit end event
+	            this._eventOutput.emit('layoutend', eventData);
+	        }
+	        else {
+
+	            // Update output and optionally emit event
+	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+	            this._commitOutput.target = result.specs;
+	            if (result.modified) {
+	                this._eventOutput.emit('reflow', {
+	                    target: this
+	                });
+	            }
+	        }
+
+	        // Render child-nodes every commit
+	        for (var i = 0; i < this._commitOutput.target.length; i++) {
+	            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
+	        }
+
+	        // Return
+	        if (size) {
+	            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
+	        }
+	        this._commitOutput.size = size;
+	        this._commitOutput.opacity = opacity;
+	        this._commitOutput.transform = transform;
+	        return this._commitOutput;
+	    };
+
+	    module.exports = FlowLayoutController;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
 /* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * Internal LayoutNode class used by `LayoutController`.
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var Transform = __webpack_require__(27);
+	    var LayoutUtility = __webpack_require__(40);
+
+	    /**
+	     * @class
+	     * @param {Object} renderNode Render-node which this layout-node represents
+	     * @alias module:LayoutNode
+	     */
+	    function LayoutNode(renderNode, spec) {
+	        this.renderNode = renderNode;
+	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
+	        this._spec.renderNode = renderNode; // also store in spec
+	        this._invalidated = false;
+	        this._removing = false;
+	        //this.scrollLength = undefined;
+	        //this.trueSizeRequested = false;
+	    }
+
+	    /**
+	     * Called to update the options for the node
+	     */
+	    LayoutNode.prototype.setOptions = function(options) {
+	        // override to implement
+	    };
+
+	    /**
+	     * Called when the node is destroyed
+	     */
+	    LayoutNode.prototype.destroy = function() {
+	        this.renderNode = undefined;
+	        this._spec.renderNode = undefined;
+	        this._viewSequence = undefined;
+	    };
+
+	    /**
+	     * Reset the end-state. This function is called on all layout-nodes prior to
+	     * calling the layout-function. So that the layout-function starts with a clean slate.
+	     */
+	    LayoutNode.prototype.reset = function() {
+	        this._invalidated = false;
+	        this.trueSizeRequested = false;
+	    };
+
+	    /**
+	     * Set the spec of the node
+	     *
+	     * @param {Object} spec
+	     */
+	    LayoutNode.prototype.setSpec = function(spec) {
+	        this._spec.align = spec.align;
+	        this._spec.origin = spec.origin;
+	        this._spec.size = spec.size;
+	        this._spec.transform = spec.transform;
+	        this._spec.opacity = spec.opacity;
+	    };
+
+	    /**
+	     * Set the content of the node
+	     *
+	     * @param {Object} set
+	     */
+	    LayoutNode.prototype.set = function(set, size) {
+	        this._invalidated = true;
+	        this._removing = false;
+	        var spec = this._spec;
+	        spec.opacity = set.opacity;
+	        spec.size = set.size;
+	        spec.origin = set.origin;
+	        spec.align = set.align;
+	        if (set.translate || set.skew || set.rotate || set.scale) {
+	            this._spec.transform = Transform.build({
+	                translate: set.translate || [0, 0, 0],
+	                skew: set.skew || [0, 0, 0],
+	                scale: set.scale || [1, 1, 1],
+	                rotate: set.rotate || [0, 0, 0]
+	            });
+	        }
+	        else {
+	            this._spec.transform = undefined;
+	        }
+	        this.scrollLength = set.scrollLength;
+	    };
+
+	    /**
+	     * Creates the render-spec
+	     */
+	    LayoutNode.prototype.getSpec = function() {
+	        return this._invalidated ? this._spec : undefined;
+	    };
+
+	    /**
+	     * Marks the node for removal
+	     */
+	    LayoutNode.prototype.remove = function(removeSpec) {
+	        this._removing = true;
+	    };
+
+	    module.exports = LayoutNode;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 43 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * Internal LayoutNode class used by `FlowLayoutController`.
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var OptionsManager = __webpack_require__(46);
+	    var Transform = __webpack_require__(27);
+	    var Vector = __webpack_require__(54);
+	    var Particle = __webpack_require__(56);
+	    var Spring = __webpack_require__(58);
+	    var PhysicsEngine = __webpack_require__(55);
+	    var LayoutNode = __webpack_require__(42);
+	    var Transitionable = __webpack_require__(63);
+
+	    /**
+	     * @class
+	     * @extends LayoutNode
+	     * @param {Object} renderNode Render-node which this layout-node represents
+	     * @param {Spec} spec Initial state
+	     * @param {Object} physicsEngines physics-engines to use
+	     * @alias module:FlowLayoutNode
+	     */
+	    function FlowLayoutNode(renderNode, spec) {
+	        LayoutNode.apply(this, arguments);
+
+	        if (!this.options) {
+	            this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
+	            this._optionsManager = new OptionsManager(this.options);
+	        }
+
+	        if (!this._pe) {
+	            this._pe = new PhysicsEngine();
+	        }
+
+	        this._options = {
+	            spring: {
+	                dampingRatio: 0.8,
+	                period: 300
+	            }
+	        };
+
+	        if (!this._properties) {
+	            this._properties = {};
+	        }
+	        else {
+	            for (var propName in this._properties) {
+	                this._properties[propName].init = false;
+	            }
+	        }
+	        _verifyIntegrity.call(this);
+
+	        this._endStateReached = false;
+	        this._initial = true;
+	        if (spec) {
+	            this.setSpec(spec);
+	        }
+	        _verifyIntegrity.call(this);
+	    }
+	    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
+	    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
+
+	    FlowLayoutNode.DEFAULT_OPTIONS = {
+	        spring: {
+	            dampingRatio: 0.8,
+	            period: 300
+	        },
+	        particleRounding: 0.001
+	    };
+
+	    /**
+	     * Defaults
+	     */
+	    var DEFAULT = {
+	        opacity: 1,
+	        size: [0, 0],
+	        origin: [0, 0],
+	        align: [0, 0],
+	        scale: [1, 1, 1],
+	        translate: [0, 0, 0],
+	        rotate: [0, 0, 0],
+	        skew: [0, 0, 0]
+	    };
+
+	    /**
+	     * Verifies that the integrity of the layout-node is oke.
+	     */
+	    function _verifyIntegrity() {
+	        /*var i;
+	        for (var propName in this._properties) {
+	            var prop = this._properties[propName];
+	            if (prop.particle) {
+	                if (isNaN(prop.particle.getEnergy())) {
+	                    throw 'invalid particle energy: ' + propName;
+	                }
+	                var value = prop.particle.getPosition();
+	                for (i = 0; i < value.length; i++) {
+	                    if (isNaN(value[i])) {
+	                       throw 'invalid particle value: ' + propName + '(' + i + ')';
+	                    }
+	                }
+	                value = prop.endState.get();
+	                for (i = 0; i < value.length; i++) {
+	                    if (isNaN(value[i])) {
+	                       throw 'invalid endState value: ' + propName + '(' + i + ')';
+	                    }
+	                }
+	            }
+	        }*/
+	    }
+
+	    /**
+	     * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
+	     * move infinitely.
+	     */
+	    function _roundParticleValue(value, precision) {
+	        precision = precision || this.options.particleRounding;
+	        return Math.round(value / precision) * precision;
+	    }
+
+	    /**
+	     * Sets the configuration options
+	     */
+	    FlowLayoutNode.prototype.setOptions = function(options) {
+	        this._optionsManager.setOptions(options);
+	        for (var propName in this._properties) {
+	            var prop = this._properties[propName];
+	            if (prop.force) {
+	                prop.force.setOptions(prop.force);
+	            }
+	        }
+	        _verifyIntegrity.call(this);
+	        return this;
+	    };
+
+	    /**
+	     * Set the properties from a spec.
+	     */
+	    FlowLayoutNode.prototype.setSpec = function(spec) {
+	        var set;
+	        if (spec.transform) {
+	            set = Transform.interpret(spec.transform);
+	        }
+	        if (!set) {
+	            set = {};
+	        }
+	        set.opacity = spec.opacity;
+	        set.size = spec.size;
+	        set.align = spec.align;
+	        set.origin = spec.origin;
+	        _set.call(this, set, DEFAULT.size);
+	    };
+
+	    /**
+	     * Reset the end-state. This function is called on all layout-nodes prior to
+	     * calling the layout-function. So that the layout-function starts with a clean slate.
+	     */
+	    FlowLayoutNode.prototype.reset = function() {
+	        if (this._invalidated) {
+	            for (var propName in this._properties) {
+	                this._properties[propName].invalidated = false;
+	            }
+	            this._invalidated = false;
+	        }
+	        this.trueSizeRequested = false;
+	        this.usesTrueSize = false;
+	        _verifyIntegrity.call(this);
+	    };
+
+	    /**
+	     * Markes the node for removal.
+	     */
+	    FlowLayoutNode.prototype.remove = function(removeSpec) {
+
+	        // Transition to the remove-spec state
+	        this._removing = true;
+	        if (removeSpec) {
+	            this.setSpec(removeSpec);
+	        }
+	        else {
+	            this._pe.sleep();
+	            this._endStateReached = true;
+	        }
+
+	        // Mark for removal
+	        this._invalidated = false;
+	        _verifyIntegrity.call(this);
+	    };
+
+	    /**
+	     * Locks a property, or a specific array-dimension of the property
+	     * fixed to the end-state value. Use this to e.g. lock the x-translation
+	     * to a the fixed end-state, so that when scrolling the renderable sticks
+	     * to the x-axis and does not feel sluggish.
+	     */
+	    FlowLayoutNode.prototype.setDirectionLock = function(direction, value) {
+	        if (direction === undefined) {
+	            this._lockDirection = undefined;
+	        }
+	        else {
+	            this._lockDirection = direction;
+	            if (value !== undefined) {
+	                if (!this._lockTransitionable) {
+	                    this._lockTransitionable = new Transitionable(1);
+	                }
+	                this._lockTransitionable.halt();
+	                this._lockTransitionable.reset(value);
+	                if (value !== 1) {
+	                    this._lockTransitionable.set(1, {
+	                        duration: (1 - value) * 1000
+	                    });
+	                }
+	            }
+	        }
+	    };
+
+	    /**
+	     * Helper function for getting the property value.
+	     */
+	    function _getRoundedValue2D(prop, def, precision) {
+	        if (!prop || !prop.init) {
+	            return def;
+	        }
+	        var value = prop.particle.getPosition();
+	        return [
+	            _roundParticleValue.call(this, value[0], precision),
+	            _roundParticleValue.call(this, value[1], precision)
+	        ];
+	    }
+	    function _getRoundedValue3D(prop, def, precision) {
+	        if (!prop || !prop.init) {
+	            return def;
+	        }
+	        var value = prop.particle.getPosition();
+	        return [
+	            _roundParticleValue.call(this, value[0], precision),
+	            _roundParticleValue.call(this, value[1], precision),
+	            _roundParticleValue.call(this, value[2], precision)
+	        ];
+	    }
+	    function _getOpacityValue() {
+	        var prop = this._properties.opacity;
+	        return (prop && prop.init) ? _roundParticleValue.call(this, Math.max(0,Math.min(1, prop.particle.getPosition1D()))) : undefined;
+	    }
+	    function _getTranslateValue(def) {
+	        var prop = this._properties.translate;
+	        if (!prop || !prop.init) {
+	            return def;
+	        }
+	        var position = prop.particle.getPosition();
+	        if (this._lockDirection !== undefined) {
+	            var value = position[this._lockDirection];
+	            var endState = prop.endState.get()[this._lockDirection];
+	            var lockValue = value + ((endState - value) * this._lockTransitionable.get());
+	            position = [
+	                _roundParticleValue.call(this, position[0]),
+	                _roundParticleValue.call(this, position[1]),
+	                _roundParticleValue.call(this, position[2])
+	            ];
+	            position[this._lockDirection] = _roundParticleValue.call(this, lockValue);
+	        }
+	        return position;
+	    }
+
+	    /**
+	     * Creates the render-spec
+	     */
+	    FlowLayoutNode.prototype.getSpec = function() {
+
+	        // When the end state was reached, return the previous spec
+	        var endStateReached = this._pe.isSleeping();
+	        if (this._endStateReached && endStateReached) {
+	            if (this._invalidated) {
+	                return this._spec;
+	            }
+	            else {
+	                return undefined;
+	            }
+	        }
+	        this._endStateReached = endStateReached;
+
+	        // Build fresh spec
+	        this._initial = false;
+	        this._spec.opacity = _getOpacityValue.call(this);
+	        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
+	        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
+	        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
+	        var translate = _getTranslateValue.call(this, DEFAULT.translate);
+	        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
+	            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
+	        }
+	        else {
+	            this._spec.transform = Transform.build({
+	                translate: translate,
+	                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
+	                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
+	                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
+	            });
+	        }
+	        //if (this.renderNode._debug) {
+	            //this.renderNode._debug = false;
+	            /*console.log(JSON.stringify({
+	                opacity: this._spec.opacity,
+	                size: this._spec.size,
+	                align: this._spec.align,
+	                origin: this._spec.origin,
+	                transform: this._spec.transform
+	            }));*/
+	        //}
+
+	        _verifyIntegrity.call(this);
+	        return this._spec;
+	    };
+
+	    /**
+	     * Helper function to set the property of a node (e.g. opacity, translate, etc..)
+	     */
+	    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
+
+	        // Get property
+	        prop = prop || this._properties[propName];
+
+	        // Update the property
+	        if (prop && prop.init) {
+	            prop.invalidated = true;
+	            var value = defaultValue;
+	            if (endState !== undefined) {
+	                value = endState;
+	            }
+	            else if (this._removing) {
+	                value = prop.particle.getPosition();
+	            }
+	            prop.endState.set(value);
+	            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
+	                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
+	            }
+	            if (immediate) {
+	                prop.particle.setPosition(value);
+	                this._endStateReached = false;
+	            }
+	            else {
+	                this._pe.wake();
+	            }
+	            return;
+	        }
+
+	        // Create property if neccesary
+	        if (!prop) {
+	            prop = {
+	                particle: new Particle({
+	                    position: (this._initial || immediate) ? endState : defaultValue
+	                }),
+	                endState: new Vector(endState)
+	            };
+	            prop.force = new Spring(this.options.spring);
+	            prop.force.setOptions({
+	                anchor: prop.endState
+	            });
+	            this._pe.addBody(prop.particle);
+	            prop.forceId = this._pe.attach(prop.force, prop.particle);
+	            this._properties[propName] = prop;
+	        }
+	        else {
+	            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
+	            prop.endState.set(endState);
+	            if (!this._initial && !immediate) {
+	                this._pe.wake();
+	            }
+	        }
+	        prop.init = true;
+	        prop.invalidated = true;
+	    }
+
+	    /**
+	     * Get value if not equals.
+	     */
+	    function _getIfNE2D(a1, a2) {
+	        return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
+	    }
+	    function _getIfNE3D(a1, a2) {
+	        return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
+	    }
+
+	    /**
+	     * context.set(..)
+	     */
+	    FlowLayoutNode.prototype.set = function(set, defaultSize) {
+	        this._removing = false;
+	        this.scrollLength = set.scrollLength;
+	        _set.call(this, set, defaultSize);
+	        this._invalidated = true;
+	        _verifyIntegrity.call(this);
+	    };
+
+	    /**
+	     * context.set(..)
+	     */
+	    function _set(set, defaultSize) {
+
+	        // set opacity
+	        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
+	        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
+	            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
+	        }
+
+	        // set align
+	        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
+	        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
+	            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
+	        }
+
+	        // set orgin
+	        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
+	        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
+	            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
+	        }
+
+	        // set size
+	        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
+	        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
+	            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
+	        }
+
+	        // set translate
+	        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
+	        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
+	            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
+	        }
+
+	        // set scale
+	        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
+	        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
+	            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
+	        }
+
+	        // set rotate
+	        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
+	        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
+	            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
+	        }
+
+	        // set skew
+	        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
+	        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
+	            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
+	        }
+	    }
+
+	    module.exports = FlowLayoutNode;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -12934,7 +13552,7 @@
 
 	    // import dependencies
 	    var LayoutContext = __webpack_require__(145);
-	    var LayoutUtility = __webpack_require__(41);
+	    var LayoutUtility = __webpack_require__(40);
 
 	    var MAX_POOL_SIZE = 100;
 	    var LOG_PREFIX = 'Nodes: ';
@@ -13628,815 +14246,214 @@
 
 
 /***/ },
-/* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * Internal LayoutNode class used by `LayoutController`.
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var Transform = __webpack_require__(27);
-	    var LayoutUtility = __webpack_require__(41);
-
-	    /**
-	     * @class
-	     * @param {Object} renderNode Render-node which this layout-node represents
-	     * @alias module:LayoutNode
-	     */
-	    function LayoutNode(renderNode, spec) {
-	        this.renderNode = renderNode;
-	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
-	        this._spec.renderNode = renderNode; // also store in spec
-	        this._invalidated = false;
-	        this._removing = false;
-	        //this.scrollLength = undefined;
-	        //this.trueSizeRequested = false;
-	    }
-
-	    /**
-	     * Called to update the options for the node
-	     */
-	    LayoutNode.prototype.setOptions = function(options) {
-	        // override to implement
-	    };
-
-	    /**
-	     * Called when the node is destroyed
-	     */
-	    LayoutNode.prototype.destroy = function() {
-	        this.renderNode = undefined;
-	        this._spec.renderNode = undefined;
-	        this._viewSequence = undefined;
-	    };
-
-	    /**
-	     * Reset the end-state. This function is called on all layout-nodes prior to
-	     * calling the layout-function. So that the layout-function starts with a clean slate.
-	     */
-	    LayoutNode.prototype.reset = function() {
-	        this._invalidated = false;
-	        this.trueSizeRequested = false;
-	    };
-
-	    /**
-	     * Set the spec of the node
-	     *
-	     * @param {Object} spec
-	     */
-	    LayoutNode.prototype.setSpec = function(spec) {
-	        this._spec.align = spec.align;
-	        this._spec.origin = spec.origin;
-	        this._spec.size = spec.size;
-	        this._spec.transform = spec.transform;
-	        this._spec.opacity = spec.opacity;
-	    };
-
-	    /**
-	     * Set the content of the node
-	     *
-	     * @param {Object} set
-	     */
-	    LayoutNode.prototype.set = function(set, size) {
-	        this._invalidated = true;
-	        this._removing = false;
-	        var spec = this._spec;
-	        spec.opacity = set.opacity;
-	        spec.size = set.size;
-	        spec.origin = set.origin;
-	        spec.align = set.align;
-	        if (set.translate || set.skew || set.rotate || set.scale) {
-	            this._spec.transform = Transform.build({
-	                translate: set.translate || [0, 0, 0],
-	                skew: set.skew || [0, 0, 0],
-	                scale: set.scale || [1, 1, 1],
-	                rotate: set.rotate || [0, 0, 0]
-	            });
-	        }
-	        else {
-	            this._spec.transform = undefined;
-	        }
-	        this.scrollLength = set.scrollLength;
-	    };
-
-	    /**
-	     * Creates the render-spec
-	     */
-	    LayoutNode.prototype.getSpec = function() {
-	        return this._invalidated ? this._spec : undefined;
-	    };
-
-	    /**
-	     * Marks the node for removal
-	     */
-	    LayoutNode.prototype.remove = function(removeSpec) {
-	        this._removing = true;
-	    };
-
-	    module.exports = LayoutNode;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 44 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * FlowLayoutController transitions renderables smoothly from one
-	 * layout to another. When the data-source or layout is changed,
-	 * the renderables are transitioned from their old state (size,
-	 * transform, origin, etc..) to the new state.
-	 *
-	 * Inherited from: [LayoutController](./LayoutController.md)
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var LayoutController = __webpack_require__(18);
-	    var LayoutNodeManager = __webpack_require__(42);
-	    var FlowLayoutNode = __webpack_require__(45);
-	    var Transform = __webpack_require__(27);
-
-	    /**
-	     * @class
-	     * @extends LayoutController
-	     * @param {Object} options Options.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
-	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
-	     * @alias module:FlowLayoutController
-	     */
-	    function FlowLayoutController(options, nodeManager) {
-	        LayoutController.call(this, FlowLayoutController.DEFAULT_OPTIONS, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
-	        if (options) {
-	            this.setOptions(options);
-	        }
-	    }
-	    FlowLayoutController.prototype = Object.create(LayoutController.prototype);
-	    FlowLayoutController.prototype.constructor = FlowLayoutController;
-
-	    FlowLayoutController.DEFAULT_OPTIONS = {
-	        nodeSpring: {
-	            dampingRatio: 0.8,
-	            period: 300
-	        }
-	        /*insertSpec: {
-	            opacity: undefined,
-	            size: undefined,
-	            transform: undefined,
-	            origin: undefined,
-	            align: undefined
-	        },
-	        removeSpec: {
-	            opacity: undefined,
-	            size: undefined,
-	            transform: undefined,
-	            origin: undefined,
-	            align: undefined
-	        }*/
-	    };
-
-	    /**
-	     * Called whenever a layout-node is created/re-used. Initializes
-	     * the node with the `insertSpec` if it has been defined.
-	     */
-	    function _initLayoutNode(node, spec) {
-	        if (node.setOptions) {
-	            node.setOptions({
-	                spring: this.options.nodeSpring
-	            });
-	        }
-	        if (!spec && this.options.insertSpec) {
-	            node.setSpec(this.options.insertSpec);
-	        }
-	    }
-
-	    var oldSetOptions = FlowLayoutController.prototype.setOptions;
-	    /**
-	     * Patches the FlowLayoutController instance's options with the passed-in ones.
-	     *
-	     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
-	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
-	     * @return {FlowLayoutController} this
-	     */
-	    FlowLayoutController.prototype.setOptions = function setOptions(options) {
-	        oldSetOptions.call(this, options);
-	        if (options.nodeSpring) {
-	            this._nodes.forEach(function(node) {
-	                node.setOptions({spring: options.nodeSpring});
-	            });
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Apply changes from this component to the corresponding document element.
-	     * This includes changes to classes, styles, size, content, opacity, origin,
-	     * and matrix transforms.
-	     *
-	     * @private
-	     * @method commit
-	     * @param {Context} context commit context
-	     */
-	    FlowLayoutController.prototype.commit = function commit(context) {
-	        var transform = context.transform;
-	        var origin = context.origin;
-	        var size = context.size;
-	        var opacity = context.opacity;
-	        var result;
-
-	        // When the size or layout function has changed, reflow the layout
-	        if (size[0] !== this._contextSizeCache[0] ||
-	            size[1] !== this._contextSizeCache[1] ||
-	            this._isDirty ||
-	            this._nodes._trueSizeRequested) {
-
-	            // Emit start event
-	            var eventData = {
-	                target: this,
-	                oldSize: this._contextSizeCache,
-	                size: size,
-	                dirty: this._isDirty,
-	                trueSizeRequested: this._nodes._trueSizeRequested
-	            };
-	            this._eventOutput.emit('layoutstart', eventData);
-
-	            // Update state
-	            this._contextSizeCache[0] = size[0];
-	            this._contextSizeCache[1] = size[1];
-	            this._isDirty = false;
-
-	            // Prepare for layout
-	            var layoutContext = this._nodes.prepareForLayout(
-	                this._viewSequence,     // first node to layout
-	                this._nodesById, {      // so we can do fast id lookups
-	                    size: size,
-	                    direction: this._direction
-	                }
-	            );
-
-	            // Layout objects
-	            if (this._layout.function) {
-	                this._layout.function(
-	                    layoutContext,          // context which the layout-function can use
-	                    this._layout.options    // additional layout-options
-	                );
-	            }
-
-	            // Mark non-invalidated nodes for removal
-	            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
-
-	            // Update output and optionally emit event
-	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-	            this._commitOutput.target = result.specs;
-	            if (result.modified || true) {
-	                this._eventOutput.emit('reflow', {
-	                    target: this
-	                });
-	            }
-
-	            // Emit end event
-	            this._eventOutput.emit('layoutend', eventData);
-	        }
-	        else {
-
-	            // Update output and optionally emit event
-	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-	            this._commitOutput.target = result.specs;
-	            if (result.modified) {
-	                this._eventOutput.emit('reflow', {
-	                    target: this
-	                });
-	            }
-	        }
-
-	        // Render child-nodes every commit
-	        for (var i = 0; i < this._commitOutput.target.length; i++) {
-	            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
-	        }
-
-	        // Return
-	        if (size) {
-	            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
-	        }
-	        this._commitOutput.size = size;
-	        this._commitOutput.opacity = opacity;
-	        this._commitOutput.transform = transform;
-	        return this._commitOutput;
-	    };
-
-	    module.exports = FlowLayoutController;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
 	 */
 
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * Internal LayoutNode class used by `FlowLayoutController`.
-	 *
-	 * @module
-	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var OptionsManager = __webpack_require__(39);
-	    var Transform = __webpack_require__(27);
-	    var Vector = __webpack_require__(54);
-	    var Particle = __webpack_require__(56);
-	    var Spring = __webpack_require__(58);
-	    var PhysicsEngine = __webpack_require__(55);
-	    var LayoutNode = __webpack_require__(43);
-	    var Transitionable = __webpack_require__(62);
+	    var EventEmitter = __webpack_require__(146);
 
 	    /**
-	     * @class
-	     * @extends LayoutNode
-	     * @param {Object} renderNode Render-node which this layout-node represents
-	     * @param {Spec} spec Initial state
-	     * @param {Object} physicsEngines physics-engines to use
-	     * @alias module:FlowLayoutNode
+	     * EventHandler forwards received events to a set of provided callback functions.
+	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
+	     *
+	     * @class EventHandler
+	     * @extends EventEmitter
+	     * @constructor
 	     */
-	    function FlowLayoutNode(renderNode, spec) {
-	        LayoutNode.apply(this, arguments);
+	    function EventHandler() {
+	        EventEmitter.apply(this, arguments);
 
-	        if (!this.options) {
-	            this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
-	            this._optionsManager = new OptionsManager(this.options);
-	        }
+	        this.downstream = []; // downstream event handlers
+	        this.downstreamFn = []; // downstream functions
 
-	        if (!this._pe) {
-	            this._pe = new PhysicsEngine();
-	        }
-
-	        this._options = {
-	            spring: {
-	                dampingRatio: 0.8,
-	                period: 300
-	            }
-	        };
-
-	        if (!this._properties) {
-	            this._properties = {};
-	        }
-	        else {
-	            for (var propName in this._properties) {
-	                this._properties[propName].init = false;
-	            }
-	        }
-	        _verifyIntegrity.call(this);
-
-	        this._endStateReached = false;
-	        this._initial = true;
-	        if (spec) {
-	            this.setSpec(spec);
-	        }
-	        _verifyIntegrity.call(this);
+	        this.upstream = []; // upstream event handlers
+	        this.upstreamListeners = {}; // upstream listeners
 	    }
-	    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
-	    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
+	    EventHandler.prototype = Object.create(EventEmitter.prototype);
+	    EventHandler.prototype.constructor = EventHandler;
 
-	    FlowLayoutNode.DEFAULT_OPTIONS = {
-	        spring: {
-	            dampingRatio: 0.8,
-	            period: 300
-	        },
-	        particleRounding: 0.001
+	    /**
+	     * Assign an event handler to receive an object's input events.
+	     *
+	     * @method setInputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
+	        object.trigger = handler.trigger.bind(handler);
+	        if (handler.subscribe && handler.unsubscribe) {
+	            object.subscribe = handler.subscribe.bind(handler);
+	            object.unsubscribe = handler.unsubscribe.bind(handler);
+	        }
 	    };
 
 	    /**
-	     * Defaults
+	     * Assign an event handler to receive an object's output events.
+	     *
+	     * @method setOutputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
+	     * @param {EventHandler} handler assigned event handler
 	     */
-	    var DEFAULT = {
-	        opacity: 1,
-	        size: [0, 0],
-	        origin: [0, 0],
-	        align: [0, 0],
-	        scale: [1, 1, 1],
-	        translate: [0, 0, 0],
-	        rotate: [0, 0, 0],
-	        skew: [0, 0, 0]
+	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
+	        if (handler instanceof EventHandler) handler.bindThis(object);
+	        object.pipe = handler.pipe.bind(handler);
+	        object.unpipe = handler.unpipe.bind(handler);
+	        object.on = handler.on.bind(handler);
+	        object.addListener = object.on;
+	        object.removeListener = handler.removeListener.bind(handler);
 	    };
 
 	    /**
-	     * Verifies that the integrity of the layout-node is oke.
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
+	     *
+	     * @method emit
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
 	     */
-	    function _verifyIntegrity() {
-	        /*var i;
-	        for (var propName in this._properties) {
-	            var prop = this._properties[propName];
-	            if (prop.particle) {
-	                if (isNaN(prop.particle.getEnergy())) {
-	                    throw 'invalid particle energy: ' + propName;
-	                }
-	                var value = prop.particle.getPosition();
-	                for (i = 0; i < value.length; i++) {
-	                    if (isNaN(value[i])) {
-	                       throw 'invalid particle value: ' + propName + '(' + i + ')';
-	                    }
-	                }
-	                value = prop.endState.get();
-	                for (i = 0; i < value.length; i++) {
-	                    if (isNaN(value[i])) {
-	                       throw 'invalid endState value: ' + propName + '(' + i + ')';
-	                    }
-	                }
-	            }
-	        }*/
-	    }
-
-	    /**
-	     * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
-	     * move infinitely.
-	     */
-	    function _roundParticleValue(value, precision) {
-	        precision = precision || this.options.particleRounding;
-	        return Math.round(value / precision) * precision;
-	    }
-
-	    /**
-	     * Sets the configuration options
-	     */
-	    FlowLayoutNode.prototype.setOptions = function(options) {
-	        this._optionsManager.setOptions(options);
-	        for (var propName in this._properties) {
-	            var prop = this._properties[propName];
-	            if (prop.force) {
-	                prop.force.setOptions(prop.force);
-	            }
+	    EventHandler.prototype.emit = function emit(type, event) {
+	        EventEmitter.prototype.emit.apply(this, arguments);
+	        var i = 0;
+	        for (i = 0; i < this.downstream.length; i++) {
+	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
 	        }
-	        _verifyIntegrity.call(this);
+	        for (i = 0; i < this.downstreamFn.length; i++) {
+	            this.downstreamFn[i](type, event);
+	        }
 	        return this;
 	    };
 
 	    /**
-	     * Set the properties from a spec.
+	     * Alias for emit
+	     * @method addListener
 	     */
-	    FlowLayoutNode.prototype.setSpec = function(spec) {
-	        var set;
-	        if (spec.transform) {
-	            set = Transform.interpret(spec.transform);
-	        }
-	        if (!set) {
-	            set = {};
-	        }
-	        set.opacity = spec.opacity;
-	        set.size = spec.size;
-	        set.align = spec.align;
-	        set.origin = spec.origin;
-	        _set.call(this, set, DEFAULT.size);
+	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    EventHandler.prototype.pipe = function pipe(target) {
+	        if (target.subscribe instanceof Function) return target.subscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index < 0) downstreamCtx.push(target);
+
+	        if (target instanceof Function) target('pipe', null);
+	        else if (target.trigger) target.trigger('pipe', null);
+
+	        return target;
 	    };
 
 	    /**
-	     * Reset the end-state. This function is called on all layout-nodes prior to
-	     * calling the layout-function. So that the layout-function starts with a clean slate.
+	     * Remove handler object from set of downstream handlers.
+	     *   Undoes work of "pipe".
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
 	     */
-	    FlowLayoutNode.prototype.reset = function() {
-	        if (this._invalidated) {
-	            for (var propName in this._properties) {
-	                this._properties[propName].invalidated = false;
-	            }
-	            this._invalidated = false;
+	    EventHandler.prototype.unpipe = function unpipe(target) {
+	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index >= 0) {
+	            downstreamCtx.splice(index, 1);
+	            if (target instanceof Function) target('unpipe', null);
+	            else if (target.trigger) target.trigger('unpipe', null);
+	            return target;
 	        }
-	        this.trueSizeRequested = false;
-	        this.usesTrueSize = false;
-	        _verifyIntegrity.call(this);
+	        else return false;
 	    };
 
 	    /**
-	     * Markes the node for removal.
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
 	     */
-	    FlowLayoutNode.prototype.remove = function(removeSpec) {
-
-	        // Transition to the remove-spec state
-	        this._removing = true;
-	        if (removeSpec) {
-	            this.setSpec(removeSpec);
+	    EventHandler.prototype.on = function on(type, handler) {
+	        EventEmitter.prototype.on.apply(this, arguments);
+	        if (!(type in this.upstreamListeners)) {
+	            var upstreamListener = this.trigger.bind(this, type);
+	            this.upstreamListeners[type] = upstreamListener;
+	            for (var i = 0; i < this.upstream.length; i++) {
+	                this.upstream[i].on(type, upstreamListener);
+	            }
 	        }
-	        else {
-	            this._pe.sleep();
-	            this._endStateReached = true;
-	        }
-
-	        // Mark for removal
-	        this._invalidated = false;
-	        _verifyIntegrity.call(this);
+	        return this;
 	    };
 
 	    /**
-	     * Locks a property, or a specific array-dimension of the property
-	     * fixed to the end-state value. Use this to e.g. lock the x-translation
-	     * to a the fixed end-state, so that when scrolling the renderable sticks
-	     * to the x-axis and does not feel sluggish.
+	     * Alias for "on"
+	     * @method addListener
 	     */
-	    FlowLayoutNode.prototype.setDirectionLock = function(direction, value) {
-	        if (direction === undefined) {
-	            this._lockDirection = undefined;
-	        }
-	        else {
-	            this._lockDirection = direction;
-	            if (value !== undefined) {
-	                if (!this._lockTransitionable) {
-	                    this._lockTransitionable = new Transitionable(1);
-	                }
-	                this._lockTransitionable.halt();
-	                this._lockTransitionable.reset(value);
-	                if (value !== 1) {
-	                    this._lockTransitionable.set(1, {
-	                        duration: (1 - value) * 1000
-	                    });
-	                }
+	    EventHandler.prototype.addListener = EventHandler.prototype.on;
+
+	    /**
+	     * Listen for events from an upstream event handler.
+	     *
+	     * @method subscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.subscribe = function subscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index < 0) {
+	            this.upstream.push(source);
+	            for (var type in this.upstreamListeners) {
+	                source.on(type, this.upstreamListeners[type]);
 	            }
 	        }
+	        return this;
 	    };
 
 	    /**
-	     * Helper function for getting the property value.
+	     * Stop listening to events from an upstream event handler.
+	     *
+	     * @method unsubscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
 	     */
-	    function _getRoundedValue2D(prop, def, precision) {
-	        if (!prop || !prop.init) {
-	            return def;
-	        }
-	        var value = prop.particle.getPosition();
-	        return [
-	            _roundParticleValue.call(this, value[0], precision),
-	            _roundParticleValue.call(this, value[1], precision)
-	        ];
-	    }
-	    function _getRoundedValue3D(prop, def, precision) {
-	        if (!prop || !prop.init) {
-	            return def;
-	        }
-	        var value = prop.particle.getPosition();
-	        return [
-	            _roundParticleValue.call(this, value[0], precision),
-	            _roundParticleValue.call(this, value[1], precision),
-	            _roundParticleValue.call(this, value[2], precision)
-	        ];
-	    }
-	    function _getOpacityValue() {
-	        var prop = this._properties.opacity;
-	        return (prop && prop.init) ? _roundParticleValue.call(this, Math.max(0,Math.min(1, prop.particle.getPosition1D()))) : undefined;
-	    }
-	    function _getTranslateValue(def) {
-	        var prop = this._properties.translate;
-	        if (!prop || !prop.init) {
-	            return def;
-	        }
-	        var position = prop.particle.getPosition();
-	        if (this._lockDirection !== undefined) {
-	            var value = position[this._lockDirection];
-	            var endState = prop.endState.get()[this._lockDirection];
-	            var lockValue = value + ((endState - value) * this._lockTransitionable.get());
-	            position = [
-	                _roundParticleValue.call(this, position[0]),
-	                _roundParticleValue.call(this, position[1]),
-	                _roundParticleValue.call(this, position[2])
-	            ];
-	            position[this._lockDirection] = _roundParticleValue.call(this, lockValue);
-	        }
-	        return position;
-	    }
-
-	    /**
-	     * Creates the render-spec
-	     */
-	    FlowLayoutNode.prototype.getSpec = function() {
-
-	        // When the end state was reached, return the previous spec
-	        var endStateReached = this._pe.isSleeping();
-	        if (this._endStateReached && endStateReached) {
-	            if (this._invalidated) {
-	                return this._spec;
-	            }
-	            else {
-	                return undefined;
+	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index >= 0) {
+	            this.upstream.splice(index, 1);
+	            for (var type in this.upstreamListeners) {
+	                source.removeListener(type, this.upstreamListeners[type]);
 	            }
 	        }
-	        this._endStateReached = endStateReached;
-
-	        // Build fresh spec
-	        this._initial = false;
-	        this._spec.opacity = _getOpacityValue.call(this);
-	        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
-	        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
-	        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
-	        var translate = _getTranslateValue.call(this, DEFAULT.translate);
-	        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
-	            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
-	        }
-	        else {
-	            this._spec.transform = Transform.build({
-	                translate: translate,
-	                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
-	                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
-	                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
-	            });
-	        }
-	        //if (this.renderNode._debug) {
-	            //this.renderNode._debug = false;
-	            /*console.log(JSON.stringify({
-	                opacity: this._spec.opacity,
-	                size: this._spec.size,
-	                align: this._spec.align,
-	                origin: this._spec.origin,
-	                transform: this._spec.transform
-	            }));*/
-	        //}
-
-	        _verifyIntegrity.call(this);
-	        return this._spec;
+	        return this;
 	    };
 
-	    /**
-	     * Helper function to set the property of a node (e.g. opacity, translate, etc..)
-	     */
-	    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
-
-	        // Get property
-	        prop = prop || this._properties[propName];
-
-	        // Update the property
-	        if (prop && prop.init) {
-	            prop.invalidated = true;
-	            var value = defaultValue;
-	            if (endState !== undefined) {
-	                value = endState;
-	            }
-	            else if (this._removing) {
-	                value = prop.particle.getPosition();
-	            }
-	            prop.endState.set(value);
-	            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
-	                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
-	            }
-	            if (immediate) {
-	                prop.particle.setPosition(value);
-	                this._endStateReached = false;
-	            }
-	            else {
-	                this._pe.wake();
-	            }
-	            return;
-	        }
-
-	        // Create property if neccesary
-	        if (!prop) {
-	            prop = {
-	                particle: new Particle({
-	                    position: (this._initial || immediate) ? endState : defaultValue
-	                }),
-	                endState: new Vector(endState)
-	            };
-	            prop.force = new Spring(this.options.spring);
-	            prop.force.setOptions({
-	                anchor: prop.endState
-	            });
-	            this._pe.addBody(prop.particle);
-	            prop.forceId = this._pe.attach(prop.force, prop.particle);
-	            this._properties[propName] = prop;
-	        }
-	        else {
-	            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
-	            prop.endState.set(endState);
-	            if (!this._initial && !immediate) {
-	                this._pe.wake();
-	            }
-	        }
-	        prop.init = true;
-	        prop.invalidated = true;
-	    }
-
-	    /**
-	     * Get value if not equals.
-	     */
-	    function _getIfNE2D(a1, a2) {
-	        return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
-	    }
-	    function _getIfNE3D(a1, a2) {
-	        return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
-	    }
-
-	    /**
-	     * context.set(..)
-	     */
-	    FlowLayoutNode.prototype.set = function(set, defaultSize) {
-	        this._removing = false;
-	        this.scrollLength = set.scrollLength;
-	        _set.call(this, set, defaultSize);
-	        this._invalidated = true;
-	        _verifyIntegrity.call(this);
-	    };
-
-	    /**
-	     * context.set(..)
-	     */
-	    function _set(set, defaultSize) {
-
-	        // set opacity
-	        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
-	        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
-	            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
-	        }
-
-	        // set align
-	        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
-	        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
-	            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
-	        }
-
-	        // set orgin
-	        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
-	        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
-	            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
-	        }
-
-	        // set size
-	        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
-	        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
-	            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
-	        }
-
-	        // set translate
-	        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
-	        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
-	            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
-	        }
-
-	        // set scale
-	        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
-	        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
-	            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
-	        }
-
-	        // set rotate
-	        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
-	        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
-	            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
-	        }
-
-	        // set skew
-	        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
-	        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
-	            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
-	        }
-	    }
-
-	    module.exports = FlowLayoutNode;
+	    module.exports = EventHandler;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -14454,11 +14471,218 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var RenderNode = __webpack_require__(49);
-	    var EventHandler = __webpack_require__(40);
-	    var ElementAllocator = __webpack_require__(146);
+	    var EventHandler = __webpack_require__(45);
+
+	    /**
+	     *  A collection of methods for setting options which can be extended
+	     *  onto other classes.
+	     *
+	     *
+	     *  **** WARNING ****
+	     *  You can only pass through objects that will compile into valid JSON.
+	     *
+	     *  Valid options:
+	     *      Strings,
+	     *      Arrays,
+	     *      Objects,
+	     *      Numbers,
+	     *      Nested Objects,
+	     *      Nested Arrays.
+	     *
+	     *    This excludes:
+	     *        Document Fragments,
+	     *        Functions
+	     * @class OptionsManager
+	     * @constructor
+	     * @param {Object} value options dictionary
+	     */
+	    function OptionsManager(value) {
+	        this._value = value;
+	        this.eventOutput = null;
+	    }
+
+	    /**
+	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
+	     *
+	     * @static
+	     * @method OptionsManager.patch
+	     *
+	     * @param {Object} source source arguments
+	     * @param {...Object} data argument additions and overwrites
+	     * @return {Object} source object
+	     */
+	    OptionsManager.patch = function patchObject(source, data) {
+	        var manager = new OptionsManager(source);
+	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
+	        return source;
+	    };
+
+	    function _createEventOutput() {
+	        this.eventOutput = new EventHandler();
+	        this.eventOutput.bindThis(this);
+	        EventHandler.setOutputHandler(this, this.eventOutput);
+	    }
+
+	    /**
+	     * Create OptionsManager from source with arguments overriden by patches.
+	     *   Triggers 'change' event on this object's event handler if the state of
+	     *   the OptionsManager changes as a result.
+	     *
+	     * @method patch
+	     *
+	     * @param {...Object} arguments list of patch objects
+	     * @return {OptionsManager} this
+	     */
+	    OptionsManager.prototype.patch = function patch() {
+	        var myState = this._value;
+	        for (var i = 0; i < arguments.length; i++) {
+	            var data = arguments[i];
+	            for (var k in data) {
+	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
+	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
+	                    this.key(k).patch(data[k]);
+	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
+	                }
+	                else this.set(k, data[k]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for patch
+	     *
+	     * @method setOptions
+	     *
+	     */
+	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
+
+	    /**
+	     * Return OptionsManager based on sub-object retrieved by key
+	     *
+	     * @method key
+	     *
+	     * @param {string} identifier key
+	     * @return {OptionsManager} new options manager with the value
+	     */
+	    OptionsManager.prototype.key = function key(identifier) {
+	        var result = new OptionsManager(this._value[identifier]);
+	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
+	        return result;
+	    };
+
+	    /**
+	     * Look up value by key or get the full options hash
+	     * @method get
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object or full options hash
+	     */
+	    OptionsManager.prototype.get = function get(key) {
+	        return key ? this._value[key] : this._value;
+	    };
+
+	    /**
+	     * Alias for get
+	     * @method getOptions
+	     */
+	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
+
+	    /**
+	     * Set key to value.  Outputs 'change' event if a value is overwritten.
+	     *
+	     * @method set
+	     *
+	     * @param {string} key key string
+	     * @param {Object} value value object
+	     * @return {OptionsManager} new options manager based on the value object
+	     */
+	    OptionsManager.prototype.set = function set(key, value) {
+	        var originalValue = this.get(key);
+	        this._value[key] = value;
+	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
+	        return this;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    OptionsManager.prototype.on = function on() {
+	        _createEventOutput.call(this);
+	        return this.on.apply(this, arguments);
+	    };
+
+	    /**
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
+	     *
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function} handler function object to remove
+	     * @return {EventHandler} internal event handler object (for chaining)
+	     */
+	    OptionsManager.prototype.removeListener = function removeListener() {
+	        _createEventOutput.call(this);
+	        return this.removeListener.apply(this, arguments);
+	    };
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    OptionsManager.prototype.pipe = function pipe() {
+	        _createEventOutput.call(this);
+	        return this.pipe.apply(this, arguments);
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     * Undoes work of "pipe"
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    OptionsManager.prototype.unpipe = function unpipe() {
+	        _createEventOutput.call(this);
+	        return this.unpipe.apply(this, arguments);
+	    };
+
+	    module.exports = OptionsManager;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var RenderNode = __webpack_require__(50);
+	    var EventHandler = __webpack_require__(45);
+	    var ElementAllocator = __webpack_require__(147);
 	    var Transform = __webpack_require__(27);
-	    var Transitionable = __webpack_require__(62);
+	    var Transitionable = __webpack_require__(63);
 
 	    var _zeroZero = [0, 0];
 	    var usePrefix = !('perspective' in document.documentElement.style);
@@ -14680,7 +14904,7 @@
 
 
 /***/ },
-/* 47 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -14693,8 +14917,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(50);
-	    var EventHandler = __webpack_require__(40);
+	    var Entity = __webpack_require__(53);
+	    var EventHandler = __webpack_require__(45);
 	    var Transform = __webpack_require__(27);
 
 	    var usePrefix = !('transform' in document.documentElement.style);
@@ -15017,17 +15241,17 @@
 
 
 /***/ },
-/* 48 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(50);
+	    var Entity = __webpack_require__(53);
 	    var Group = __webpack_require__(52);
-	    var OptionsManager = __webpack_require__(39);
+	    var OptionsManager = __webpack_require__(46);
 	    var Transform = __webpack_require__(27);
-	    var Utility = __webpack_require__(32);
+	    var Utility = __webpack_require__(31);
 	    var ViewSequence = __webpack_require__(24);
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 
 	    /**
 	     * Scroller lays out a collection of renderables, and will browse through them based on
@@ -15333,7 +15557,7 @@
 
 
 /***/ },
-/* 49 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15346,8 +15570,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(50);
-	    var SpecParser = __webpack_require__(147);
+	    var Entity = __webpack_require__(53);
+	    var SpecParser = __webpack_require__(148);
 
 	    /**
 	     * A wrapper for inserting a renderable component (like a Modifer or
@@ -15506,89 +15730,6 @@
 
 
 /***/ },
-/* 50 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * A singleton that maintains a global registry of Surfaces.
-	     *   Private.
-	     *
-	     * @private
-	     * @static
-	     * @class Entity
-	     */
-
-	    var entities = [];
-
-	    /**
-	     * Get entity from global index.
-	     *
-	     * @private
-	     * @method get
-	     * @param {Number} id entity registration id
-	     * @return {Surface} entity in the global index
-	     */
-	    function get(id) {
-	        return entities[id];
-	    }
-
-	    /**
-	     * Overwrite entity in the global index
-	     *
-	     * @private
-	     * @method set
-	     * @param {Number} id entity registration id
-	     * @param {Surface} entity to add to the global index
-	     */
-	    function set(id, entity) {
-	        entities[id] = entity;
-	    }
-
-	    /**
-	     * Add entity to global index
-	     *
-	     * @private
-	     * @method register
-	     * @param {Surface} entity to add to global index
-	     * @return {Number} new id
-	     */
-	    function register(entity) {
-	        var id = entities.length;
-	        set(id, entity);
-	        return id;
-	    }
-
-	    /**
-	     * Remove entity from global index
-	     *
-	     * @private
-	     * @method unregister
-	     * @param {Number} id entity registration id
-	     */
-	    function unregister(id) {
-	        set(id, null);
-	    }
-
-	    module.exports = {
-	        register: register,
-	        unregister: unregister,
-	        get: get,
-	        set: set
-	    };
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -15604,7 +15745,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Surface = __webpack_require__(25);
-	    var Context = __webpack_require__(46);
+	    var Context = __webpack_require__(47);
 
 	    /**
 	     * ContainerSurface is an object designed to contain surfaces and
@@ -15723,7 +15864,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Context = __webpack_require__(46);
+	    var Context = __webpack_require__(47);
 	    var Transform = __webpack_require__(27);
 	    var Surface = __webpack_require__(25);
 
@@ -15843,249 +15984,82 @@
 /* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
 	 */
 
-	/*global define*/
-
-	/**
-	 * LayoutDockHelper helps positioning nodes using docking principles.
-	 *
-	 * **Example:**
-	 *
-	 * ```javascript
-	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
-	 *
-	 * function HeaderFooterLayout(context, options) {
-	 *   var dock = new LayoutDockHelper(context);
-	 *   dock.top('header', options.headerHeight);
-	 *   dock.bottom('footer', options.footerHeight);
-	 *   dock.fill('content');
-	 * };
-	 * ```
-	 *
-	 * You can also use layout-literals to create layouts using docking semantics:
-	 *
-	 * ```javascript
-	 * var layoutController = new LayoutController({
-	 *   layout: {dock: [
-	 *     ['top', 'header', 40],
-	 *     ['bottom', 'footer', 40, 1], // z-index +1
-	 *     ['fill', 'content']
-	 *   ]},
-	 *   dataSource: {
-	 *     header: new Surface({content: 'header'}),
-	 *     footer: new Surface({content: 'footer'}),
-	 *     content: new Surface({content: 'content'}),
-	 *   }
-	 * });
-	 * ```
-	 *
-	 * @module
-	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * A singleton that maintains a global registry of Surfaces.
+	     *   Private.
+	     *
+	     * @private
+	     * @static
+	     * @class Entity
+	     */
 
-	    // import dependencies
-	    var LayoutUtility = __webpack_require__(41);
+	    var entities = [];
 
 	    /**
-	     * @class
-	     * @param {LayoutContext} context layout-context
-	     * @param {Object} [options] additional options
-	     * @param {Object} [options.margins] margins to start out with (default: 0px)
-	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
-	     * @alias module:LayoutDockHelper
+	     * Get entity from global index.
+	     *
+	     * @private
+	     * @method get
+	     * @param {Number} id entity registration id
+	     * @return {Surface} entity in the global index
 	     */
-	    function LayoutDockHelper(context, options) {
-	        var size = context.size;
-	        this._size = size;
-	        this._context = context;
-	        this._options = options;
-	        this._z = (options && options.translateZ) ? options.translateZ : 0;
-	        if (options && options.margins) {
-	            var margins = LayoutUtility.normalizeMargins(options.margins);
-	            this._left = margins[3];
-	            this._top = margins[0];
-	            this._right = size[0] - margins[1];
-	            this._bottom = size[1] - margins[2];
-	        }
-	        else {
-	            this._left = 0;
-	            this._top = 0;
-	            this._right = size[0];
-	            this._bottom = size[1];
-	        }
+	    function get(id) {
+	        return entities[id];
 	    }
 
 	    /**
-	     * Parses the layout-rules based on a JSON data object.
-	     * The object should be an array with the following syntax:
-	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
+	     * Overwrite entity in the global index
 	     *
-	     * **Example:**
-	     *
-	     * ```JSON
-	     * [
-	     *   ['top': 'header', 50],
-	     *   ['bottom': 'footer', 50, 10], // z-index: 10
-	     *   ['fill', 'content']
-	     * ]
-	     * ```
-	     *
-	     * @param {Object} data JSON object
+	     * @private
+	     * @method set
+	     * @param {Number} id entity registration id
+	     * @param {Surface} entity to add to the global index
 	     */
-	    LayoutDockHelper.prototype.parse = function(data) {
-	        for (var i = 0; i < data.length; i++) {
-	            var rule = data[i];
-	            var value = (rule.length >= 3) ? rule[2] : undefined;
-	            if (rule[0] === 'top') {
-	                this.top(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'left') {
-	                this.left(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'right') {
-	                this.right(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'bottom') {
-	                this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'fill') {
-	                this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
-	            }
-	        }
-	    };
+	    function set(id, entity) {
+	        entities[id] = entity;
+	    }
 
 	    /**
-	     * Dock the node to the top.
+	     * Add entity to global index
 	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
+	     * @private
+	     * @method register
+	     * @param {Surface} entity to add to global index
+	     * @return {Number} new id
 	     */
-	    LayoutDockHelper.prototype.top = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._top += height;
-	        return this;
-	    };
+	    function register(entity) {
+	        var id = entities.length;
+	        set(id, entity);
+	        return id;
+	    }
 
 	    /**
-	     * Dock the node to the left
+	     * Remove entity from global index
 	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
+	     * @private
+	     * @method unregister
+	     * @param {Number} id entity registration id
 	     */
-	    LayoutDockHelper.prototype.left = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (width === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            width = size[0];
-	        }
-	        this._context.set(node, {
-	            size: [width, this._bottom - this._top],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._left += width;
-	        return this;
+	    function unregister(id) {
+	        set(id, null);
+	    }
+
+	    module.exports = {
+	        register: register,
+	        unregister: unregister,
+	        get: get,
+	        set: set
 	    };
-
-	    /**
-	     * Dock the node to the bottom
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 1],
-	            align: [0, 1],
-	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
-	        });
-	        this._bottom -= height;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the right.
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.right = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (node) {
-	            if (width === undefined) {
-	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	                width = size[0];
-	            }
-	            this._context.set(node, {
-	                size: [width, this._bottom - this._top],
-	                origin: [1, 0],
-	                align: [1, 0],
-	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
-	            });
-	        }
-	        if (width) {
-	            this._right -= width;
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Fills the node to the remaining content.
-	     *
-	     * @param {LayoutNode|String} node layout-node to dock
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.fill = function(node, z) {
-	        this._context.set(node, {
-	            size: [this._right - this._left, this._bottom - this._top],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        return this;
-	    };
-
-	    // Register the helper
-	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
-
-	    module.exports = LayoutDockHelper;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -16487,7 +16461,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 
 	    /**
 	     * The Physics Engine is responsible for mediating bodies with their
@@ -17020,8 +16994,8 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Vector = __webpack_require__(54);
 	    var Transform = __webpack_require__(27);
-	    var EventHandler = __webpack_require__(40);
-	    var Integrator = __webpack_require__(152);
+	    var EventHandler = __webpack_require__(45);
+	    var Integrator = __webpack_require__(153);
 
 	    /**
 	     * A point body that is controlled by the Physics Engine. A particle has
@@ -17411,7 +17385,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(148);
+	    var Force = __webpack_require__(149);
 
 	    /**
 	     * Drag is a force that opposes velocity. Attach it to the physics engine
@@ -17538,7 +17512,7 @@
 	/*global console */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(148);
+	    var Force = __webpack_require__(149);
 	    var Vector = __webpack_require__(54);
 
 	    /**
@@ -17808,9 +17782,9 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 	    var Engine = __webpack_require__(23);
-	    var OptionsManager = __webpack_require__(39);
+	    var OptionsManager = __webpack_require__(46);
 
 	    /**
 	     * Handles piped in mousewheel events.
@@ -18012,7 +17986,7 @@
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 
 	    /**
 	     * Combines multiple types of sync classes (e.g. mouse, touch,
@@ -18142,9 +18116,9 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var TouchTracker = __webpack_require__(149);
-	    var EventHandler = __webpack_require__(40);
-	    var OptionsManager = __webpack_require__(39);
+	    var TouchTracker = __webpack_require__(150);
+	    var EventHandler = __webpack_require__(45);
+	    var OptionsManager = __webpack_require__(46);
 
 	    /**
 	     * Handles piped in touch events. Emits 'start', 'update', and 'events'
@@ -18360,6 +18334,256 @@
 /* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+
+	/**
+	 * LayoutDockHelper helps positioning nodes using docking principles.
+	 *
+	 * **Example:**
+	 *
+	 * ```javascript
+	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
+	 *
+	 * function HeaderFooterLayout(context, options) {
+	 *   var dock = new LayoutDockHelper(context);
+	 *   dock.top('header', options.headerHeight);
+	 *   dock.bottom('footer', options.footerHeight);
+	 *   dock.fill('content');
+	 * };
+	 * ```
+	 *
+	 * You can also use layout-literals to create layouts using docking semantics:
+	 *
+	 * ```javascript
+	 * var layoutController = new LayoutController({
+	 *   layout: {dock: [
+	 *     ['top', 'header', 40],
+	 *     ['bottom', 'footer', 40, 1], // z-index +1
+	 *     ['fill', 'content']
+	 *   ]},
+	 *   dataSource: {
+	 *     header: new Surface({content: 'header'}),
+	 *     footer: new Surface({content: 'footer'}),
+	 *     content: new Surface({content: 'content'}),
+	 *   }
+	 * });
+	 * ```
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var LayoutUtility = __webpack_require__(40);
+
+	    /**
+	     * @class
+	     * @param {LayoutContext} context layout-context
+	     * @param {Object} [options] additional options
+	     * @param {Object} [options.margins] margins to start out with (default: 0px)
+	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
+	     * @alias module:LayoutDockHelper
+	     */
+	    function LayoutDockHelper(context, options) {
+	        var size = context.size;
+	        this._size = size;
+	        this._context = context;
+	        this._options = options;
+	        this._z = (options && options.translateZ) ? options.translateZ : 0;
+	        if (options && options.margins) {
+	            var margins = LayoutUtility.normalizeMargins(options.margins);
+	            this._left = margins[3];
+	            this._top = margins[0];
+	            this._right = size[0] - margins[1];
+	            this._bottom = size[1] - margins[2];
+	        }
+	        else {
+	            this._left = 0;
+	            this._top = 0;
+	            this._right = size[0];
+	            this._bottom = size[1];
+	        }
+	    }
+
+	    /**
+	     * Parses the layout-rules based on a JSON data object.
+	     * The object should be an array with the following syntax:
+	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
+	     *
+	     * **Example:**
+	     *
+	     * ```JSON
+	     * [
+	     *   ['top': 'header', 50],
+	     *   ['bottom': 'footer', 50, 10], // z-index: 10
+	     *   ['fill', 'content']
+	     * ]
+	     * ```
+	     *
+	     * @param {Object} data JSON object
+	     */
+	    LayoutDockHelper.prototype.parse = function(data) {
+	        for (var i = 0; i < data.length; i++) {
+	            var rule = data[i];
+	            var value = (rule.length >= 3) ? rule[2] : undefined;
+	            if (rule[0] === 'top') {
+	                this.top(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'left') {
+	                this.left(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'right') {
+	                this.right(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'bottom') {
+	                this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'fill') {
+	                this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
+	            }
+	        }
+	    };
+
+	    /**
+	     * Dock the node to the top.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.top = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._top += height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the left
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.left = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (width === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            width = size[0];
+	        }
+	        this._context.set(node, {
+	            size: [width, this._bottom - this._top],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._left += width;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the bottom
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 1],
+	            align: [0, 1],
+	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+	        });
+	        this._bottom -= height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the right.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.right = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (node) {
+	            if (width === undefined) {
+	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	                width = size[0];
+	            }
+	            this._context.set(node, {
+	                size: [width, this._bottom - this._top],
+	                origin: [1, 0],
+	                align: [1, 0],
+	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+	            });
+	        }
+	        if (width) {
+	            this._right -= width;
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Fills the node to the remaining content.
+	     *
+	     * @param {LayoutNode|String} node layout-node to dock
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.fill = function(node, z) {
+	        this._context.set(node, {
+	            size: [this._right - this._left, this._bottom - this._top],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        return this;
+	    };
+
+	    // Register the helper
+	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
+
+	    module.exports = LayoutDockHelper;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 63 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -18370,8 +18594,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var MultipleTransition = __webpack_require__(150);
-	    var TweenTransition = __webpack_require__(151);
+	    var MultipleTransition = __webpack_require__(151);
+	    var TweenTransition = __webpack_require__(152);
 
 	    /**
 	     * A state maintainer for a smooth transition between
@@ -18585,7 +18809,7 @@
 
 
 /***/ },
-/* 63 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -18598,9 +18822,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transitionable = __webpack_require__(62);
+	    var Transitionable = __webpack_require__(63);
 	    var Transform = __webpack_require__(27);
-	    var Utility = __webpack_require__(32);
+	    var Utility = __webpack_require__(31);
 
 	    /**
 	     * A class for transitioning the state of a Transform by transitioning
@@ -18821,7 +19045,7 @@
 
 
 /***/ },
-/* 64 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18892,7 +19116,7 @@
 
 
 /***/ },
-/* 65 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18954,7 +19178,7 @@
 
 
 /***/ },
-/* 66 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19056,7 +19280,7 @@
 
 
 /***/ },
-/* 67 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19191,7 +19415,7 @@
 
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19298,7 +19522,7 @@
 
 
 /***/ },
-/* 69 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19454,7 +19678,7 @@
 
 
 /***/ },
-/* 70 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19546,7 +19770,7 @@
 
 
 /***/ },
-/* 71 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19658,7 +19882,7 @@
 
 
 /***/ },
-/* 72 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19767,7 +19991,7 @@
 
 
 /***/ },
-/* 73 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19880,7 +20104,7 @@
 
 
 /***/ },
-/* 74 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20024,7 +20248,7 @@
 
 
 /***/ },
-/* 75 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20096,7 +20320,7 @@
 
 
 /***/ },
-/* 76 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20257,7 +20481,7 @@
 
 
 /***/ },
-/* 77 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20322,7 +20546,7 @@
 
 
 /***/ },
-/* 78 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20405,7 +20629,7 @@
 
 
 /***/ },
-/* 79 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20467,7 +20691,7 @@
 
 
 /***/ },
-/* 80 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20545,7 +20769,7 @@
 
 
 /***/ },
-/* 81 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20622,7 +20846,7 @@
 
 
 /***/ },
-/* 82 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20722,7 +20946,7 @@
 
 
 /***/ },
-/* 83 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20790,7 +21014,7 @@
 
 
 /***/ },
-/* 84 */
+/* 85 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20855,7 +21079,7 @@
 
 
 /***/ },
-/* 85 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20924,7 +21148,7 @@
 
 
 /***/ },
-/* 86 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20995,7 +21219,7 @@
 
 
 /***/ },
-/* 87 */
+/* 88 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21076,7 +21300,7 @@
 
 
 /***/ },
-/* 88 */
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21158,7 +21382,7 @@
 
 
 /***/ },
-/* 89 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21224,7 +21448,7 @@
 
 
 /***/ },
-/* 90 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21327,7 +21551,7 @@
 
 
 /***/ },
-/* 91 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21438,7 +21662,7 @@
 
 
 /***/ },
-/* 92 */
+/* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21500,7 +21724,7 @@
 
 
 /***/ },
-/* 93 */
+/* 94 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21560,7 +21784,7 @@
 
 
 /***/ },
-/* 94 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21624,7 +21848,7 @@
 
 
 /***/ },
-/* 95 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21701,7 +21925,7 @@
 
 
 /***/ },
-/* 96 */
+/* 97 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21784,7 +22008,7 @@
 
 
 /***/ },
-/* 97 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21895,7 +22119,7 @@
 
 
 /***/ },
-/* 98 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22040,7 +22264,7 @@
 
 
 /***/ },
-/* 99 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22151,7 +22375,7 @@
 
 
 /***/ },
-/* 100 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22269,7 +22493,7 @@
 
 
 /***/ },
-/* 101 */
+/* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22342,7 +22566,7 @@
 
 
 /***/ },
-/* 102 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22472,7 +22696,7 @@
 
 
 /***/ },
-/* 103 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22537,7 +22761,7 @@
 
 
 /***/ },
-/* 104 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22601,7 +22825,7 @@
 
 
 /***/ },
-/* 105 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22714,7 +22938,7 @@
 
 
 /***/ },
-/* 106 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22775,7 +22999,7 @@
 
 
 /***/ },
-/* 107 */
+/* 108 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22844,7 +23068,7 @@
 
 
 /***/ },
-/* 108 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22987,7 +23211,7 @@
 
 
 /***/ },
-/* 109 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23111,7 +23335,7 @@
 
 
 /***/ },
-/* 110 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23194,7 +23418,7 @@
 
 
 /***/ },
-/* 111 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23286,7 +23510,7 @@
 
 
 /***/ },
-/* 112 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23356,7 +23580,7 @@
 
 
 /***/ },
-/* 113 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23466,7 +23690,7 @@
 
 
 /***/ },
-/* 114 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23538,7 +23762,7 @@
 
 
 /***/ },
-/* 115 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23632,7 +23856,7 @@
 
 
 /***/ },
-/* 116 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23695,7 +23919,7 @@
 
 
 /***/ },
-/* 117 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23806,7 +24030,7 @@
 
 
 /***/ },
-/* 118 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23879,7 +24103,7 @@
 
 
 /***/ },
-/* 119 */
+/* 120 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23941,7 +24165,7 @@
 
 
 /***/ },
-/* 120 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24045,7 +24269,7 @@
 
 
 /***/ },
-/* 121 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24107,7 +24331,7 @@
 
 
 /***/ },
-/* 122 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24173,7 +24397,7 @@
 
 
 /***/ },
-/* 123 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24251,7 +24475,7 @@
 
 
 /***/ },
-/* 124 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24423,7 +24647,7 @@
 
 
 /***/ },
-/* 125 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24585,7 +24809,7 @@
 
 
 /***/ },
-/* 126 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24735,7 +24959,7 @@
 
 
 /***/ },
-/* 127 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24802,7 +25026,7 @@
 
 
 /***/ },
-/* 128 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -24913,7 +25137,7 @@
 
 
 /***/ },
-/* 129 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25024,7 +25248,7 @@
 
 
 /***/ },
-/* 130 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25093,7 +25317,7 @@
 
 
 /***/ },
-/* 131 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25211,7 +25435,7 @@
 
 
 /***/ },
-/* 132 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25275,7 +25499,7 @@
 
 
 /***/ },
-/* 133 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25339,7 +25563,7 @@
 
 
 /***/ },
-/* 134 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25437,7 +25661,7 @@
 
 
 /***/ },
-/* 135 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25498,7 +25722,7 @@
 
 
 /***/ },
-/* 136 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25559,7 +25783,7 @@
 
 
 /***/ },
-/* 137 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25722,7 +25946,7 @@
 
 
 /***/ },
-/* 138 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25783,7 +26007,7 @@
 
 
 /***/ },
-/* 139 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25851,7 +26075,7 @@
 
 
 /***/ },
-/* 140 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -25965,7 +26189,7 @@
 
 
 /***/ },
-/* 141 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -26055,16 +26279,16 @@
 
 
 /***/ },
-/* 142 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Create a simple path alias to allow browserify to resolve
 	// the runtime on a supported path.
-	module.exports = __webpack_require__(153);
+	module.exports = __webpack_require__(154);
 
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -26077,107 +26301,6 @@
 		}
 		return module;
 	}
-
-
-/***/ },
-/* 144 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * EventEmitter represents a channel for events.
-	     *
-	     * @class EventEmitter
-	     * @constructor
-	     */
-	    function EventEmitter() {
-	        this.listeners = {};
-	        this._owner = this;
-	    }
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    EventEmitter.prototype.emit = function emit(type, event) {
-	        var handlers = this.listeners[type];
-	        if (handlers) {
-	            for (var i = 0; i < handlers.length; i++) {
-	                handlers[i].call(this._owner, event);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	   EventEmitter.prototype.on = function on(type, handler) {
-	        if (!(type in this.listeners)) this.listeners[type] = [];
-	        var index = this.listeners[type].indexOf(handler);
-	        if (index < 0) this.listeners[type].push(handler);
-	        return this;
-	    };
-
-	    /**
-	     * Alias for "on".
-	     * @method addListener
-	     */
-	    EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-
-	   /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function} handler function object to remove
-	     * @return {EventEmitter} this
-	     */
-	    EventEmitter.prototype.removeListener = function removeListener(type, handler) {
-	        var listener = this.listeners[type];
-	        if (listener !== undefined) {
-	            var index = listener.indexOf(handler);
-	            if (index >= 0) listener.splice(index, 1);
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Call event handlers with this set to owner.
-	     *
-	     * @method bindThis
-	     *
-	     * @param {Object} owner object this EventEmitter belongs to
-	     */
-	    EventEmitter.prototype.bindThis = function bindThis(owner) {
-	        this._owner = owner;
-	    };
-
-	    module.exports = EventEmitter;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
@@ -26471,6 +26594,107 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * EventEmitter represents a channel for events.
+	     *
+	     * @class EventEmitter
+	     * @constructor
+	     */
+	    function EventEmitter() {
+	        this.listeners = {};
+	        this._owner = this;
+	    }
+
+	    /**
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
+	     *
+	     * @method emit
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
+	     */
+	    EventEmitter.prototype.emit = function emit(type, event) {
+	        var handlers = this.listeners[type];
+	        if (handlers) {
+	            for (var i = 0; i < handlers.length; i++) {
+	                handlers[i].call(this._owner, event);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	   EventEmitter.prototype.on = function on(type, handler) {
+	        if (!(type in this.listeners)) this.listeners[type] = [];
+	        var index = this.listeners[type].indexOf(handler);
+	        if (index < 0) this.listeners[type].push(handler);
+	        return this;
+	    };
+
+	    /**
+	     * Alias for "on".
+	     * @method addListener
+	     */
+	    EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+	   /**
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
+	     *
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function} handler function object to remove
+	     * @return {EventEmitter} this
+	     */
+	    EventEmitter.prototype.removeListener = function removeListener(type, handler) {
+	        var listener = this.listeners[type];
+	        if (listener !== undefined) {
+	            var index = listener.indexOf(handler);
+	            if (index >= 0) listener.splice(index, 1);
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Call event handlers with this set to owner.
+	     *
+	     * @method bindThis
+	     *
+	     * @param {Object} owner object this EventEmitter belongs to
+	     */
+	    EventEmitter.prototype.bindThis = function bindThis(owner) {
+	        this._owner = owner;
+	    };
+
+	    module.exports = EventEmitter;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 147 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    /**
 	     * Internal helper object to Context that handles the process of
@@ -26570,7 +26794,7 @@
 
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26752,7 +26976,7 @@
 
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26766,7 +26990,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Vector = __webpack_require__(54);
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 
 	    /**
 	     * Force base class.
@@ -26819,7 +27043,7 @@
 
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26831,7 +27055,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(45);
 
 	    var _now = Date.now;
 
@@ -26949,7 +27173,7 @@
 
 
 /***/ },
-/* 150 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26962,7 +27186,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Utility = __webpack_require__(32);
+	    var Utility = __webpack_require__(31);
 
 	    /**
 	     * Transition meta-method to support transitioning multiple
@@ -27032,7 +27256,7 @@
 
 
 /***/ },
-/* 151 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -27464,7 +27688,7 @@
 
 
 /***/ },
-/* 152 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -27572,19 +27796,19 @@
 
 
 /***/ },
-/* 153 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*globals Handlebars: true */
-	var base = __webpack_require__(154);
+	var base = __webpack_require__(155);
 
 	// Each of these augment the Handlebars object. No need to setup here.
 	// (This is done to easily share code between commonjs and browse envs)
-	var SafeString = __webpack_require__(155)["default"];
-	var Exception = __webpack_require__(156)["default"];
-	var Utils = __webpack_require__(157);
-	var runtime = __webpack_require__(158);
+	var SafeString = __webpack_require__(156)["default"];
+	var Exception = __webpack_require__(157)["default"];
+	var Utils = __webpack_require__(158);
+	var runtime = __webpack_require__(159);
 
 	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
 	var create = function() {
@@ -27609,12 +27833,12 @@
 	exports["default"] = Handlebars;
 
 /***/ },
-/* 154 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(157);
-	var Exception = __webpack_require__(156)["default"];
+	var Utils = __webpack_require__(158);
+	var Exception = __webpack_require__(157)["default"];
 
 	var VERSION = "1.3.0";
 	exports.VERSION = VERSION;var COMPILER_REVISION = 4;
@@ -27794,7 +28018,7 @@
 	exports.createFrame = createFrame;
 
 /***/ },
-/* 155 */
+/* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27810,7 +28034,7 @@
 	exports["default"] = SafeString;
 
 /***/ },
-/* 156 */
+/* 157 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27843,12 +28067,12 @@
 	exports["default"] = Exception;
 
 /***/ },
-/* 157 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*jshint -W004 */
-	var SafeString = __webpack_require__(155)["default"];
+	var SafeString = __webpack_require__(156)["default"];
 
 	var escape = {
 	  "&": "&amp;",
@@ -27924,14 +28148,14 @@
 	exports.isEmpty = isEmpty;
 
 /***/ },
-/* 158 */
+/* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(157);
-	var Exception = __webpack_require__(156)["default"];
-	var COMPILER_REVISION = __webpack_require__(154).COMPILER_REVISION;
-	var REVISION_CHANGES = __webpack_require__(154).REVISION_CHANGES;
+	var Utils = __webpack_require__(158);
+	var Exception = __webpack_require__(157)["default"];
+	var COMPILER_REVISION = __webpack_require__(155).COMPILER_REVISION;
+	var REVISION_CHANGES = __webpack_require__(155).REVISION_CHANGES;
 
 	function checkRevision(compilerInfo) {
 	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
