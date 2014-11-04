@@ -64,7 +64,6 @@ define(function(require) {
     }
 
     // Initialize
-    //var mobileDetect = new MobileDetect(window.navigator.userAgent);
     var mainContext = Engine.createContext();
     var viewSequence = new ViewSequence();
     _setupFirebase();
@@ -147,9 +146,11 @@ define(function(require) {
     var messageInputTextArea;
     function _createMessageInput() {
         messageInputTextArea = new AutosizeTextareaSurface({
-            rows: 1,
             classes: ['message-input'],
-            placeholder: 'famous-flex-chat...'
+            placeholder: 'famous-flex-chat...',
+            properties: {
+                resize: 'none'
+            }
         });
         messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
         messageInputTextArea.on('keydown', function(e) {
@@ -268,11 +269,16 @@ define(function(require) {
             viewSequence.push(chatBubble);
         }
         if (!stockScrollView) {
+
+            // Scroll the latest (newest) chat message
             if (afterInitialRefresh) {
                 scrollView.goToLastPage();
                 scrollView.reflowLayout();
             }
             else {
+
+                // On startup, set datasource to the last page immediately
+                // so it doesn't scroll from top to bottom all the way
                 viewSequence = viewSequence.getNext() || viewSequence;
                 scrollView.setDataSource(viewSequence);
                 scrollView.goToLastPage();
@@ -309,9 +315,6 @@ define(function(require) {
                 message: data.message
             }
         });
-        /*surface.on('onresize', function(event) {
-            console.log('whut');
-        });*/
         return surface;
     }
 
@@ -389,7 +392,7 @@ define(function(require) {
     }*/
 
     //
-    // Shows the Console
+    // Loads the chat messages from demoMessages.json
     //
     function _loadDemoData() {
         var data = require('./demoMessages.json');
