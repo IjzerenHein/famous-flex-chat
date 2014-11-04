@@ -67,18 +67,18 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 
 	    //<webpack>
-	    __webpack_require__(5);
+	    __webpack_require__(4);
 	    __webpack_require__(21);
-	    __webpack_require__(6);
-	    __webpack_require__(8);
+	    __webpack_require__(5);
+	    __webpack_require__(9);
 	    //</webpack>
 
 	    // Fast-click
-	    var FastClick = __webpack_require__(15);
+	    var FastClick = __webpack_require__(20);
 	    FastClick.attach(document.body);
 
 	    // import dependencies
-	    var Firebase = __webpack_require__(16);
+	    var Firebase = __webpack_require__(15);
 	    var Engine = __webpack_require__(23);
 	    var ViewSequence = __webpack_require__(24);
 	    var Surface = __webpack_require__(25);
@@ -90,16 +90,16 @@
 	    var HeaderFooterLayout = __webpack_require__(19);
 	    var LayoutController = __webpack_require__(18);
 	    var Lagometer = __webpack_require__(12);
-	    var AutosizeTextareaSurface = __webpack_require__(3);
+	    var AutosizeTextareaSurface = __webpack_require__(11);
 	    var Timer = __webpack_require__(29);
-	    var Console = __webpack_require__(4);
+	    var Console = __webpack_require__(3);
 	    var InputSurface = __webpack_require__(30);
 	    var moment = __webpack_require__(13);
-	    var cuid = __webpack_require__(20);
-	    var browser = __webpack_require__(34).userAgent(window.navigator.userAgent);
+	    var cuid = __webpack_require__(16);
+	    var browser = __webpack_require__(33).userAgent(window.navigator.userAgent);
 	    // templates
-	    var chatBubbleTemplate = __webpack_require__(9);
-	    var daySectionTemplate = __webpack_require__(10);
+	    var chatBubbleTemplate = __webpack_require__(7);
+	    var daySectionTemplate = __webpack_require__(8);
 
 	    // debugging
 	    var flow = true;
@@ -448,7 +448,7 @@
 	    // Loads the chat messages from demoMessages.json
 	    //
 	    function _loadDemoData() {
-	        var data = __webpack_require__(11);
+	        var data = __webpack_require__(10);
 	        for (var i = 0 ; i < data.length; i++) {
 	            _addMessage(data[i]);
 	        }
@@ -565,7 +565,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(31);
+	    var Utility = __webpack_require__(32);
 
 	    // Define capabilities of this layout function
 	    var capabilities = {
@@ -815,6 +815,216 @@
 	 * @copyright Gloey Apps, 2014
 	 */
 
+	/*global define, console*/
+	/*eslint no-use-before-define:0, no-console:0 */
+
+	/**
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    'use strict';
+
+	    // import dependencies
+	    var Surface = __webpack_require__(25);
+	    var Modifier = __webpack_require__(26);
+	    var View = __webpack_require__(31);
+
+	    // globals
+	    var instance;
+
+	    /**
+	     * @class
+	     * @extends TextareaSurface
+	     * @param {Object} [options] Configuration options
+	     */
+	    function Console(options) {
+	        instance = this;
+	        View.apply(this, arguments);
+
+	        // Create log surface
+	        var modifier = new Modifier({
+	            //size: [undefined, 100]
+	        });
+	        this.surface = new Surface({
+	            properties: {
+	                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+	                color: 'rgba(255, 255, 255, 0.5)',
+	                'z-index': 1000,
+	                overflow: 'auto'
+	            }
+	        });
+	        this.add(modifier).add(this.surface);
+
+	        // Hijack original console.log
+	        var originalConsoleLog = console.log;
+	        console.log = function(args) {
+	            originalConsoleLog.apply(console, arguments);
+	            instance.log.apply(instance, arguments);
+	        };
+	    }
+	    Console.prototype = Object.create(View.prototype);
+	    Console.prototype.constructor = Console;
+
+	    /**
+	     * Logs content to the console.
+	     */
+	    Console.prototype.log = function(text) {
+	        var value = this.surface.getContent();
+	        if (value !== '') {
+	            value += '<br>';
+	        }
+	        value += text;
+	        this.surface.setContent(value);
+	    };
+
+	    /**
+	     * Logs content to the console.
+	     */
+	    Console.log = function(text) {
+	        if (instance) {
+	            instance.log(text);
+	        }
+	    };
+
+	    /**
+	     * Get the global console instance.
+	     */
+	    Console.prototype.getInstance = function() {
+	        return instance;
+	    };
+
+	    module.exports = Console;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(34);
+	__webpack_require__(35);
+	__webpack_require__(36);
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	var dispose = __webpack_require__(14)
+		// The css code:
+		(__webpack_require__(6));
+	// Hot Module Replacement
+	if(false) {
+		module.hot.accept();
+		module.hot.dispose(dispose);
+	}
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports =
+		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n}\n.message-bubble .author {\n  font-size: 14px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	  this.compilerInfo = [4,'>= 1.0.0'];
+	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+	  buffer += "<div class=\"back\">\n	<span class=\"author\">";
+	  if (helper = helpers.author) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.author); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
+	    + "</span>\n	<div class=\"time\">";
+	  if (helper = helpers.time) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.time); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
+	    + "</div>\n	<div class=\"message\">";
+	  if (helper = helpers.message) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.message); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
+	    + "</div>\n</div>";
+	  return buffer;
+	  });
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	  this.compilerInfo = [4,'>= 1.0.0'];
+	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
+	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
+
+
+	  buffer += "<span class=\"text\">";
+	  if (helper = helpers.text) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+	  else { helper = (depth0 && depth0.text); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+	  buffer += escapeExpression(stack1)
+	    + "</span>\n";
+	  return buffer;
+	  });
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__.p + "index.html"
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = [
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		},
+		{
+			"message": "test message one",
+			"author": "Hein"
+		}
+	]
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
 	/*global define*/
 	/*eslint no-use-before-define:0*/
 
@@ -825,7 +1035,7 @@
 	    'use strict';
 
 	    // import dependencies
-	    var TextareaSurface = __webpack_require__(32);
+	    var TextareaSurface = __webpack_require__(37);
 
 	    /**
 	     * @class
@@ -1047,216 +1257,6 @@
 
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define, console*/
-	/*eslint no-use-before-define:0, no-console:0 */
-
-	/**
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    'use strict';
-
-	    // import dependencies
-	    var Surface = __webpack_require__(25);
-	    var Modifier = __webpack_require__(26);
-	    var View = __webpack_require__(33);
-
-	    // globals
-	    var instance;
-
-	    /**
-	     * @class
-	     * @extends TextareaSurface
-	     * @param {Object} [options] Configuration options
-	     */
-	    function Console(options) {
-	        instance = this;
-	        View.apply(this, arguments);
-
-	        // Create log surface
-	        var modifier = new Modifier({
-	            //size: [undefined, 100]
-	        });
-	        this.surface = new Surface({
-	            properties: {
-	                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-	                color: 'rgba(255, 255, 255, 0.5)',
-	                'z-index': 1000,
-	                overflow: 'auto'
-	            }
-	        });
-	        this.add(modifier).add(this.surface);
-
-	        // Hijack original console.log
-	        var originalConsoleLog = console.log;
-	        console.log = function(args) {
-	            originalConsoleLog.apply(console, arguments);
-	            instance.log.apply(instance, arguments);
-	        };
-	    }
-	    Console.prototype = Object.create(View.prototype);
-	    Console.prototype.constructor = Console;
-
-	    /**
-	     * Logs content to the console.
-	     */
-	    Console.prototype.log = function(text) {
-	        var value = this.surface.getContent();
-	        if (value !== '') {
-	            value += '<br>';
-	        }
-	        value += text;
-	        this.surface.setContent(value);
-	    };
-
-	    /**
-	     * Logs content to the console.
-	     */
-	    Console.log = function(text) {
-	        if (instance) {
-	            instance.log(text);
-	        }
-	    };
-
-	    /**
-	     * Get the global console instance.
-	     */
-	    Console.prototype.getInstance = function() {
-	        return instance;
-	    };
-
-	    module.exports = Console;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(35);
-	__webpack_require__(36);
-	__webpack_require__(37);
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	var dispose = __webpack_require__(14)
-		// The css code:
-		(__webpack_require__(7));
-	// Hot Module Replacement
-	if(false) {
-		module.hot.accept();
-		module.hot.dispose(dispose);
-	}
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports =
-		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n}\n.message-bubble .author {\n  font-size: 14px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__.p + "index.html"
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
-	  this.compilerInfo = [4,'>= 1.0.0'];
-	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
-
-
-	  buffer += "<div class=\"back\">\n	<span class=\"author\">";
-	  if (helper = helpers.author) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-	  else { helper = (depth0 && depth0.author); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-	  buffer += escapeExpression(stack1)
-	    + "</span>\n	<div class=\"time\">";
-	  if (helper = helpers.time) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-	  else { helper = (depth0 && depth0.time); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-	  buffer += escapeExpression(stack1)
-	    + "</div>\n	<div class=\"message\">";
-	  if (helper = helpers.message) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-	  else { helper = (depth0 && depth0.message); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-	  buffer += escapeExpression(stack1)
-	    + "</div>\n</div>";
-	  return buffer;
-	  });
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
-	  this.compilerInfo = [4,'>= 1.0.0'];
-	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
-	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
-
-
-	  buffer += "<span class=\"text\">";
-	  if (helper = helpers.text) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-	  else { helper = (depth0 && depth0.text); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-	  buffer += escapeExpression(stack1)
-	    + "</span>\n";
-	  return buffer;
-	  });
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = [
-		{
-			"message": "test message one",
-			"author": "Hein"
-		},
-		{
-			"message": "test message one",
-			"author": "Hein"
-		},
-		{
-			"message": "test message one",
-			"author": "Hein"
-		},
-		{
-			"message": "test message one",
-			"author": "Hein"
-		},
-		{
-			"message": "test message one",
-			"author": "Hein"
-		},
-		{
-			"message": "test message one",
-			"author": "Hein"
-		},
-		{
-			"message": "test message one",
-			"author": "Hein"
-		}
-	]
-
-/***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -1279,7 +1279,7 @@
 	    // import dependencies
 	    var Engine = __webpack_require__(23);
 	    var CanvasSurface = __webpack_require__(38);
-	    var View = __webpack_require__(33);
+	    var View = __webpack_require__(31);
 
 	    /**
 	     * @class Lagometer
@@ -4406,833 +4406,6 @@
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
-	 *
-	 * @version 1.0.3
-	 * @codingstandard ftlabs-jsv2
-	 * @copyright The Financial Times Limited [All Rights Reserved]
-	 * @license MIT License (see LICENSE.txt)
-	 */
-
-	/*jslint browser:true, node:true*/
-	/*global define, Event, Node*/
-
-
-	/**
-	 * Instantiate fast-clicking listeners on the specified layer.
-	 *
-	 * @constructor
-	 * @param {Element} layer The layer to listen on
-	 * @param {Object} options The options to override the defaults
-	 */
-	function FastClick(layer, options) {
-		'use strict';
-		var oldOnClick;
-
-		options = options || {};
-
-		/**
-		 * Whether a click is currently being tracked.
-		 *
-		 * @type boolean
-		 */
-		this.trackingClick = false;
-
-
-		/**
-		 * Timestamp for when click tracking started.
-		 *
-		 * @type number
-		 */
-		this.trackingClickStart = 0;
-
-
-		/**
-		 * The element being tracked for a click.
-		 *
-		 * @type EventTarget
-		 */
-		this.targetElement = null;
-
-
-		/**
-		 * X-coordinate of touch start event.
-		 *
-		 * @type number
-		 */
-		this.touchStartX = 0;
-
-
-		/**
-		 * Y-coordinate of touch start event.
-		 *
-		 * @type number
-		 */
-		this.touchStartY = 0;
-
-
-		/**
-		 * ID of the last touch, retrieved from Touch.identifier.
-		 *
-		 * @type number
-		 */
-		this.lastTouchIdentifier = 0;
-
-
-		/**
-		 * Touchmove boundary, beyond which a click will be cancelled.
-		 *
-		 * @type number
-		 */
-		this.touchBoundary = options.touchBoundary || 10;
-
-
-		/**
-		 * The FastClick layer.
-		 *
-		 * @type Element
-		 */
-		this.layer = layer;
-
-		/**
-		 * The minimum time between tap(touchstart and touchend) events
-		 *
-		 * @type number
-		 */
-		this.tapDelay = options.tapDelay || 200;
-
-		if (FastClick.notNeeded(layer)) {
-			return;
-		}
-
-		// Some old versions of Android don't have Function.prototype.bind
-		function bind(method, context) {
-			return function() { return method.apply(context, arguments); };
-		}
-
-
-		var methods = ['onMouse', 'onClick', 'onTouchStart', 'onTouchMove', 'onTouchEnd', 'onTouchCancel'];
-		var context = this;
-		for (var i = 0, l = methods.length; i < l; i++) {
-			context[methods[i]] = bind(context[methods[i]], context);
-		}
-
-		// Set up event handlers as required
-		if (deviceIsAndroid) {
-			layer.addEventListener('mouseover', this.onMouse, true);
-			layer.addEventListener('mousedown', this.onMouse, true);
-			layer.addEventListener('mouseup', this.onMouse, true);
-		}
-
-		layer.addEventListener('click', this.onClick, true);
-		layer.addEventListener('touchstart', this.onTouchStart, false);
-		layer.addEventListener('touchmove', this.onTouchMove, false);
-		layer.addEventListener('touchend', this.onTouchEnd, false);
-		layer.addEventListener('touchcancel', this.onTouchCancel, false);
-
-		// Hack is required for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
-		// which is how FastClick normally stops click events bubbling to callbacks registered on the FastClick
-		// layer when they are cancelled.
-		if (!Event.prototype.stopImmediatePropagation) {
-			layer.removeEventListener = function(type, callback, capture) {
-				var rmv = Node.prototype.removeEventListener;
-				if (type === 'click') {
-					rmv.call(layer, type, callback.hijacked || callback, capture);
-				} else {
-					rmv.call(layer, type, callback, capture);
-				}
-			};
-
-			layer.addEventListener = function(type, callback, capture) {
-				var adv = Node.prototype.addEventListener;
-				if (type === 'click') {
-					adv.call(layer, type, callback.hijacked || (callback.hijacked = function(event) {
-						if (!event.propagationStopped) {
-							callback(event);
-						}
-					}), capture);
-				} else {
-					adv.call(layer, type, callback, capture);
-				}
-			};
-		}
-
-		// If a handler is already declared in the element's onclick attribute, it will be fired before
-		// FastClick's onClick handler. Fix this by pulling out the user-defined handler function and
-		// adding it as listener.
-		if (typeof layer.onclick === 'function') {
-
-			// Android browser on at least 3.2 requires a new reference to the function in layer.onclick
-			// - the old one won't work if passed to addEventListener directly.
-			oldOnClick = layer.onclick;
-			layer.addEventListener('click', function(event) {
-				oldOnClick(event);
-			}, false);
-			layer.onclick = null;
-		}
-	}
-
-
-	/**
-	 * Android requires exceptions.
-	 *
-	 * @type boolean
-	 */
-	var deviceIsAndroid = navigator.userAgent.indexOf('Android') > 0;
-
-
-	/**
-	 * iOS requires exceptions.
-	 *
-	 * @type boolean
-	 */
-	var deviceIsIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
-
-
-	/**
-	 * iOS 4 requires an exception for select elements.
-	 *
-	 * @type boolean
-	 */
-	var deviceIsIOS4 = deviceIsIOS && (/OS 4_\d(_\d)?/).test(navigator.userAgent);
-
-
-	/**
-	 * iOS 6.0(+?) requires the target element to be manually derived
-	 *
-	 * @type boolean
-	 */
-	var deviceIsIOSWithBadTarget = deviceIsIOS && (/OS ([6-9]|\d{2})_\d/).test(navigator.userAgent);
-
-	/**
-	 * BlackBerry requires exceptions.
-	 *
-	 * @type boolean
-	 */
-	var deviceIsBlackBerry10 = navigator.userAgent.indexOf('BB10') > 0;
-
-	/**
-	 * Determine whether a given element requires a native click.
-	 *
-	 * @param {EventTarget|Element} target Target DOM element
-	 * @returns {boolean} Returns true if the element needs a native click
-	 */
-	FastClick.prototype.needsClick = function(target) {
-		'use strict';
-		switch (target.nodeName.toLowerCase()) {
-
-		// Don't send a synthetic click to disabled inputs (issue #62)
-		case 'button':
-		case 'select':
-		case 'textarea':
-			if (target.disabled) {
-				return true;
-			}
-
-			break;
-		case 'input':
-
-			// File inputs need real clicks on iOS 6 due to a browser bug (issue #68)
-			if ((deviceIsIOS && target.type === 'file') || target.disabled) {
-				return true;
-			}
-
-			break;
-		case 'label':
-		case 'video':
-			return true;
-		}
-
-		return (/\bneedsclick\b/).test(target.className);
-	};
-
-
-	/**
-	 * Determine whether a given element requires a call to focus to simulate click into element.
-	 *
-	 * @param {EventTarget|Element} target Target DOM element
-	 * @returns {boolean} Returns true if the element requires a call to focus to simulate native click.
-	 */
-	FastClick.prototype.needsFocus = function(target) {
-		'use strict';
-		switch (target.nodeName.toLowerCase()) {
-		case 'textarea':
-			return true;
-		case 'select':
-			return !deviceIsAndroid;
-		case 'input':
-			switch (target.type) {
-			case 'button':
-			case 'checkbox':
-			case 'file':
-			case 'image':
-			case 'radio':
-			case 'submit':
-				return false;
-			}
-
-			// No point in attempting to focus disabled inputs
-			return !target.disabled && !target.readOnly;
-		default:
-			return (/\bneedsfocus\b/).test(target.className);
-		}
-	};
-
-
-	/**
-	 * Send a click event to the specified element.
-	 *
-	 * @param {EventTarget|Element} targetElement
-	 * @param {Event} event
-	 */
-	FastClick.prototype.sendClick = function(targetElement, event) {
-		'use strict';
-		var clickEvent, touch;
-
-		// On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
-		if (document.activeElement && document.activeElement !== targetElement) {
-			document.activeElement.blur();
-		}
-
-		touch = event.changedTouches[0];
-
-		// Synthesise a click event, with an extra attribute so it can be tracked
-		clickEvent = document.createEvent('MouseEvents');
-		clickEvent.initMouseEvent(this.determineEventType(targetElement), true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
-		clickEvent.forwardedTouchEvent = true;
-		targetElement.dispatchEvent(clickEvent);
-	};
-
-	FastClick.prototype.determineEventType = function(targetElement) {
-		'use strict';
-
-		//Issue #159: Android Chrome Select Box does not open with a synthetic click event
-		if (deviceIsAndroid && targetElement.tagName.toLowerCase() === 'select') {
-			return 'mousedown';
-		}
-
-		return 'click';
-	};
-
-
-	/**
-	 * @param {EventTarget|Element} targetElement
-	 */
-	FastClick.prototype.focus = function(targetElement) {
-		'use strict';
-		var length;
-
-		// Issue #160: on iOS 7, some input elements (e.g. date datetime) throw a vague TypeError on setSelectionRange. These elements don't have an integer value for the selectionStart and selectionEnd properties, but unfortunately that can't be used for detection because accessing the properties also throws a TypeError. Just check the type instead. Filed as Apple bug #15122724.
-		if (deviceIsIOS && targetElement.setSelectionRange && targetElement.type.indexOf('date') !== 0 && targetElement.type !== 'time') {
-			length = targetElement.value.length;
-			targetElement.setSelectionRange(length, length);
-		} else {
-			targetElement.focus();
-		}
-	};
-
-
-	/**
-	 * Check whether the given target element is a child of a scrollable layer and if so, set a flag on it.
-	 *
-	 * @param {EventTarget|Element} targetElement
-	 */
-	FastClick.prototype.updateScrollParent = function(targetElement) {
-		'use strict';
-		var scrollParent, parentElement;
-
-		scrollParent = targetElement.fastClickScrollParent;
-
-		// Attempt to discover whether the target element is contained within a scrollable layer. Re-check if the
-		// target element was moved to another parent.
-		if (!scrollParent || !scrollParent.contains(targetElement)) {
-			parentElement = targetElement;
-			do {
-				if (parentElement.scrollHeight > parentElement.offsetHeight) {
-					scrollParent = parentElement;
-					targetElement.fastClickScrollParent = parentElement;
-					break;
-				}
-
-				parentElement = parentElement.parentElement;
-			} while (parentElement);
-		}
-
-		// Always update the scroll top tracker if possible.
-		if (scrollParent) {
-			scrollParent.fastClickLastScrollTop = scrollParent.scrollTop;
-		}
-	};
-
-
-	/**
-	 * @param {EventTarget} targetElement
-	 * @returns {Element|EventTarget}
-	 */
-	FastClick.prototype.getTargetElementFromEventTarget = function(eventTarget) {
-		'use strict';
-
-		// On some older browsers (notably Safari on iOS 4.1 - see issue #56) the event target may be a text node.
-		if (eventTarget.nodeType === Node.TEXT_NODE) {
-			return eventTarget.parentNode;
-		}
-
-		return eventTarget;
-	};
-
-
-	/**
-	 * On touch start, record the position and scroll offset.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
-	FastClick.prototype.onTouchStart = function(event) {
-		'use strict';
-		var targetElement, touch, selection;
-
-		// Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
-		if (event.targetTouches.length > 1) {
-			return true;
-		}
-
-		targetElement = this.getTargetElementFromEventTarget(event.target);
-		touch = event.targetTouches[0];
-
-		if (deviceIsIOS) {
-
-			// Only trusted events will deselect text on iOS (issue #49)
-			selection = window.getSelection();
-			if (selection.rangeCount && !selection.isCollapsed) {
-				return true;
-			}
-
-			if (!deviceIsIOS4) {
-
-				// Weird things happen on iOS when an alert or confirm dialog is opened from a click event callback (issue #23):
-				// when the user next taps anywhere else on the page, new touchstart and touchend events are dispatched
-				// with the same identifier as the touch event that previously triggered the click that triggered the alert.
-				// Sadly, there is an issue on iOS 4 that causes some normal touch events to have the same identifier as an
-				// immediately preceeding touch event (issue #52), so this fix is unavailable on that platform.
-				// Issue 120: touch.identifier is 0 when Chrome dev tools 'Emulate touch events' is set with an iOS device UA string,
-				// which causes all touch events to be ignored. As this block only applies to iOS, and iOS identifiers are always long,
-				// random integers, it's safe to to continue if the identifier is 0 here.
-				if (touch.identifier && touch.identifier === this.lastTouchIdentifier) {
-					event.preventDefault();
-					return false;
-				}
-
-				this.lastTouchIdentifier = touch.identifier;
-
-				// If the target element is a child of a scrollable layer (using -webkit-overflow-scrolling: touch) and:
-				// 1) the user does a fling scroll on the scrollable layer
-				// 2) the user stops the fling scroll with another tap
-				// then the event.target of the last 'touchend' event will be the element that was under the user's finger
-				// when the fling scroll was started, causing FastClick to send a click event to that layer - unless a check
-				// is made to ensure that a parent layer was not scrolled before sending a synthetic click (issue #42).
-				this.updateScrollParent(targetElement);
-			}
-		}
-
-		this.trackingClick = true;
-		this.trackingClickStart = event.timeStamp;
-		this.targetElement = targetElement;
-
-		this.touchStartX = touch.pageX;
-		this.touchStartY = touch.pageY;
-
-		// Prevent phantom clicks on fast double-tap (issue #36)
-		if ((event.timeStamp - this.lastClickTime) < this.tapDelay) {
-			event.preventDefault();
-		}
-
-		return true;
-	};
-
-
-	/**
-	 * Based on a touchmove event object, check whether the touch has moved past a boundary since it started.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
-	FastClick.prototype.touchHasMoved = function(event) {
-		'use strict';
-		var touch = event.changedTouches[0], boundary = this.touchBoundary;
-
-		if (Math.abs(touch.pageX - this.touchStartX) > boundary || Math.abs(touch.pageY - this.touchStartY) > boundary) {
-			return true;
-		}
-
-		return false;
-	};
-
-
-	/**
-	 * Update the last position.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
-	FastClick.prototype.onTouchMove = function(event) {
-		'use strict';
-		if (!this.trackingClick) {
-			return true;
-		}
-
-		// If the touch has moved, cancel the click tracking
-		if (this.targetElement !== this.getTargetElementFromEventTarget(event.target) || this.touchHasMoved(event)) {
-			this.trackingClick = false;
-			this.targetElement = null;
-		}
-
-		return true;
-	};
-
-
-	/**
-	 * Attempt to find the labelled control for the given label element.
-	 *
-	 * @param {EventTarget|HTMLLabelElement} labelElement
-	 * @returns {Element|null}
-	 */
-	FastClick.prototype.findControl = function(labelElement) {
-		'use strict';
-
-		// Fast path for newer browsers supporting the HTML5 control attribute
-		if (labelElement.control !== undefined) {
-			return labelElement.control;
-		}
-
-		// All browsers under test that support touch events also support the HTML5 htmlFor attribute
-		if (labelElement.htmlFor) {
-			return document.getElementById(labelElement.htmlFor);
-		}
-
-		// If no for attribute exists, attempt to retrieve the first labellable descendant element
-		// the list of which is defined here: http://www.w3.org/TR/html5/forms.html#category-label
-		return labelElement.querySelector('button, input:not([type=hidden]), keygen, meter, output, progress, select, textarea');
-	};
-
-
-	/**
-	 * On touch end, determine whether to send a click event at once.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
-	FastClick.prototype.onTouchEnd = function(event) {
-		'use strict';
-		var forElement, trackingClickStart, targetTagName, scrollParent, touch, targetElement = this.targetElement;
-
-		if (!this.trackingClick) {
-			return true;
-		}
-
-		// Prevent phantom clicks on fast double-tap (issue #36)
-		if ((event.timeStamp - this.lastClickTime) < this.tapDelay) {
-			this.cancelNextClick = true;
-			return true;
-		}
-
-		// Reset to prevent wrong click cancel on input (issue #156).
-		this.cancelNextClick = false;
-
-		this.lastClickTime = event.timeStamp;
-
-		trackingClickStart = this.trackingClickStart;
-		this.trackingClick = false;
-		this.trackingClickStart = 0;
-
-		// On some iOS devices, the targetElement supplied with the event is invalid if the layer
-		// is performing a transition or scroll, and has to be re-detected manually. Note that
-		// for this to function correctly, it must be called *after* the event target is checked!
-		// See issue #57; also filed as rdar://13048589 .
-		if (deviceIsIOSWithBadTarget) {
-			touch = event.changedTouches[0];
-
-			// In certain cases arguments of elementFromPoint can be negative, so prevent setting targetElement to null
-			targetElement = document.elementFromPoint(touch.pageX - window.pageXOffset, touch.pageY - window.pageYOffset) || targetElement;
-			targetElement.fastClickScrollParent = this.targetElement.fastClickScrollParent;
-		}
-
-		targetTagName = targetElement.tagName.toLowerCase();
-		if (targetTagName === 'label') {
-			forElement = this.findControl(targetElement);
-			if (forElement) {
-				this.focus(targetElement);
-				if (deviceIsAndroid) {
-					return false;
-				}
-
-				targetElement = forElement;
-			}
-		} else if (this.needsFocus(targetElement)) {
-
-			// Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
-			// Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
-			if ((event.timeStamp - trackingClickStart) > 100 || (deviceIsIOS && window.top !== window && targetTagName === 'input')) {
-				this.targetElement = null;
-				return false;
-			}
-
-			this.focus(targetElement);
-			this.sendClick(targetElement, event);
-
-			// Select elements need the event to go through on iOS 4, otherwise the selector menu won't open.
-			// Also this breaks opening selects when VoiceOver is active on iOS6, iOS7 (and possibly others)
-			if (!deviceIsIOS || targetTagName !== 'select') {
-				this.targetElement = null;
-				event.preventDefault();
-			}
-
-			return false;
-		}
-
-		if (deviceIsIOS && !deviceIsIOS4) {
-
-			// Don't send a synthetic click event if the target element is contained within a parent layer that was scrolled
-			// and this tap is being used to stop the scrolling (usually initiated by a fling - issue #42).
-			scrollParent = targetElement.fastClickScrollParent;
-			if (scrollParent && scrollParent.fastClickLastScrollTop !== scrollParent.scrollTop) {
-				return true;
-			}
-		}
-
-		// Prevent the actual click from going though - unless the target node is marked as requiring
-		// real clicks or if it is in the whitelist in which case only non-programmatic clicks are permitted.
-		if (!this.needsClick(targetElement)) {
-			event.preventDefault();
-			this.sendClick(targetElement, event);
-		}
-
-		return false;
-	};
-
-
-	/**
-	 * On touch cancel, stop tracking the click.
-	 *
-	 * @returns {void}
-	 */
-	FastClick.prototype.onTouchCancel = function() {
-		'use strict';
-		this.trackingClick = false;
-		this.targetElement = null;
-	};
-
-
-	/**
-	 * Determine mouse events which should be permitted.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
-	FastClick.prototype.onMouse = function(event) {
-		'use strict';
-
-		// If a target element was never set (because a touch event was never fired) allow the event
-		if (!this.targetElement) {
-			return true;
-		}
-
-		if (event.forwardedTouchEvent) {
-			return true;
-		}
-
-		// Programmatically generated events targeting a specific element should be permitted
-		if (!event.cancelable) {
-			return true;
-		}
-
-		// Derive and check the target element to see whether the mouse event needs to be permitted;
-		// unless explicitly enabled, prevent non-touch click events from triggering actions,
-		// to prevent ghost/doubleclicks.
-		if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
-
-			// Prevent any user-added listeners declared on FastClick element from being fired.
-			if (event.stopImmediatePropagation) {
-				event.stopImmediatePropagation();
-			} else {
-
-				// Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
-				event.propagationStopped = true;
-			}
-
-			// Cancel the event
-			event.stopPropagation();
-			event.preventDefault();
-
-			return false;
-		}
-
-		// If the mouse event is permitted, return true for the action to go through.
-		return true;
-	};
-
-
-	/**
-	 * On actual clicks, determine whether this is a touch-generated click, a click action occurring
-	 * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
-	 * an actual click which should be permitted.
-	 *
-	 * @param {Event} event
-	 * @returns {boolean}
-	 */
-	FastClick.prototype.onClick = function(event) {
-		'use strict';
-		var permitted;
-
-		// It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
-		if (this.trackingClick) {
-			this.targetElement = null;
-			this.trackingClick = false;
-			return true;
-		}
-
-		// Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
-		if (event.target.type === 'submit' && event.detail === 0) {
-			return true;
-		}
-
-		permitted = this.onMouse(event);
-
-		// Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
-		if (!permitted) {
-			this.targetElement = null;
-		}
-
-		// If clicks are permitted, return true for the action to go through.
-		return permitted;
-	};
-
-
-	/**
-	 * Remove all FastClick's event listeners.
-	 *
-	 * @returns {void}
-	 */
-	FastClick.prototype.destroy = function() {
-		'use strict';
-		var layer = this.layer;
-
-		if (deviceIsAndroid) {
-			layer.removeEventListener('mouseover', this.onMouse, true);
-			layer.removeEventListener('mousedown', this.onMouse, true);
-			layer.removeEventListener('mouseup', this.onMouse, true);
-		}
-
-		layer.removeEventListener('click', this.onClick, true);
-		layer.removeEventListener('touchstart', this.onTouchStart, false);
-		layer.removeEventListener('touchmove', this.onTouchMove, false);
-		layer.removeEventListener('touchend', this.onTouchEnd, false);
-		layer.removeEventListener('touchcancel', this.onTouchCancel, false);
-	};
-
-
-	/**
-	 * Check whether FastClick is needed.
-	 *
-	 * @param {Element} layer The layer to listen on
-	 */
-	FastClick.notNeeded = function(layer) {
-		'use strict';
-		var metaViewport;
-		var chromeVersion;
-		var blackberryVersion;
-
-		// Devices that don't support touch don't need FastClick
-		if (typeof window.ontouchstart === 'undefined') {
-			return true;
-		}
-
-		// Chrome version - zero for other browsers
-		chromeVersion = +(/Chrome\/([0-9]+)/.exec(navigator.userAgent) || [,0])[1];
-
-		if (chromeVersion) {
-
-			if (deviceIsAndroid) {
-				metaViewport = document.querySelector('meta[name=viewport]');
-
-				if (metaViewport) {
-					// Chrome on Android with user-scalable="no" doesn't need FastClick (issue #89)
-					if (metaViewport.content.indexOf('user-scalable=no') !== -1) {
-						return true;
-					}
-					// Chrome 32 and above with width=device-width or less don't need FastClick
-					if (chromeVersion > 31 && document.documentElement.scrollWidth <= window.outerWidth) {
-						return true;
-					}
-				}
-
-			// Chrome desktop doesn't need FastClick (issue #15)
-			} else {
-				return true;
-			}
-		}
-
-		if (deviceIsBlackBerry10) {
-			blackberryVersion = navigator.userAgent.match(/Version\/([0-9]*)\.([0-9]*)/);
-
-			// BlackBerry 10.3+ does not require Fastclick library.
-			// https://github.com/ftlabs/fastclick/issues/251
-			if (blackberryVersion[1] >= 10 && blackberryVersion[2] >= 3) {
-				metaViewport = document.querySelector('meta[name=viewport]');
-
-				if (metaViewport) {
-					// user-scalable=no eliminates click delay.
-					if (metaViewport.content.indexOf('user-scalable=no') !== -1) {
-						return true;
-					}
-					// width=device-width (or less than device-width) eliminates click delay.
-					if (document.documentElement.scrollWidth <= window.outerWidth) {
-						return true;
-					}
-				}
-			}
-		}
-
-		// IE10 with -ms-touch-action: none, which disables double-tap-to-zoom (issue #97)
-		if (layer.style.msTouchAction === 'none') {
-			return true;
-		}
-
-		return false;
-	};
-
-
-	/**
-	 * Factory method for creating a FastClick object
-	 *
-	 * @param {Element} layer The layer to listen on
-	 * @param {Object} options The options to override the defaults
-	 */
-	FastClick.attach = function(layer, options) {
-		'use strict';
-		return new FastClick(layer, options);
-	};
-
-
-	if (true) {
-
-		// AMD. Register as an anonymous module.
-		!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
-			'use strict';
-			return FastClick;
-		}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else if (typeof module !== 'undefined' && module.exports) {
-		module.exports = FastClick.attach;
-		module.exports.FastClick = FastClick;
-	} else {
-		window.FastClick = FastClick;
-	}
-
-
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/*! @license Firebase v1.1.2 - License: https://www.firebase.com/terms/terms-of-service.html */ (function() {var k,ba=this;function l(a){return void 0!==a}function ca(){}function da(a){a.ib=function(){return a.Ld?a.Ld:a.Ld=new a}}
 	function ea(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
 	else if("function"==b&&"undefined"==typeof a.call)return"object";return b}function fa(a){return"array"==ea(a)}function ga(a){var b=ea(a);return"array"==b||"object"==b&&"number"==typeof a.length}function p(a){return"string"==typeof a}function ha(a){return"number"==typeof a}function ia(a){return"function"==ea(a)}function ja(a){var b=typeof a;return"object"==b&&null!=a||"function"==b}function ka(a,b,c){return a.call.apply(a.bind,arguments)}
@@ -5433,6 +4606,122 @@
 
 
 /***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * cuid.js
+	 * Collision-resistant UID generator for browsers and node.
+	 * Sequential for fast db lookups and recency sorting.
+	 * Safe for element IDs and server-side lookups.
+	 *
+	 * Extracted from CLCTR
+	 * 
+	 * Copyright (c) Eric Elliott 2012
+	 * MIT License
+	 */
+
+	/*global window, navigator, document, require, process, module */
+	(function (app) {
+	  'use strict';
+	  var namespace = 'cuid',
+	    c = 0,
+	    blockSize = 4,
+	    base = 36,
+	    discreteValues = Math.pow(base, blockSize),
+
+	    pad = function pad(num, size) {
+	      var s = "000000000" + num;
+	      return s.substr(s.length-size);
+	    },
+
+	    randomBlock = function randomBlock() {
+	      return pad((Math.random() *
+	            discreteValues << 0)
+	            .toString(base), blockSize);
+	    },
+
+	    safeCounter = function () {
+	      c = (c < discreteValues) ? c : 0;
+	      c++; // this is not subliminal
+	      return c - 1;
+	    },
+
+	    api = function cuid() {
+	      // Starting with a lowercase letter makes
+	      // it HTML element ID friendly.
+	      var letter = 'c', // hard-coded allows for sequential access
+
+	        // timestamp
+	        // warning: this exposes the exact date and time
+	        // that the uid was created.
+	        timestamp = (new Date().getTime()).toString(base),
+
+	        // Prevent same-machine collisions.
+	        counter,
+
+	        // A few chars to generate distinct ids for different
+	        // clients (so different computers are far less
+	        // likely to generate the same id)
+	        fingerprint = api.fingerprint(),
+
+	        // Grab some more chars from Math.random()
+	        random = randomBlock() + randomBlock();
+
+	        counter = pad(safeCounter().toString(base), blockSize);
+
+	      return  (letter + timestamp + counter + fingerprint + random);
+	    };
+
+	  api.slug = function slug() {
+	    var date = new Date().getTime().toString(36),
+	      counter,
+	      print = api.fingerprint().slice(0,1) +
+	        api.fingerprint().slice(-1),
+	      random = randomBlock().slice(-2);
+
+	      counter = safeCounter().toString(36).slice(-4);
+
+	    return date.slice(-2) + 
+	      counter + print + random;
+	  };
+
+	  api.globalCount = function globalCount() {
+	    // We want to cache the results of this
+	    var cache = (function calc() {
+	        var i,
+	          count = 0;
+
+	        for (i in window) {
+	          count++;
+	        }
+
+	        return count;
+	      }());
+
+	    api.globalCount = function () { return cache; };
+	    return cache;
+	  };
+
+	  api.fingerprint = function browserPrint() {
+	    return pad((navigator.mimeTypes.length +
+	      navigator.userAgent.length).toString(36) +
+	      api.globalCount().toString(36), 4);
+	  };
+
+	  // don't change anything from here down.
+	  if (app.register) {
+	    app.register(namespace, api);
+	  } else if (true) {
+	    module.exports = api;
+	  } else {
+	    app[namespace] = api;
+	  }
+
+	}(this.applitude || this));
+
+
+/***/ },
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -5467,21 +4756,21 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(40);
-	    var FlowLayoutController = __webpack_require__(41);
-	    var LayoutNode = __webpack_require__(42);
-	    var FlowLayoutNode = __webpack_require__(43);
-	    var LayoutNodeManager = __webpack_require__(44);
-	    var ContainerSurface = __webpack_require__(51);
+	    var LayoutUtility = __webpack_require__(42);
+	    var FlowLayoutController = __webpack_require__(45);
+	    var LayoutNode = __webpack_require__(44);
+	    var FlowLayoutNode = __webpack_require__(46);
+	    var LayoutNodeManager = __webpack_require__(43);
+	    var ContainerSurface = __webpack_require__(52);
 	    var Transform = __webpack_require__(27);
-	    var EventHandler = __webpack_require__(45);
-	    var Group = __webpack_require__(52);
-	    var Vector = __webpack_require__(54);
-	    var PhysicsEngine = __webpack_require__(55);
-	    var Particle = __webpack_require__(56);
-	    var Drag = __webpack_require__(57);
-	    var Spring = __webpack_require__(58);
-	    var ScrollSync = __webpack_require__(59);
+	    var EventHandler = __webpack_require__(41);
+	    var Group = __webpack_require__(53);
+	    var Vector = __webpack_require__(55);
+	    var PhysicsEngine = __webpack_require__(56);
+	    var Particle = __webpack_require__(57);
+	    var Drag = __webpack_require__(58);
+	    var Spring = __webpack_require__(59);
+	    var ScrollSync = __webpack_require__(60);
 
 	    /**
 	     * Boudary reached detection
@@ -7224,16 +6513,16 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(31);
-	    var Entity = __webpack_require__(53);
+	    var Utility = __webpack_require__(32);
+	    var Entity = __webpack_require__(51);
 	    var ViewSequence = __webpack_require__(24);
-	    var OptionsManager = __webpack_require__(46);
-	    var EventHandler = __webpack_require__(45);
-	    var LayoutUtility = __webpack_require__(40);
-	    var LayoutNodeManager = __webpack_require__(44);
-	    var LayoutNode = __webpack_require__(42);
+	    var OptionsManager = __webpack_require__(40);
+	    var EventHandler = __webpack_require__(41);
+	    var LayoutUtility = __webpack_require__(42);
+	    var LayoutNodeManager = __webpack_require__(43);
+	    var LayoutNode = __webpack_require__(44);
 	    var Transform = __webpack_require__(27);
-	    __webpack_require__(62);
+	    __webpack_require__(54);
 
 	    /**
 	     * @class
@@ -7800,7 +7089,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutDockHelper = __webpack_require__(62);
+	    var LayoutDockHelper = __webpack_require__(54);
 
 	    // Layout function
 	    module.exports = function HeaderFooterLayout(context, options) {
@@ -7816,116 +7105,827 @@
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/**
-	 * cuid.js
-	 * Collision-resistant UID generator for browsers and node.
-	 * Sequential for fast db lookups and recency sorting.
-	 * Safe for element IDs and server-side lookups.
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * @preserve FastClick: polyfill to remove click delays on browsers with touch UIs.
 	 *
-	 * Extracted from CLCTR
-	 * 
-	 * Copyright (c) Eric Elliott 2012
-	 * MIT License
+	 * @version 1.0.3
+	 * @codingstandard ftlabs-jsv2
+	 * @copyright The Financial Times Limited [All Rights Reserved]
+	 * @license MIT License (see LICENSE.txt)
 	 */
 
-	/*global window, navigator, document, require, process, module */
-	(function (app) {
-	  'use strict';
-	  var namespace = 'cuid',
-	    c = 0,
-	    blockSize = 4,
-	    base = 36,
-	    discreteValues = Math.pow(base, blockSize),
+	/*jslint browser:true, node:true*/
+	/*global define, Event, Node*/
 
-	    pad = function pad(num, size) {
-	      var s = "000000000" + num;
-	      return s.substr(s.length-size);
-	    },
 
-	    randomBlock = function randomBlock() {
-	      return pad((Math.random() *
-	            discreteValues << 0)
-	            .toString(base), blockSize);
-	    },
+	/**
+	 * Instantiate fast-clicking listeners on the specified layer.
+	 *
+	 * @constructor
+	 * @param {Element} layer The layer to listen on
+	 * @param {Object} options The options to override the defaults
+	 */
+	function FastClick(layer, options) {
+		'use strict';
+		var oldOnClick;
 
-	    safeCounter = function () {
-	      c = (c < discreteValues) ? c : 0;
-	      c++; // this is not subliminal
-	      return c - 1;
-	    },
+		options = options || {};
 
-	    api = function cuid() {
-	      // Starting with a lowercase letter makes
-	      // it HTML element ID friendly.
-	      var letter = 'c', // hard-coded allows for sequential access
+		/**
+		 * Whether a click is currently being tracked.
+		 *
+		 * @type boolean
+		 */
+		this.trackingClick = false;
 
-	        // timestamp
-	        // warning: this exposes the exact date and time
-	        // that the uid was created.
-	        timestamp = (new Date().getTime()).toString(base),
 
-	        // Prevent same-machine collisions.
-	        counter,
+		/**
+		 * Timestamp for when click tracking started.
+		 *
+		 * @type number
+		 */
+		this.trackingClickStart = 0;
 
-	        // A few chars to generate distinct ids for different
-	        // clients (so different computers are far less
-	        // likely to generate the same id)
-	        fingerprint = api.fingerprint(),
 
-	        // Grab some more chars from Math.random()
-	        random = randomBlock() + randomBlock();
+		/**
+		 * The element being tracked for a click.
+		 *
+		 * @type EventTarget
+		 */
+		this.targetElement = null;
 
-	        counter = pad(safeCounter().toString(base), blockSize);
 
-	      return  (letter + timestamp + counter + fingerprint + random);
-	    };
+		/**
+		 * X-coordinate of touch start event.
+		 *
+		 * @type number
+		 */
+		this.touchStartX = 0;
 
-	  api.slug = function slug() {
-	    var date = new Date().getTime().toString(36),
-	      counter,
-	      print = api.fingerprint().slice(0,1) +
-	        api.fingerprint().slice(-1),
-	      random = randomBlock().slice(-2);
 
-	      counter = safeCounter().toString(36).slice(-4);
+		/**
+		 * Y-coordinate of touch start event.
+		 *
+		 * @type number
+		 */
+		this.touchStartY = 0;
 
-	    return date.slice(-2) + 
-	      counter + print + random;
-	  };
 
-	  api.globalCount = function globalCount() {
-	    // We want to cache the results of this
-	    var cache = (function calc() {
-	        var i,
-	          count = 0;
+		/**
+		 * ID of the last touch, retrieved from Touch.identifier.
+		 *
+		 * @type number
+		 */
+		this.lastTouchIdentifier = 0;
 
-	        for (i in window) {
-	          count++;
-	        }
 
-	        return count;
-	      }());
+		/**
+		 * Touchmove boundary, beyond which a click will be cancelled.
+		 *
+		 * @type number
+		 */
+		this.touchBoundary = options.touchBoundary || 10;
 
-	    api.globalCount = function () { return cache; };
-	    return cache;
-	  };
 
-	  api.fingerprint = function browserPrint() {
-	    return pad((navigator.mimeTypes.length +
-	      navigator.userAgent.length).toString(36) +
-	      api.globalCount().toString(36), 4);
-	  };
+		/**
+		 * The FastClick layer.
+		 *
+		 * @type Element
+		 */
+		this.layer = layer;
 
-	  // don't change anything from here down.
-	  if (app.register) {
-	    app.register(namespace, api);
-	  } else if (true) {
-	    module.exports = api;
-	  } else {
-	    app[namespace] = api;
-	  }
+		/**
+		 * The minimum time between tap(touchstart and touchend) events
+		 *
+		 * @type number
+		 */
+		this.tapDelay = options.tapDelay || 200;
 
-	}(this.applitude || this));
+		if (FastClick.notNeeded(layer)) {
+			return;
+		}
+
+		// Some old versions of Android don't have Function.prototype.bind
+		function bind(method, context) {
+			return function() { return method.apply(context, arguments); };
+		}
+
+
+		var methods = ['onMouse', 'onClick', 'onTouchStart', 'onTouchMove', 'onTouchEnd', 'onTouchCancel'];
+		var context = this;
+		for (var i = 0, l = methods.length; i < l; i++) {
+			context[methods[i]] = bind(context[methods[i]], context);
+		}
+
+		// Set up event handlers as required
+		if (deviceIsAndroid) {
+			layer.addEventListener('mouseover', this.onMouse, true);
+			layer.addEventListener('mousedown', this.onMouse, true);
+			layer.addEventListener('mouseup', this.onMouse, true);
+		}
+
+		layer.addEventListener('click', this.onClick, true);
+		layer.addEventListener('touchstart', this.onTouchStart, false);
+		layer.addEventListener('touchmove', this.onTouchMove, false);
+		layer.addEventListener('touchend', this.onTouchEnd, false);
+		layer.addEventListener('touchcancel', this.onTouchCancel, false);
+
+		// Hack is required for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+		// which is how FastClick normally stops click events bubbling to callbacks registered on the FastClick
+		// layer when they are cancelled.
+		if (!Event.prototype.stopImmediatePropagation) {
+			layer.removeEventListener = function(type, callback, capture) {
+				var rmv = Node.prototype.removeEventListener;
+				if (type === 'click') {
+					rmv.call(layer, type, callback.hijacked || callback, capture);
+				} else {
+					rmv.call(layer, type, callback, capture);
+				}
+			};
+
+			layer.addEventListener = function(type, callback, capture) {
+				var adv = Node.prototype.addEventListener;
+				if (type === 'click') {
+					adv.call(layer, type, callback.hijacked || (callback.hijacked = function(event) {
+						if (!event.propagationStopped) {
+							callback(event);
+						}
+					}), capture);
+				} else {
+					adv.call(layer, type, callback, capture);
+				}
+			};
+		}
+
+		// If a handler is already declared in the element's onclick attribute, it will be fired before
+		// FastClick's onClick handler. Fix this by pulling out the user-defined handler function and
+		// adding it as listener.
+		if (typeof layer.onclick === 'function') {
+
+			// Android browser on at least 3.2 requires a new reference to the function in layer.onclick
+			// - the old one won't work if passed to addEventListener directly.
+			oldOnClick = layer.onclick;
+			layer.addEventListener('click', function(event) {
+				oldOnClick(event);
+			}, false);
+			layer.onclick = null;
+		}
+	}
+
+
+	/**
+	 * Android requires exceptions.
+	 *
+	 * @type boolean
+	 */
+	var deviceIsAndroid = navigator.userAgent.indexOf('Android') > 0;
+
+
+	/**
+	 * iOS requires exceptions.
+	 *
+	 * @type boolean
+	 */
+	var deviceIsIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+
+
+	/**
+	 * iOS 4 requires an exception for select elements.
+	 *
+	 * @type boolean
+	 */
+	var deviceIsIOS4 = deviceIsIOS && (/OS 4_\d(_\d)?/).test(navigator.userAgent);
+
+
+	/**
+	 * iOS 6.0(+?) requires the target element to be manually derived
+	 *
+	 * @type boolean
+	 */
+	var deviceIsIOSWithBadTarget = deviceIsIOS && (/OS ([6-9]|\d{2})_\d/).test(navigator.userAgent);
+
+	/**
+	 * BlackBerry requires exceptions.
+	 *
+	 * @type boolean
+	 */
+	var deviceIsBlackBerry10 = navigator.userAgent.indexOf('BB10') > 0;
+
+	/**
+	 * Determine whether a given element requires a native click.
+	 *
+	 * @param {EventTarget|Element} target Target DOM element
+	 * @returns {boolean} Returns true if the element needs a native click
+	 */
+	FastClick.prototype.needsClick = function(target) {
+		'use strict';
+		switch (target.nodeName.toLowerCase()) {
+
+		// Don't send a synthetic click to disabled inputs (issue #62)
+		case 'button':
+		case 'select':
+		case 'textarea':
+			if (target.disabled) {
+				return true;
+			}
+
+			break;
+		case 'input':
+
+			// File inputs need real clicks on iOS 6 due to a browser bug (issue #68)
+			if ((deviceIsIOS && target.type === 'file') || target.disabled) {
+				return true;
+			}
+
+			break;
+		case 'label':
+		case 'video':
+			return true;
+		}
+
+		return (/\bneedsclick\b/).test(target.className);
+	};
+
+
+	/**
+	 * Determine whether a given element requires a call to focus to simulate click into element.
+	 *
+	 * @param {EventTarget|Element} target Target DOM element
+	 * @returns {boolean} Returns true if the element requires a call to focus to simulate native click.
+	 */
+	FastClick.prototype.needsFocus = function(target) {
+		'use strict';
+		switch (target.nodeName.toLowerCase()) {
+		case 'textarea':
+			return true;
+		case 'select':
+			return !deviceIsAndroid;
+		case 'input':
+			switch (target.type) {
+			case 'button':
+			case 'checkbox':
+			case 'file':
+			case 'image':
+			case 'radio':
+			case 'submit':
+				return false;
+			}
+
+			// No point in attempting to focus disabled inputs
+			return !target.disabled && !target.readOnly;
+		default:
+			return (/\bneedsfocus\b/).test(target.className);
+		}
+	};
+
+
+	/**
+	 * Send a click event to the specified element.
+	 *
+	 * @param {EventTarget|Element} targetElement
+	 * @param {Event} event
+	 */
+	FastClick.prototype.sendClick = function(targetElement, event) {
+		'use strict';
+		var clickEvent, touch;
+
+		// On some Android devices activeElement needs to be blurred otherwise the synthetic click will have no effect (#24)
+		if (document.activeElement && document.activeElement !== targetElement) {
+			document.activeElement.blur();
+		}
+
+		touch = event.changedTouches[0];
+
+		// Synthesise a click event, with an extra attribute so it can be tracked
+		clickEvent = document.createEvent('MouseEvents');
+		clickEvent.initMouseEvent(this.determineEventType(targetElement), true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
+		clickEvent.forwardedTouchEvent = true;
+		targetElement.dispatchEvent(clickEvent);
+	};
+
+	FastClick.prototype.determineEventType = function(targetElement) {
+		'use strict';
+
+		//Issue #159: Android Chrome Select Box does not open with a synthetic click event
+		if (deviceIsAndroid && targetElement.tagName.toLowerCase() === 'select') {
+			return 'mousedown';
+		}
+
+		return 'click';
+	};
+
+
+	/**
+	 * @param {EventTarget|Element} targetElement
+	 */
+	FastClick.prototype.focus = function(targetElement) {
+		'use strict';
+		var length;
+
+		// Issue #160: on iOS 7, some input elements (e.g. date datetime) throw a vague TypeError on setSelectionRange. These elements don't have an integer value for the selectionStart and selectionEnd properties, but unfortunately that can't be used for detection because accessing the properties also throws a TypeError. Just check the type instead. Filed as Apple bug #15122724.
+		if (deviceIsIOS && targetElement.setSelectionRange && targetElement.type.indexOf('date') !== 0 && targetElement.type !== 'time') {
+			length = targetElement.value.length;
+			targetElement.setSelectionRange(length, length);
+		} else {
+			targetElement.focus();
+		}
+	};
+
+
+	/**
+	 * Check whether the given target element is a child of a scrollable layer and if so, set a flag on it.
+	 *
+	 * @param {EventTarget|Element} targetElement
+	 */
+	FastClick.prototype.updateScrollParent = function(targetElement) {
+		'use strict';
+		var scrollParent, parentElement;
+
+		scrollParent = targetElement.fastClickScrollParent;
+
+		// Attempt to discover whether the target element is contained within a scrollable layer. Re-check if the
+		// target element was moved to another parent.
+		if (!scrollParent || !scrollParent.contains(targetElement)) {
+			parentElement = targetElement;
+			do {
+				if (parentElement.scrollHeight > parentElement.offsetHeight) {
+					scrollParent = parentElement;
+					targetElement.fastClickScrollParent = parentElement;
+					break;
+				}
+
+				parentElement = parentElement.parentElement;
+			} while (parentElement);
+		}
+
+		// Always update the scroll top tracker if possible.
+		if (scrollParent) {
+			scrollParent.fastClickLastScrollTop = scrollParent.scrollTop;
+		}
+	};
+
+
+	/**
+	 * @param {EventTarget} targetElement
+	 * @returns {Element|EventTarget}
+	 */
+	FastClick.prototype.getTargetElementFromEventTarget = function(eventTarget) {
+		'use strict';
+
+		// On some older browsers (notably Safari on iOS 4.1 - see issue #56) the event target may be a text node.
+		if (eventTarget.nodeType === Node.TEXT_NODE) {
+			return eventTarget.parentNode;
+		}
+
+		return eventTarget;
+	};
+
+
+	/**
+	 * On touch start, record the position and scroll offset.
+	 *
+	 * @param {Event} event
+	 * @returns {boolean}
+	 */
+	FastClick.prototype.onTouchStart = function(event) {
+		'use strict';
+		var targetElement, touch, selection;
+
+		// Ignore multiple touches, otherwise pinch-to-zoom is prevented if both fingers are on the FastClick element (issue #111).
+		if (event.targetTouches.length > 1) {
+			return true;
+		}
+
+		targetElement = this.getTargetElementFromEventTarget(event.target);
+		touch = event.targetTouches[0];
+
+		if (deviceIsIOS) {
+
+			// Only trusted events will deselect text on iOS (issue #49)
+			selection = window.getSelection();
+			if (selection.rangeCount && !selection.isCollapsed) {
+				return true;
+			}
+
+			if (!deviceIsIOS4) {
+
+				// Weird things happen on iOS when an alert or confirm dialog is opened from a click event callback (issue #23):
+				// when the user next taps anywhere else on the page, new touchstart and touchend events are dispatched
+				// with the same identifier as the touch event that previously triggered the click that triggered the alert.
+				// Sadly, there is an issue on iOS 4 that causes some normal touch events to have the same identifier as an
+				// immediately preceeding touch event (issue #52), so this fix is unavailable on that platform.
+				// Issue 120: touch.identifier is 0 when Chrome dev tools 'Emulate touch events' is set with an iOS device UA string,
+				// which causes all touch events to be ignored. As this block only applies to iOS, and iOS identifiers are always long,
+				// random integers, it's safe to to continue if the identifier is 0 here.
+				if (touch.identifier && touch.identifier === this.lastTouchIdentifier) {
+					event.preventDefault();
+					return false;
+				}
+
+				this.lastTouchIdentifier = touch.identifier;
+
+				// If the target element is a child of a scrollable layer (using -webkit-overflow-scrolling: touch) and:
+				// 1) the user does a fling scroll on the scrollable layer
+				// 2) the user stops the fling scroll with another tap
+				// then the event.target of the last 'touchend' event will be the element that was under the user's finger
+				// when the fling scroll was started, causing FastClick to send a click event to that layer - unless a check
+				// is made to ensure that a parent layer was not scrolled before sending a synthetic click (issue #42).
+				this.updateScrollParent(targetElement);
+			}
+		}
+
+		this.trackingClick = true;
+		this.trackingClickStart = event.timeStamp;
+		this.targetElement = targetElement;
+
+		this.touchStartX = touch.pageX;
+		this.touchStartY = touch.pageY;
+
+		// Prevent phantom clicks on fast double-tap (issue #36)
+		if ((event.timeStamp - this.lastClickTime) < this.tapDelay) {
+			event.preventDefault();
+		}
+
+		return true;
+	};
+
+
+	/**
+	 * Based on a touchmove event object, check whether the touch has moved past a boundary since it started.
+	 *
+	 * @param {Event} event
+	 * @returns {boolean}
+	 */
+	FastClick.prototype.touchHasMoved = function(event) {
+		'use strict';
+		var touch = event.changedTouches[0], boundary = this.touchBoundary;
+
+		if (Math.abs(touch.pageX - this.touchStartX) > boundary || Math.abs(touch.pageY - this.touchStartY) > boundary) {
+			return true;
+		}
+
+		return false;
+	};
+
+
+	/**
+	 * Update the last position.
+	 *
+	 * @param {Event} event
+	 * @returns {boolean}
+	 */
+	FastClick.prototype.onTouchMove = function(event) {
+		'use strict';
+		if (!this.trackingClick) {
+			return true;
+		}
+
+		// If the touch has moved, cancel the click tracking
+		if (this.targetElement !== this.getTargetElementFromEventTarget(event.target) || this.touchHasMoved(event)) {
+			this.trackingClick = false;
+			this.targetElement = null;
+		}
+
+		return true;
+	};
+
+
+	/**
+	 * Attempt to find the labelled control for the given label element.
+	 *
+	 * @param {EventTarget|HTMLLabelElement} labelElement
+	 * @returns {Element|null}
+	 */
+	FastClick.prototype.findControl = function(labelElement) {
+		'use strict';
+
+		// Fast path for newer browsers supporting the HTML5 control attribute
+		if (labelElement.control !== undefined) {
+			return labelElement.control;
+		}
+
+		// All browsers under test that support touch events also support the HTML5 htmlFor attribute
+		if (labelElement.htmlFor) {
+			return document.getElementById(labelElement.htmlFor);
+		}
+
+		// If no for attribute exists, attempt to retrieve the first labellable descendant element
+		// the list of which is defined here: http://www.w3.org/TR/html5/forms.html#category-label
+		return labelElement.querySelector('button, input:not([type=hidden]), keygen, meter, output, progress, select, textarea');
+	};
+
+
+	/**
+	 * On touch end, determine whether to send a click event at once.
+	 *
+	 * @param {Event} event
+	 * @returns {boolean}
+	 */
+	FastClick.prototype.onTouchEnd = function(event) {
+		'use strict';
+		var forElement, trackingClickStart, targetTagName, scrollParent, touch, targetElement = this.targetElement;
+
+		if (!this.trackingClick) {
+			return true;
+		}
+
+		// Prevent phantom clicks on fast double-tap (issue #36)
+		if ((event.timeStamp - this.lastClickTime) < this.tapDelay) {
+			this.cancelNextClick = true;
+			return true;
+		}
+
+		// Reset to prevent wrong click cancel on input (issue #156).
+		this.cancelNextClick = false;
+
+		this.lastClickTime = event.timeStamp;
+
+		trackingClickStart = this.trackingClickStart;
+		this.trackingClick = false;
+		this.trackingClickStart = 0;
+
+		// On some iOS devices, the targetElement supplied with the event is invalid if the layer
+		// is performing a transition or scroll, and has to be re-detected manually. Note that
+		// for this to function correctly, it must be called *after* the event target is checked!
+		// See issue #57; also filed as rdar://13048589 .
+		if (deviceIsIOSWithBadTarget) {
+			touch = event.changedTouches[0];
+
+			// In certain cases arguments of elementFromPoint can be negative, so prevent setting targetElement to null
+			targetElement = document.elementFromPoint(touch.pageX - window.pageXOffset, touch.pageY - window.pageYOffset) || targetElement;
+			targetElement.fastClickScrollParent = this.targetElement.fastClickScrollParent;
+		}
+
+		targetTagName = targetElement.tagName.toLowerCase();
+		if (targetTagName === 'label') {
+			forElement = this.findControl(targetElement);
+			if (forElement) {
+				this.focus(targetElement);
+				if (deviceIsAndroid) {
+					return false;
+				}
+
+				targetElement = forElement;
+			}
+		} else if (this.needsFocus(targetElement)) {
+
+			// Case 1: If the touch started a while ago (best guess is 100ms based on tests for issue #36) then focus will be triggered anyway. Return early and unset the target element reference so that the subsequent click will be allowed through.
+			// Case 2: Without this exception for input elements tapped when the document is contained in an iframe, then any inputted text won't be visible even though the value attribute is updated as the user types (issue #37).
+			if ((event.timeStamp - trackingClickStart) > 100 || (deviceIsIOS && window.top !== window && targetTagName === 'input')) {
+				this.targetElement = null;
+				return false;
+			}
+
+			this.focus(targetElement);
+			this.sendClick(targetElement, event);
+
+			// Select elements need the event to go through on iOS 4, otherwise the selector menu won't open.
+			// Also this breaks opening selects when VoiceOver is active on iOS6, iOS7 (and possibly others)
+			if (!deviceIsIOS || targetTagName !== 'select') {
+				this.targetElement = null;
+				event.preventDefault();
+			}
+
+			return false;
+		}
+
+		if (deviceIsIOS && !deviceIsIOS4) {
+
+			// Don't send a synthetic click event if the target element is contained within a parent layer that was scrolled
+			// and this tap is being used to stop the scrolling (usually initiated by a fling - issue #42).
+			scrollParent = targetElement.fastClickScrollParent;
+			if (scrollParent && scrollParent.fastClickLastScrollTop !== scrollParent.scrollTop) {
+				return true;
+			}
+		}
+
+		// Prevent the actual click from going though - unless the target node is marked as requiring
+		// real clicks or if it is in the whitelist in which case only non-programmatic clicks are permitted.
+		if (!this.needsClick(targetElement)) {
+			event.preventDefault();
+			this.sendClick(targetElement, event);
+		}
+
+		return false;
+	};
+
+
+	/**
+	 * On touch cancel, stop tracking the click.
+	 *
+	 * @returns {void}
+	 */
+	FastClick.prototype.onTouchCancel = function() {
+		'use strict';
+		this.trackingClick = false;
+		this.targetElement = null;
+	};
+
+
+	/**
+	 * Determine mouse events which should be permitted.
+	 *
+	 * @param {Event} event
+	 * @returns {boolean}
+	 */
+	FastClick.prototype.onMouse = function(event) {
+		'use strict';
+
+		// If a target element was never set (because a touch event was never fired) allow the event
+		if (!this.targetElement) {
+			return true;
+		}
+
+		if (event.forwardedTouchEvent) {
+			return true;
+		}
+
+		// Programmatically generated events targeting a specific element should be permitted
+		if (!event.cancelable) {
+			return true;
+		}
+
+		// Derive and check the target element to see whether the mouse event needs to be permitted;
+		// unless explicitly enabled, prevent non-touch click events from triggering actions,
+		// to prevent ghost/doubleclicks.
+		if (!this.needsClick(this.targetElement) || this.cancelNextClick) {
+
+			// Prevent any user-added listeners declared on FastClick element from being fired.
+			if (event.stopImmediatePropagation) {
+				event.stopImmediatePropagation();
+			} else {
+
+				// Part of the hack for browsers that don't support Event#stopImmediatePropagation (e.g. Android 2)
+				event.propagationStopped = true;
+			}
+
+			// Cancel the event
+			event.stopPropagation();
+			event.preventDefault();
+
+			return false;
+		}
+
+		// If the mouse event is permitted, return true for the action to go through.
+		return true;
+	};
+
+
+	/**
+	 * On actual clicks, determine whether this is a touch-generated click, a click action occurring
+	 * naturally after a delay after a touch (which needs to be cancelled to avoid duplication), or
+	 * an actual click which should be permitted.
+	 *
+	 * @param {Event} event
+	 * @returns {boolean}
+	 */
+	FastClick.prototype.onClick = function(event) {
+		'use strict';
+		var permitted;
+
+		// It's possible for another FastClick-like library delivered with third-party code to fire a click event before FastClick does (issue #44). In that case, set the click-tracking flag back to false and return early. This will cause onTouchEnd to return early.
+		if (this.trackingClick) {
+			this.targetElement = null;
+			this.trackingClick = false;
+			return true;
+		}
+
+		// Very odd behaviour on iOS (issue #18): if a submit element is present inside a form and the user hits enter in the iOS simulator or clicks the Go button on the pop-up OS keyboard the a kind of 'fake' click event will be triggered with the submit-type input element as the target.
+		if (event.target.type === 'submit' && event.detail === 0) {
+			return true;
+		}
+
+		permitted = this.onMouse(event);
+
+		// Only unset targetElement if the click is not permitted. This will ensure that the check for !targetElement in onMouse fails and the browser's click doesn't go through.
+		if (!permitted) {
+			this.targetElement = null;
+		}
+
+		// If clicks are permitted, return true for the action to go through.
+		return permitted;
+	};
+
+
+	/**
+	 * Remove all FastClick's event listeners.
+	 *
+	 * @returns {void}
+	 */
+	FastClick.prototype.destroy = function() {
+		'use strict';
+		var layer = this.layer;
+
+		if (deviceIsAndroid) {
+			layer.removeEventListener('mouseover', this.onMouse, true);
+			layer.removeEventListener('mousedown', this.onMouse, true);
+			layer.removeEventListener('mouseup', this.onMouse, true);
+		}
+
+		layer.removeEventListener('click', this.onClick, true);
+		layer.removeEventListener('touchstart', this.onTouchStart, false);
+		layer.removeEventListener('touchmove', this.onTouchMove, false);
+		layer.removeEventListener('touchend', this.onTouchEnd, false);
+		layer.removeEventListener('touchcancel', this.onTouchCancel, false);
+	};
+
+
+	/**
+	 * Check whether FastClick is needed.
+	 *
+	 * @param {Element} layer The layer to listen on
+	 */
+	FastClick.notNeeded = function(layer) {
+		'use strict';
+		var metaViewport;
+		var chromeVersion;
+		var blackberryVersion;
+
+		// Devices that don't support touch don't need FastClick
+		if (typeof window.ontouchstart === 'undefined') {
+			return true;
+		}
+
+		// Chrome version - zero for other browsers
+		chromeVersion = +(/Chrome\/([0-9]+)/.exec(navigator.userAgent) || [,0])[1];
+
+		if (chromeVersion) {
+
+			if (deviceIsAndroid) {
+				metaViewport = document.querySelector('meta[name=viewport]');
+
+				if (metaViewport) {
+					// Chrome on Android with user-scalable="no" doesn't need FastClick (issue #89)
+					if (metaViewport.content.indexOf('user-scalable=no') !== -1) {
+						return true;
+					}
+					// Chrome 32 and above with width=device-width or less don't need FastClick
+					if (chromeVersion > 31 && document.documentElement.scrollWidth <= window.outerWidth) {
+						return true;
+					}
+				}
+
+			// Chrome desktop doesn't need FastClick (issue #15)
+			} else {
+				return true;
+			}
+		}
+
+		if (deviceIsBlackBerry10) {
+			blackberryVersion = navigator.userAgent.match(/Version\/([0-9]*)\.([0-9]*)/);
+
+			// BlackBerry 10.3+ does not require Fastclick library.
+			// https://github.com/ftlabs/fastclick/issues/251
+			if (blackberryVersion[1] >= 10 && blackberryVersion[2] >= 3) {
+				metaViewport = document.querySelector('meta[name=viewport]');
+
+				if (metaViewport) {
+					// user-scalable=no eliminates click delay.
+					if (metaViewport.content.indexOf('user-scalable=no') !== -1) {
+						return true;
+					}
+					// width=device-width (or less than device-width) eliminates click delay.
+					if (document.documentElement.scrollWidth <= window.outerWidth) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// IE10 with -ms-touch-action: none, which disables double-tap-to-zoom (issue #97)
+		if (layer.style.msTouchAction === 'none') {
+			return true;
+		}
+
+		return false;
+	};
+
+
+	/**
+	 * Factory method for creating a FastClick object
+	 *
+	 * @param {Element} layer The layer to listen on
+	 * @param {Object} options The options to override the defaults
+	 */
+	FastClick.attach = function(layer, options) {
+		'use strict';
+		return new FastClick(layer, options);
+	};
+
+
+	if (true) {
+
+		// AMD. Register as an anonymous module.
+		!(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+			'use strict';
+			return FastClick;
+		}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else if (typeof module !== 'undefined' && module.exports) {
+		module.exports = FastClick.attach;
+		module.exports.FastClick = FastClick;
+	} else {
+		window.FastClick = FastClick;
+	}
 
 
 /***/ },
@@ -7980,8 +7980,8 @@
 	     * @class Engine
 	     */
 	    var Context = __webpack_require__(47);
-	    var EventHandler = __webpack_require__(45);
-	    var OptionsManager = __webpack_require__(46);
+	    var EventHandler = __webpack_require__(41);
+	    var OptionsManager = __webpack_require__(40);
 
 	    var Engine = {};
 
@@ -10329,20 +10329,20 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var PhysicsEngine = __webpack_require__(55);
-	    var Particle = __webpack_require__(56);
-	    var Drag = __webpack_require__(57);
-	    var Spring = __webpack_require__(58);
+	    var PhysicsEngine = __webpack_require__(56);
+	    var Particle = __webpack_require__(57);
+	    var Drag = __webpack_require__(58);
+	    var Spring = __webpack_require__(59);
 
-	    var EventHandler = __webpack_require__(45);
-	    var OptionsManager = __webpack_require__(46);
+	    var EventHandler = __webpack_require__(41);
+	    var OptionsManager = __webpack_require__(40);
 	    var ViewSequence = __webpack_require__(24);
 	    var Scroller = __webpack_require__(49);
-	    var Utility = __webpack_require__(31);
+	    var Utility = __webpack_require__(32);
 
-	    var GenericSync = __webpack_require__(60);
-	    var ScrollSync = __webpack_require__(59);
-	    var TouchSync = __webpack_require__(61);
+	    var GenericSync = __webpack_require__(61);
+	    var ScrollSync = __webpack_require__(60);
+	    var TouchSync = __webpack_require__(62);
 	    GenericSync.register({scroll : ScrollSync, touch : TouchSync});
 
 	    /** @const */
@@ -11371,6 +11371,122 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(41);
+	    var OptionsManager = __webpack_require__(40);
+	    var RenderNode = __webpack_require__(50);
+	    var Utility = __webpack_require__(32);
+
+	    /**
+	     * Useful for quickly creating elements within applications
+	     *   with large event systems.  Consists of a RenderNode paired with
+	     *   an input EventHandler and an output EventHandler.
+	     *   Meant to be extended by the developer.
+	     *
+	     * @class View
+	     * @uses EventHandler
+	     * @uses OptionsManager
+	     * @uses RenderNode
+	     * @constructor
+	     */
+	    function View(options) {
+	        this._node = new RenderNode();
+
+	        this._eventInput = new EventHandler();
+	        this._eventOutput = new EventHandler();
+	        EventHandler.setInputHandler(this, this._eventInput);
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+
+	        this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
+	        this._optionsManager = new OptionsManager(this.options);
+
+	        if (options) this.setOptions(options);
+	    }
+
+	    View.DEFAULT_OPTIONS = {}; // no defaults
+
+	    /**
+	     * Look up options value by key
+	     * @method getOptions
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object
+	     */
+	    View.prototype.getOptions = function getOptions(key) {
+	        return this._optionsManager.getOptions(key);
+	    };
+
+	    /*
+	     *  Set internal options.
+	     *  No defaults options are set in View.
+	     *
+	     *  @method setOptions
+	     *  @param {Object} options
+	     */
+	    View.prototype.setOptions = function setOptions(options) {
+	        this._optionsManager.patch(options);
+	    };
+
+	    /**
+	     * Add a child renderable to the view.
+	     *   Note: This is meant to be used by an inheriting class
+	     *   rather than from outside the prototype chain.
+	     *
+	     * @method add
+	     * @return {RenderNode}
+	     * @protected
+	     */
+	    View.prototype.add = function add() {
+	        return this._node.add.apply(this._node, arguments);
+	    };
+
+	    /**
+	     * Alias for add
+	     * @method _add
+	     */
+	    View.prototype._add = View.prototype.add;
+
+	    /**
+	     * Generate a render spec from the contents of this component.
+	     *
+	     * @private
+	     * @method render
+	     * @return {number} Render spec for this component
+	     */
+	    View.prototype.render = function render() {
+	        return this._node.render();
+	    };
+
+	    /**
+	     * Return size of contained element.
+	     *
+	     * @method getSize
+	     * @return {Array.Number} [width, height]
+	     */
+	    View.prototype.getSize = function getSize() {
+	        if (this._node && this._node.getSize) {
+	            return this._node.getSize.apply(this._node, arguments) || this.options.size;
+	        }
+	        else return this.options.size;
+	    };
+
+	    module.exports = View;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    /**
 	     * This namespace holds standalone functionality.
 	     *  Currently includes name mapping for transition curves,
@@ -11485,7 +11601,353 @@
 
 
 /***/ },
-/* 32 */
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*jshint browser: true, node: true
+	*/
+
+	(function (exports) {
+	    'use strict';
+
+	    var userAgent = exports.userAgent = function (ua) {
+	        ua = (ua || window.navigator.userAgent).toString().toLowerCase();
+	        function checkUserAgent(ua) {
+	            var browser = {};
+	            var match = /(dolfin)[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(opera)(?:.*version)?[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(webkit)(?:.*version)?[ \/]([\w.]+)/.exec( ua ) ||
+	                    /(msie) ([\w.]+)/.exec( ua ) ||
+	                    ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+))?/.exec( ua ) ||
+	                    ["","unknown"];
+	            if (match[1] === "webkit") {
+	                match = /(iphone|ipad|ipod)[\S\s]*os ([\w._\-]+) like/.exec(ua) ||
+	                    /(android)[ \/]([\w._\-]+);/.exec(ua) || [match[0], "safari", match[2]];
+	            } else if (match[1] === "mozilla") {
+	                if (/trident/.test(ua)) {
+	                    match[1] = "msie";
+	                } else {
+	                    match[1] = "firefox";
+	                }
+	            } else if (/polaris|natebrowser|([010|011|016|017|018|019]{3}\d{3,4}\d{4}$)/.test(ua)) {
+	                match[1] = "polaris";
+	            }
+
+	            browser[match[1]] = true;
+	            browser.name = match[1];
+	            browser.version = setVersion(match[2]);
+
+	            return browser;
+	        }
+
+	        function setVersion(versionString) {
+	            var version = {};
+
+	            var versions = versionString ? versionString.split(/\.|-|_/) : ["0","0","0"];
+	            version.info = versions.join(".");
+	            version.major = versions[0] || "0";
+	            version.minor = versions[1] || "0";
+	            version.patch = versions[2] || "0";
+
+	            return version;
+	        }
+
+	        function checkPlatform (ua) {
+	            if (isPc(ua)) {
+	                return "pc";
+	            } else if (isTablet(ua)) {
+	                return "tablet";
+	            } else if (isMobile(ua)) {
+	                return "mobile";
+	            } else {
+	                return "";
+	            }
+	        }
+	        function isPc (ua) {
+	            if (ua.match(/linux|windows (nt|98)|macintosh/) && !ua.match(/android|mobile|polaris|lgtelecom|uzard|natebrowser|ktf;|skt;/)) {
+	                return true;
+	            }
+	            return false;
+	        }
+	        function isTablet (ua) {
+	            if (ua.match(/ipad/) || (ua.match(/android/) && !ua.match(/mobi|mini|fennec/))) {
+	                return true;
+	            }
+	            return false;
+	        }
+	        function isMobile (ua) {
+	            if (!!ua.match(/ip(hone|od)|android.+mobile|windows (ce|phone)|blackberry|bb10|symbian|webos|firefox.+fennec|opera m(ob|in)i|polaris|iemobile|lgtelecom|nokia|sonyericsson|dolfin|uzard|natebrowser|ktf;|skt;/)) {
+	                return true;
+	            } else {
+	                return false;
+	            }
+	        }
+
+	        function checkOs (ua) {
+	            var os = {},
+	                match = /(iphone|ipad|ipod)[\S\s]*os ([\w._\-]+) like/.exec(ua) ||
+	                        /(android)[ \/]([\w._\-]+);/.exec(ua) ||
+	                        (/android/.test(ua)? ["", "android", "0.0.0"] : false) ||
+	                        (/polaris|natebrowser|([010|011|016|017|018|019]{3}\d{3,4}\d{4}$)/.test(ua)? ["", "polaris", "0.0.0"] : false) ||
+	                        /(windows)(?: nt | phone(?: os){0,1} | )([\w._\-]+)/.exec(ua) ||
+	                        (/(windows)/.test(ua)? ["", "windows", "0.0.0"] : false) ||
+	                        /(mac) os x ([\w._\-]+)/.exec(ua) ||
+	                        (/(linux)/.test(ua)? ["", "linux", "0.0.0"] : false) ||
+	                        (/webos/.test(ua)? ["", "webos", "0.0.0"] : false) ||
+	                        /(bada)[ \/]([\w._\-]+)/.exec(ua) ||
+	                        (/bada/.test(ua)? ["", "bada", "0.0.0"] : false) ||
+	                        (/(rim|blackberry|bb10)/.test(ua)? ["", "blackberry", "0.0.0"] : false) ||
+	                        ["", "unknown", "0.0.0"];
+
+	            if (match[1] === "iphone" || match[1] === "ipad" || match[1] === "ipod") {
+	                match[1] = "ios";
+	            } else if (match[1] === "windows" && match[2] === "98") {
+	                match[2] = "0.98.0";
+	            }
+	            os[match[1]] = true;
+	            os.name = match[1];
+	            os.version = setVersion(match[2]);
+	            return os;
+	        }
+
+	        function checkApp (ua) {
+	            var app = {},
+	                match = /(crios)[ \/]([\w.]+)/.exec( ua ) ||
+	                        /(daumapps)[ \/]([\w.]+)/.exec( ua ) ||
+	                        ["",""];
+
+	            if (match[1]) {
+	                app.isApp = true;
+	                app.name = match[1];
+	                app.version = setVersion(match[2]);
+	            } else {
+	                app.isApp = false;
+	            }
+
+	            return app;
+	        }
+
+	        return {
+	            ua: ua,
+	            browser: checkUserAgent(ua),
+	            platform: checkPlatform(ua),
+	            os: checkOs(ua),
+	            app: checkApp(ua)
+	        };
+	    };
+
+	    if (typeof window === 'object' && window.navigator.userAgent) {
+	        window.ua_result = userAgent(window.navigator.userAgent) || null;
+	    }
+
+	})((function (){
+	    // Make userAgent a Node module, if possible.
+	    if (true) {
+	        exports.daumtools = exports;
+	        exports.util = exports;
+	        return exports;
+	    } else if (typeof window === 'object') {
+	        window.daumtools = (typeof window.daumtools === 'undefined') ? {} : window.daumtools;
+	        window.util = (typeof window.util === 'undefined') ? window.daumtools : window.util;
+	        return window.daumtools;
+	    }
+	})());
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/*
+	 * classList.js: Cross-browser full element.classList implementation.
+	 * 2011-06-15
+	 *
+	 * By Eli Grey, http://eligrey.com
+	 * Public Domain.
+	 * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+	 */
+
+	/*global self, document, DOMException */
+
+	/*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js*/
+
+	if (typeof document !== "undefined" && !("classList" in document.createElement("a"))) {
+
+	(function (view) {
+
+	"use strict";
+
+	var
+	      classListProp = "classList"
+	    , protoProp = "prototype"
+	    , elemCtrProto = (view.HTMLElement || view.Element)[protoProp]
+	    , objCtr = Object
+	    , strTrim = String[protoProp].trim || function () {
+	        return this.replace(/^\s+|\s+$/g, "");
+	    }
+	    , arrIndexOf = Array[protoProp].indexOf || function (item) {
+	        var
+	              i = 0
+	            , len = this.length
+	        ;
+	        for (; i < len; i++) {
+	            if (i in this && this[i] === item) {
+	                return i;
+	            }
+	        }
+	        return -1;
+	    }
+	    // Vendors: please allow content code to instantiate DOMExceptions
+	    , DOMEx = function (type, message) {
+	        this.name = type;
+	        this.code = DOMException[type];
+	        this.message = message;
+	    }
+	    , checkTokenAndGetIndex = function (classList, token) {
+	        if (token === "") {
+	            throw new DOMEx(
+	                  "SYNTAX_ERR"
+	                , "An invalid or illegal string was specified"
+	            );
+	        }
+	        if (/\s/.test(token)) {
+	            throw new DOMEx(
+	                  "INVALID_CHARACTER_ERR"
+	                , "String contains an invalid character"
+	            );
+	        }
+	        return arrIndexOf.call(classList, token);
+	    }
+	    , ClassList = function (elem) {
+	        var
+	              trimmedClasses = strTrim.call(elem.className)
+	            , classes = trimmedClasses ? trimmedClasses.split(/\s+/) : []
+	            , i = 0
+	            , len = classes.length
+	        ;
+	        for (; i < len; i++) {
+	            this.push(classes[i]);
+	        }
+	        this._updateClassName = function () {
+	            elem.className = this.toString();
+	        };
+	    }
+	    , classListProto = ClassList[protoProp] = []
+	    , classListGetter = function () {
+	        return new ClassList(this);
+	    }
+	;
+	// Most DOMException implementations don't allow calling DOMException's toString()
+	// on non-DOMExceptions. Error's toString() is sufficient here.
+	DOMEx[protoProp] = Error[protoProp];
+	classListProto.item = function (i) {
+	    return this[i] || null;
+	};
+	classListProto.contains = function (token) {
+	    token += "";
+	    return checkTokenAndGetIndex(this, token) !== -1;
+	};
+	classListProto.add = function (token) {
+	    token += "";
+	    if (checkTokenAndGetIndex(this, token) === -1) {
+	        this.push(token);
+	        this._updateClassName();
+	    }
+	};
+	classListProto.remove = function (token) {
+	    token += "";
+	    var index = checkTokenAndGetIndex(this, token);
+	    if (index !== -1) {
+	        this.splice(index, 1);
+	        this._updateClassName();
+	    }
+	};
+	classListProto.toggle = function (token) {
+	    token += "";
+	    if (checkTokenAndGetIndex(this, token) === -1) {
+	        this.add(token);
+	    } else {
+	        this.remove(token);
+	    }
+	};
+	classListProto.toString = function () {
+	    return this.join(" ");
+	};
+
+	if (objCtr.defineProperty) {
+	    var classListPropDesc = {
+	          get: classListGetter
+	        , enumerable: true
+	        , configurable: true
+	    };
+	    try {
+	        objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+	    } catch (ex) { // IE 8 doesn't support enumerable:true
+	        if (ex.number === -0x7FF5EC54) {
+	            classListPropDesc.enumerable = false;
+	            objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
+	        }
+	    }
+	} else if (objCtr[protoProp].__defineGetter__) {
+	    elemCtrProto.__defineGetter__(classListProp, classListGetter);
+	}
+
+	}(self));
+
+	}
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	if (!Function.prototype.bind) {
+	    Function.prototype.bind = function (oThis) {
+	        if (typeof this !== "function") {
+	            // closest thing possible to the ECMAScript 5 internal IsCallable function
+	            throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+	        }
+
+	        var aArgs = Array.prototype.slice.call(arguments, 1),
+	        fToBind = this,
+	        fNOP = function () {},
+	        fBound = function () {
+	            return fToBind.apply(this instanceof fNOP && oThis
+	                ? this
+	                : oThis,
+	                aArgs.concat(Array.prototype.slice.call(arguments)));
+	        };
+
+	        fNOP.prototype = this.prototype;
+	        fBound.prototype = new fNOP();
+
+	        return fBound;
+	    };
+	}
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// adds requestAnimationFrame functionality
+	// Source: http://strd6.com/2011/05/better-window-requestanimationframe-shim/
+
+	window.requestAnimationFrame || (window.requestAnimationFrame =
+	  window.webkitRequestAnimationFrame ||
+	  window.mozRequestAnimationFrame    ||
+	  window.oRequestAnimationFrame      ||
+	  window.msRequestAnimationFrame     ||
+	  function(callback, element) {
+	    return window.setTimeout(function() {
+	      callback(+new Date());
+	  }, 1000 / 60);
+	});
+
+
+/***/ },
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -11682,468 +12144,6 @@
 
 	    module.exports = TextareaSurface;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 33 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(45);
-	    var OptionsManager = __webpack_require__(46);
-	    var RenderNode = __webpack_require__(50);
-	    var Utility = __webpack_require__(31);
-
-	    /**
-	     * Useful for quickly creating elements within applications
-	     *   with large event systems.  Consists of a RenderNode paired with
-	     *   an input EventHandler and an output EventHandler.
-	     *   Meant to be extended by the developer.
-	     *
-	     * @class View
-	     * @uses EventHandler
-	     * @uses OptionsManager
-	     * @uses RenderNode
-	     * @constructor
-	     */
-	    function View(options) {
-	        this._node = new RenderNode();
-
-	        this._eventInput = new EventHandler();
-	        this._eventOutput = new EventHandler();
-	        EventHandler.setInputHandler(this, this._eventInput);
-	        EventHandler.setOutputHandler(this, this._eventOutput);
-
-	        this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
-	        this._optionsManager = new OptionsManager(this.options);
-
-	        if (options) this.setOptions(options);
-	    }
-
-	    View.DEFAULT_OPTIONS = {}; // no defaults
-
-	    /**
-	     * Look up options value by key
-	     * @method getOptions
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object
-	     */
-	    View.prototype.getOptions = function getOptions(key) {
-	        return this._optionsManager.getOptions(key);
-	    };
-
-	    /*
-	     *  Set internal options.
-	     *  No defaults options are set in View.
-	     *
-	     *  @method setOptions
-	     *  @param {Object} options
-	     */
-	    View.prototype.setOptions = function setOptions(options) {
-	        this._optionsManager.patch(options);
-	    };
-
-	    /**
-	     * Add a child renderable to the view.
-	     *   Note: This is meant to be used by an inheriting class
-	     *   rather than from outside the prototype chain.
-	     *
-	     * @method add
-	     * @return {RenderNode}
-	     * @protected
-	     */
-	    View.prototype.add = function add() {
-	        return this._node.add.apply(this._node, arguments);
-	    };
-
-	    /**
-	     * Alias for add
-	     * @method _add
-	     */
-	    View.prototype._add = View.prototype.add;
-
-	    /**
-	     * Generate a render spec from the contents of this component.
-	     *
-	     * @private
-	     * @method render
-	     * @return {number} Render spec for this component
-	     */
-	    View.prototype.render = function render() {
-	        return this._node.render();
-	    };
-
-	    /**
-	     * Return size of contained element.
-	     *
-	     * @method getSize
-	     * @return {Array.Number} [width, height]
-	     */
-	    View.prototype.getSize = function getSize() {
-	        if (this._node && this._node.getSize) {
-	            return this._node.getSize.apply(this._node, arguments) || this.options.size;
-	        }
-	        else return this.options.size;
-	    };
-
-	    module.exports = View;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*jshint browser: true, node: true
-	*/
-
-	(function (exports) {
-	    'use strict';
-
-	    var userAgent = exports.userAgent = function (ua) {
-	        ua = (ua || window.navigator.userAgent).toString().toLowerCase();
-	        function checkUserAgent(ua) {
-	            var browser = {};
-	            var match = /(dolfin)[ \/]([\w.]+)/.exec( ua ) ||
-	                    /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
-	                    /(opera)(?:.*version)?[ \/]([\w.]+)/.exec( ua ) ||
-	                    /(webkit)(?:.*version)?[ \/]([\w.]+)/.exec( ua ) ||
-	                    /(msie) ([\w.]+)/.exec( ua ) ||
-	                    ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+))?/.exec( ua ) ||
-	                    ["","unknown"];
-	            if (match[1] === "webkit") {
-	                match = /(iphone|ipad|ipod)[\S\s]*os ([\w._\-]+) like/.exec(ua) ||
-	                    /(android)[ \/]([\w._\-]+);/.exec(ua) || [match[0], "safari", match[2]];
-	            } else if (match[1] === "mozilla") {
-	                if (/trident/.test(ua)) {
-	                    match[1] = "msie";
-	                } else {
-	                    match[1] = "firefox";
-	                }
-	            } else if (/polaris|natebrowser|([010|011|016|017|018|019]{3}\d{3,4}\d{4}$)/.test(ua)) {
-	                match[1] = "polaris";
-	            }
-
-	            browser[match[1]] = true;
-	            browser.name = match[1];
-	            browser.version = setVersion(match[2]);
-
-	            return browser;
-	        }
-
-	        function setVersion(versionString) {
-	            var version = {};
-
-	            var versions = versionString ? versionString.split(/\.|-|_/) : ["0","0","0"];
-	            version.info = versions.join(".");
-	            version.major = versions[0] || "0";
-	            version.minor = versions[1] || "0";
-	            version.patch = versions[2] || "0";
-
-	            return version;
-	        }
-
-	        function checkPlatform (ua) {
-	            if (isPc(ua)) {
-	                return "pc";
-	            } else if (isTablet(ua)) {
-	                return "tablet";
-	            } else if (isMobile(ua)) {
-	                return "mobile";
-	            } else {
-	                return "";
-	            }
-	        }
-	        function isPc (ua) {
-	            if (ua.match(/linux|windows (nt|98)|macintosh/) && !ua.match(/android|mobile|polaris|lgtelecom|uzard|natebrowser|ktf;|skt;/)) {
-	                return true;
-	            }
-	            return false;
-	        }
-	        function isTablet (ua) {
-	            if (ua.match(/ipad/) || (ua.match(/android/) && !ua.match(/mobi|mini|fennec/))) {
-	                return true;
-	            }
-	            return false;
-	        }
-	        function isMobile (ua) {
-	            if (!!ua.match(/ip(hone|od)|android.+mobile|windows (ce|phone)|blackberry|bb10|symbian|webos|firefox.+fennec|opera m(ob|in)i|polaris|iemobile|lgtelecom|nokia|sonyericsson|dolfin|uzard|natebrowser|ktf;|skt;/)) {
-	                return true;
-	            } else {
-	                return false;
-	            }
-	        }
-
-	        function checkOs (ua) {
-	            var os = {},
-	                match = /(iphone|ipad|ipod)[\S\s]*os ([\w._\-]+) like/.exec(ua) ||
-	                        /(android)[ \/]([\w._\-]+);/.exec(ua) ||
-	                        (/android/.test(ua)? ["", "android", "0.0.0"] : false) ||
-	                        (/polaris|natebrowser|([010|011|016|017|018|019]{3}\d{3,4}\d{4}$)/.test(ua)? ["", "polaris", "0.0.0"] : false) ||
-	                        /(windows)(?: nt | phone(?: os){0,1} | )([\w._\-]+)/.exec(ua) ||
-	                        (/(windows)/.test(ua)? ["", "windows", "0.0.0"] : false) ||
-	                        /(mac) os x ([\w._\-]+)/.exec(ua) ||
-	                        (/(linux)/.test(ua)? ["", "linux", "0.0.0"] : false) ||
-	                        (/webos/.test(ua)? ["", "webos", "0.0.0"] : false) ||
-	                        /(bada)[ \/]([\w._\-]+)/.exec(ua) ||
-	                        (/bada/.test(ua)? ["", "bada", "0.0.0"] : false) ||
-	                        (/(rim|blackberry|bb10)/.test(ua)? ["", "blackberry", "0.0.0"] : false) ||
-	                        ["", "unknown", "0.0.0"];
-
-	            if (match[1] === "iphone" || match[1] === "ipad" || match[1] === "ipod") {
-	                match[1] = "ios";
-	            } else if (match[1] === "windows" && match[2] === "98") {
-	                match[2] = "0.98.0";
-	            }
-	            os[match[1]] = true;
-	            os.name = match[1];
-	            os.version = setVersion(match[2]);
-	            return os;
-	        }
-
-	        function checkApp (ua) {
-	            var app = {},
-	                match = /(crios)[ \/]([\w.]+)/.exec( ua ) ||
-	                        /(daumapps)[ \/]([\w.]+)/.exec( ua ) ||
-	                        ["",""];
-
-	            if (match[1]) {
-	                app.isApp = true;
-	                app.name = match[1];
-	                app.version = setVersion(match[2]);
-	            } else {
-	                app.isApp = false;
-	            }
-
-	            return app;
-	        }
-
-	        return {
-	            ua: ua,
-	            browser: checkUserAgent(ua),
-	            platform: checkPlatform(ua),
-	            os: checkOs(ua),
-	            app: checkApp(ua)
-	        };
-	    };
-
-	    if (typeof window === 'object' && window.navigator.userAgent) {
-	        window.ua_result = userAgent(window.navigator.userAgent) || null;
-	    }
-
-	})((function (){
-	    // Make userAgent a Node module, if possible.
-	    if (true) {
-	        exports.daumtools = exports;
-	        exports.util = exports;
-	        return exports;
-	    } else if (typeof window === 'object') {
-	        window.daumtools = (typeof window.daumtools === 'undefined') ? {} : window.daumtools;
-	        window.util = (typeof window.util === 'undefined') ? window.daumtools : window.util;
-	        return window.daumtools;
-	    }
-	})());
-
-/***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/*
-	 * classList.js: Cross-browser full element.classList implementation.
-	 * 2011-06-15
-	 *
-	 * By Eli Grey, http://eligrey.com
-	 * Public Domain.
-	 * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
-	 */
-
-	/*global self, document, DOMException */
-
-	/*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js*/
-
-	if (typeof document !== "undefined" && !("classList" in document.createElement("a"))) {
-
-	(function (view) {
-
-	"use strict";
-
-	var
-	      classListProp = "classList"
-	    , protoProp = "prototype"
-	    , elemCtrProto = (view.HTMLElement || view.Element)[protoProp]
-	    , objCtr = Object
-	    , strTrim = String[protoProp].trim || function () {
-	        return this.replace(/^\s+|\s+$/g, "");
-	    }
-	    , arrIndexOf = Array[protoProp].indexOf || function (item) {
-	        var
-	              i = 0
-	            , len = this.length
-	        ;
-	        for (; i < len; i++) {
-	            if (i in this && this[i] === item) {
-	                return i;
-	            }
-	        }
-	        return -1;
-	    }
-	    // Vendors: please allow content code to instantiate DOMExceptions
-	    , DOMEx = function (type, message) {
-	        this.name = type;
-	        this.code = DOMException[type];
-	        this.message = message;
-	    }
-	    , checkTokenAndGetIndex = function (classList, token) {
-	        if (token === "") {
-	            throw new DOMEx(
-	                  "SYNTAX_ERR"
-	                , "An invalid or illegal string was specified"
-	            );
-	        }
-	        if (/\s/.test(token)) {
-	            throw new DOMEx(
-	                  "INVALID_CHARACTER_ERR"
-	                , "String contains an invalid character"
-	            );
-	        }
-	        return arrIndexOf.call(classList, token);
-	    }
-	    , ClassList = function (elem) {
-	        var
-	              trimmedClasses = strTrim.call(elem.className)
-	            , classes = trimmedClasses ? trimmedClasses.split(/\s+/) : []
-	            , i = 0
-	            , len = classes.length
-	        ;
-	        for (; i < len; i++) {
-	            this.push(classes[i]);
-	        }
-	        this._updateClassName = function () {
-	            elem.className = this.toString();
-	        };
-	    }
-	    , classListProto = ClassList[protoProp] = []
-	    , classListGetter = function () {
-	        return new ClassList(this);
-	    }
-	;
-	// Most DOMException implementations don't allow calling DOMException's toString()
-	// on non-DOMExceptions. Error's toString() is sufficient here.
-	DOMEx[protoProp] = Error[protoProp];
-	classListProto.item = function (i) {
-	    return this[i] || null;
-	};
-	classListProto.contains = function (token) {
-	    token += "";
-	    return checkTokenAndGetIndex(this, token) !== -1;
-	};
-	classListProto.add = function (token) {
-	    token += "";
-	    if (checkTokenAndGetIndex(this, token) === -1) {
-	        this.push(token);
-	        this._updateClassName();
-	    }
-	};
-	classListProto.remove = function (token) {
-	    token += "";
-	    var index = checkTokenAndGetIndex(this, token);
-	    if (index !== -1) {
-	        this.splice(index, 1);
-	        this._updateClassName();
-	    }
-	};
-	classListProto.toggle = function (token) {
-	    token += "";
-	    if (checkTokenAndGetIndex(this, token) === -1) {
-	        this.add(token);
-	    } else {
-	        this.remove(token);
-	    }
-	};
-	classListProto.toString = function () {
-	    return this.join(" ");
-	};
-
-	if (objCtr.defineProperty) {
-	    var classListPropDesc = {
-	          get: classListGetter
-	        , enumerable: true
-	        , configurable: true
-	    };
-	    try {
-	        objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
-	    } catch (ex) { // IE 8 doesn't support enumerable:true
-	        if (ex.number === -0x7FF5EC54) {
-	            classListPropDesc.enumerable = false;
-	            objCtr.defineProperty(elemCtrProto, classListProp, classListPropDesc);
-	        }
-	    }
-	} else if (objCtr[protoProp].__defineGetter__) {
-	    elemCtrProto.__defineGetter__(classListProp, classListGetter);
-	}
-
-	}(self));
-
-	}
-
-
-/***/ },
-/* 36 */
-/***/ function(module, exports, __webpack_require__) {
-
-	if (!Function.prototype.bind) {
-	    Function.prototype.bind = function (oThis) {
-	        if (typeof this !== "function") {
-	            // closest thing possible to the ECMAScript 5 internal IsCallable function
-	            throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
-	        }
-
-	        var aArgs = Array.prototype.slice.call(arguments, 1),
-	        fToBind = this,
-	        fNOP = function () {},
-	        fBound = function () {
-	            return fToBind.apply(this instanceof fNOP && oThis
-	                ? this
-	                : oThis,
-	                aArgs.concat(Array.prototype.slice.call(arguments)));
-	        };
-
-	        fNOP.prototype = this.prototype;
-	        fBound.prototype = new fNOP();
-
-	        return fBound;
-	    };
-	}
-
-
-/***/ },
-/* 37 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// adds requestAnimationFrame functionality
-	// Source: http://strd6.com/2011/05/better-window-requestanimationframe-shim/
-
-	window.requestAnimationFrame || (window.requestAnimationFrame =
-	  window.webkitRequestAnimationFrame ||
-	  window.mozRequestAnimationFrame    ||
-	  window.oRequestAnimationFrame      ||
-	  window.msRequestAnimationFrame     ||
-	  function(callback, element) {
-	    return window.setTimeout(function() {
-	      callback(+new Date());
-	  }, 1000 / 60);
-	});
 
 
 /***/ },
@@ -12449,6 +12449,425 @@
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(41);
+
+	    /**
+	     *  A collection of methods for setting options which can be extended
+	     *  onto other classes.
+	     *
+	     *
+	     *  **** WARNING ****
+	     *  You can only pass through objects that will compile into valid JSON.
+	     *
+	     *  Valid options:
+	     *      Strings,
+	     *      Arrays,
+	     *      Objects,
+	     *      Numbers,
+	     *      Nested Objects,
+	     *      Nested Arrays.
+	     *
+	     *    This excludes:
+	     *        Document Fragments,
+	     *        Functions
+	     * @class OptionsManager
+	     * @constructor
+	     * @param {Object} value options dictionary
+	     */
+	    function OptionsManager(value) {
+	        this._value = value;
+	        this.eventOutput = null;
+	    }
+
+	    /**
+	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
+	     *
+	     * @static
+	     * @method OptionsManager.patch
+	     *
+	     * @param {Object} source source arguments
+	     * @param {...Object} data argument additions and overwrites
+	     * @return {Object} source object
+	     */
+	    OptionsManager.patch = function patchObject(source, data) {
+	        var manager = new OptionsManager(source);
+	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
+	        return source;
+	    };
+
+	    function _createEventOutput() {
+	        this.eventOutput = new EventHandler();
+	        this.eventOutput.bindThis(this);
+	        EventHandler.setOutputHandler(this, this.eventOutput);
+	    }
+
+	    /**
+	     * Create OptionsManager from source with arguments overriden by patches.
+	     *   Triggers 'change' event on this object's event handler if the state of
+	     *   the OptionsManager changes as a result.
+	     *
+	     * @method patch
+	     *
+	     * @param {...Object} arguments list of patch objects
+	     * @return {OptionsManager} this
+	     */
+	    OptionsManager.prototype.patch = function patch() {
+	        var myState = this._value;
+	        for (var i = 0; i < arguments.length; i++) {
+	            var data = arguments[i];
+	            for (var k in data) {
+	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
+	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
+	                    this.key(k).patch(data[k]);
+	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
+	                }
+	                else this.set(k, data[k]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for patch
+	     *
+	     * @method setOptions
+	     *
+	     */
+	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
+
+	    /**
+	     * Return OptionsManager based on sub-object retrieved by key
+	     *
+	     * @method key
+	     *
+	     * @param {string} identifier key
+	     * @return {OptionsManager} new options manager with the value
+	     */
+	    OptionsManager.prototype.key = function key(identifier) {
+	        var result = new OptionsManager(this._value[identifier]);
+	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
+	        return result;
+	    };
+
+	    /**
+	     * Look up value by key or get the full options hash
+	     * @method get
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object or full options hash
+	     */
+	    OptionsManager.prototype.get = function get(key) {
+	        return key ? this._value[key] : this._value;
+	    };
+
+	    /**
+	     * Alias for get
+	     * @method getOptions
+	     */
+	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
+
+	    /**
+	     * Set key to value.  Outputs 'change' event if a value is overwritten.
+	     *
+	     * @method set
+	     *
+	     * @param {string} key key string
+	     * @param {Object} value value object
+	     * @return {OptionsManager} new options manager based on the value object
+	     */
+	    OptionsManager.prototype.set = function set(key, value) {
+	        var originalValue = this.get(key);
+	        this._value[key] = value;
+	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
+	        return this;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    OptionsManager.prototype.on = function on() {
+	        _createEventOutput.call(this);
+	        return this.on.apply(this, arguments);
+	    };
+
+	    /**
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
+	     *
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'change')
+	     * @param {function} handler function object to remove
+	     * @return {EventHandler} internal event handler object (for chaining)
+	     */
+	    OptionsManager.prototype.removeListener = function removeListener() {
+	        _createEventOutput.call(this);
+	        return this.removeListener.apply(this, arguments);
+	    };
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    OptionsManager.prototype.pipe = function pipe() {
+	        _createEventOutput.call(this);
+	        return this.pipe.apply(this, arguments);
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     * Undoes work of "pipe"
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    OptionsManager.prototype.unpipe = function unpipe() {
+	        _createEventOutput.call(this);
+	        return this.unpipe.apply(this, arguments);
+	    };
+
+	    module.exports = OptionsManager;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventEmitter = __webpack_require__(145);
+
+	    /**
+	     * EventHandler forwards received events to a set of provided callback functions.
+	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
+	     *
+	     * @class EventHandler
+	     * @extends EventEmitter
+	     * @constructor
+	     */
+	    function EventHandler() {
+	        EventEmitter.apply(this, arguments);
+
+	        this.downstream = []; // downstream event handlers
+	        this.downstreamFn = []; // downstream functions
+
+	        this.upstream = []; // upstream event handlers
+	        this.upstreamListeners = {}; // upstream listeners
+	    }
+	    EventHandler.prototype = Object.create(EventEmitter.prototype);
+	    EventHandler.prototype.constructor = EventHandler;
+
+	    /**
+	     * Assign an event handler to receive an object's input events.
+	     *
+	     * @method setInputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
+	        object.trigger = handler.trigger.bind(handler);
+	        if (handler.subscribe && handler.unsubscribe) {
+	            object.subscribe = handler.subscribe.bind(handler);
+	            object.unsubscribe = handler.unsubscribe.bind(handler);
+	        }
+	    };
+
+	    /**
+	     * Assign an event handler to receive an object's output events.
+	     *
+	     * @method setOutputHandler
+	     * @static
+	     *
+	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
+	     * @param {EventHandler} handler assigned event handler
+	     */
+	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
+	        if (handler instanceof EventHandler) handler.bindThis(object);
+	        object.pipe = handler.pipe.bind(handler);
+	        object.unpipe = handler.unpipe.bind(handler);
+	        object.on = handler.on.bind(handler);
+	        object.addListener = object.on;
+	        object.removeListener = handler.removeListener.bind(handler);
+	    };
+
+	    /**
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
+	     *
+	     * @method emit
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.emit = function emit(type, event) {
+	        EventEmitter.prototype.emit.apply(this, arguments);
+	        var i = 0;
+	        for (i = 0; i < this.downstream.length; i++) {
+	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
+	        }
+	        for (i = 0; i < this.downstreamFn.length; i++) {
+	            this.downstreamFn[i](type, event);
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for emit
+	     * @method addListener
+	     */
+	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
+
+	    /**
+	     * Add event handler object to set of downstream handlers.
+	     *
+	     * @method pipe
+	     *
+	     * @param {EventHandler} target event handler target object
+	     * @return {EventHandler} passed event handler
+	     */
+	    EventHandler.prototype.pipe = function pipe(target) {
+	        if (target.subscribe instanceof Function) return target.subscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index < 0) downstreamCtx.push(target);
+
+	        if (target instanceof Function) target('pipe', null);
+	        else if (target.trigger) target.trigger('pipe', null);
+
+	        return target;
+	    };
+
+	    /**
+	     * Remove handler object from set of downstream handlers.
+	     *   Undoes work of "pipe".
+	     *
+	     * @method unpipe
+	     *
+	     * @param {EventHandler} target target handler object
+	     * @return {EventHandler} provided target
+	     */
+	    EventHandler.prototype.unpipe = function unpipe(target) {
+	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
+
+	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
+	        var index = downstreamCtx.indexOf(target);
+	        if (index >= 0) {
+	            downstreamCtx.splice(index, 1);
+	            if (target instanceof Function) target('unpipe', null);
+	            else if (target.trigger) target.trigger('unpipe', null);
+	            return target;
+	        }
+	        else return false;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.on = function on(type, handler) {
+	        EventEmitter.prototype.on.apply(this, arguments);
+	        if (!(type in this.upstreamListeners)) {
+	            var upstreamListener = this.trigger.bind(this, type);
+	            this.upstreamListeners[type] = upstreamListener;
+	            for (var i = 0; i < this.upstream.length; i++) {
+	                this.upstream[i].on(type, upstreamListener);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Alias for "on"
+	     * @method addListener
+	     */
+	    EventHandler.prototype.addListener = EventHandler.prototype.on;
+
+	    /**
+	     * Listen for events from an upstream event handler.
+	     *
+	     * @method subscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.subscribe = function subscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index < 0) {
+	            this.upstream.push(source);
+	            for (var type in this.upstreamListeners) {
+	                source.on(type, this.upstreamListeners[type]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Stop listening to events from an upstream event handler.
+	     *
+	     * @method unsubscribe
+	     *
+	     * @param {EventEmitter} source source emitter object
+	     * @return {EventHandler} this
+	     */
+	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
+	        var index = this.upstream.indexOf(source);
+	        if (index >= 0) {
+	            this.upstream.splice(index, 1);
+	            for (var type in this.upstreamListeners) {
+	                source.removeListener(type, this.upstreamListeners[type]);
+	            }
+	        }
+	        return this;
+	    };
+
+	    module.exports = EventHandler;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
 	 * This Source Code is licensed under the MIT license. If a copy of the
 	 * MIT-license was not distributed with this file, You can obtain one at:
@@ -12710,820 +13129,7 @@
 
 
 /***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * FlowLayoutController transitions renderables smoothly from one
-	 * layout to another. When the data-source or layout is changed,
-	 * the renderables are transitioned from their old state (size,
-	 * transform, origin, etc..) to the new state.
-	 *
-	 * Inherited from: [LayoutController](./LayoutController.md)
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var LayoutController = __webpack_require__(18);
-	    var LayoutNodeManager = __webpack_require__(44);
-	    var FlowLayoutNode = __webpack_require__(43);
-	    var Transform = __webpack_require__(27);
-
-	    /**
-	     * @class
-	     * @extends LayoutController
-	     * @param {Object} options Options.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
-	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
-	     * @alias module:FlowLayoutController
-	     */
-	    function FlowLayoutController(options, nodeManager) {
-	        LayoutController.call(this, FlowLayoutController.DEFAULT_OPTIONS, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
-	        if (options) {
-	            this.setOptions(options);
-	        }
-	    }
-	    FlowLayoutController.prototype = Object.create(LayoutController.prototype);
-	    FlowLayoutController.prototype.constructor = FlowLayoutController;
-
-	    FlowLayoutController.DEFAULT_OPTIONS = {
-	        nodeSpring: {
-	            dampingRatio: 0.8,
-	            period: 300
-	        }
-	        /*insertSpec: {
-	            opacity: undefined,
-	            size: undefined,
-	            transform: undefined,
-	            origin: undefined,
-	            align: undefined
-	        },
-	        removeSpec: {
-	            opacity: undefined,
-	            size: undefined,
-	            transform: undefined,
-	            origin: undefined,
-	            align: undefined
-	        }*/
-	    };
-
-	    /**
-	     * Called whenever a layout-node is created/re-used. Initializes
-	     * the node with the `insertSpec` if it has been defined.
-	     */
-	    function _initLayoutNode(node, spec) {
-	        if (node.setOptions) {
-	            node.setOptions({
-	                spring: this.options.nodeSpring
-	            });
-	        }
-	        if (!spec && this.options.insertSpec) {
-	            node.setSpec(this.options.insertSpec);
-	        }
-	    }
-
-	    var oldSetOptions = FlowLayoutController.prototype.setOptions;
-	    /**
-	     * Patches the FlowLayoutController instance's options with the passed-in ones.
-	     *
-	     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
-	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
-	     * @return {FlowLayoutController} this
-	     */
-	    FlowLayoutController.prototype.setOptions = function setOptions(options) {
-	        oldSetOptions.call(this, options);
-	        if (options.nodeSpring) {
-	            this._nodes.forEach(function(node) {
-	                node.setOptions({spring: options.nodeSpring});
-	            });
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Apply changes from this component to the corresponding document element.
-	     * This includes changes to classes, styles, size, content, opacity, origin,
-	     * and matrix transforms.
-	     *
-	     * @private
-	     * @method commit
-	     * @param {Context} context commit context
-	     */
-	    FlowLayoutController.prototype.commit = function commit(context) {
-	        var transform = context.transform;
-	        var origin = context.origin;
-	        var size = context.size;
-	        var opacity = context.opacity;
-	        var result;
-
-	        // When the size or layout function has changed, reflow the layout
-	        if (size[0] !== this._contextSizeCache[0] ||
-	            size[1] !== this._contextSizeCache[1] ||
-	            this._isDirty ||
-	            this._nodes._trueSizeRequested) {
-
-	            // Emit start event
-	            var eventData = {
-	                target: this,
-	                oldSize: this._contextSizeCache,
-	                size: size,
-	                dirty: this._isDirty,
-	                trueSizeRequested: this._nodes._trueSizeRequested
-	            };
-	            this._eventOutput.emit('layoutstart', eventData);
-
-	            // Update state
-	            this._contextSizeCache[0] = size[0];
-	            this._contextSizeCache[1] = size[1];
-	            this._isDirty = false;
-
-	            // Prepare for layout
-	            var layoutContext = this._nodes.prepareForLayout(
-	                this._viewSequence,     // first node to layout
-	                this._nodesById, {      // so we can do fast id lookups
-	                    size: size,
-	                    direction: this._direction
-	                }
-	            );
-
-	            // Layout objects
-	            if (this._layout.function) {
-	                this._layout.function(
-	                    layoutContext,          // context which the layout-function can use
-	                    this._layout.options    // additional layout-options
-	                );
-	            }
-
-	            // Mark non-invalidated nodes for removal
-	            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
-
-	            // Update output and optionally emit event
-	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-	            this._commitOutput.target = result.specs;
-	            if (result.modified || true) {
-	                this._eventOutput.emit('reflow', {
-	                    target: this
-	                });
-	            }
-
-	            // Emit end event
-	            this._eventOutput.emit('layoutend', eventData);
-	        }
-	        else {
-
-	            // Update output and optionally emit event
-	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
-	            this._commitOutput.target = result.specs;
-	            if (result.modified) {
-	                this._eventOutput.emit('reflow', {
-	                    target: this
-	                });
-	            }
-	        }
-
-	        // Render child-nodes every commit
-	        for (var i = 0; i < this._commitOutput.target.length; i++) {
-	            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
-	        }
-
-	        // Return
-	        if (size) {
-	            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
-	        }
-	        this._commitOutput.size = size;
-	        this._commitOutput.opacity = opacity;
-	        this._commitOutput.transform = transform;
-	        return this._commitOutput;
-	    };
-
-	    module.exports = FlowLayoutController;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 42 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * Internal LayoutNode class used by `LayoutController`.
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var Transform = __webpack_require__(27);
-	    var LayoutUtility = __webpack_require__(40);
-
-	    /**
-	     * @class
-	     * @param {Object} renderNode Render-node which this layout-node represents
-	     * @alias module:LayoutNode
-	     */
-	    function LayoutNode(renderNode, spec) {
-	        this.renderNode = renderNode;
-	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
-	        this._spec.renderNode = renderNode; // also store in spec
-	        this._invalidated = false;
-	        this._removing = false;
-	        //this.scrollLength = undefined;
-	        //this.trueSizeRequested = false;
-	    }
-
-	    /**
-	     * Called to update the options for the node
-	     */
-	    LayoutNode.prototype.setOptions = function(options) {
-	        // override to implement
-	    };
-
-	    /**
-	     * Called when the node is destroyed
-	     */
-	    LayoutNode.prototype.destroy = function() {
-	        this.renderNode = undefined;
-	        this._spec.renderNode = undefined;
-	        this._viewSequence = undefined;
-	    };
-
-	    /**
-	     * Reset the end-state. This function is called on all layout-nodes prior to
-	     * calling the layout-function. So that the layout-function starts with a clean slate.
-	     */
-	    LayoutNode.prototype.reset = function() {
-	        this._invalidated = false;
-	        this.trueSizeRequested = false;
-	    };
-
-	    /**
-	     * Set the spec of the node
-	     *
-	     * @param {Object} spec
-	     */
-	    LayoutNode.prototype.setSpec = function(spec) {
-	        this._spec.align = spec.align;
-	        this._spec.origin = spec.origin;
-	        this._spec.size = spec.size;
-	        this._spec.transform = spec.transform;
-	        this._spec.opacity = spec.opacity;
-	    };
-
-	    /**
-	     * Set the content of the node
-	     *
-	     * @param {Object} set
-	     */
-	    LayoutNode.prototype.set = function(set, size) {
-	        this._invalidated = true;
-	        this._removing = false;
-	        var spec = this._spec;
-	        spec.opacity = set.opacity;
-	        spec.size = set.size;
-	        spec.origin = set.origin;
-	        spec.align = set.align;
-	        if (set.translate || set.skew || set.rotate || set.scale) {
-	            this._spec.transform = Transform.build({
-	                translate: set.translate || [0, 0, 0],
-	                skew: set.skew || [0, 0, 0],
-	                scale: set.scale || [1, 1, 1],
-	                rotate: set.rotate || [0, 0, 0]
-	            });
-	        }
-	        else {
-	            this._spec.transform = undefined;
-	        }
-	        this.scrollLength = set.scrollLength;
-	    };
-
-	    /**
-	     * Creates the render-spec
-	     */
-	    LayoutNode.prototype.getSpec = function() {
-	        return this._invalidated ? this._spec : undefined;
-	    };
-
-	    /**
-	     * Marks the node for removal
-	     */
-	    LayoutNode.prototype.remove = function(removeSpec) {
-	        this._removing = true;
-	    };
-
-	    module.exports = LayoutNode;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-	/*eslint no-use-before-define:0 */
-
-	/**
-	 * Internal LayoutNode class used by `FlowLayoutController`.
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var OptionsManager = __webpack_require__(46);
-	    var Transform = __webpack_require__(27);
-	    var Vector = __webpack_require__(54);
-	    var Particle = __webpack_require__(56);
-	    var Spring = __webpack_require__(58);
-	    var PhysicsEngine = __webpack_require__(55);
-	    var LayoutNode = __webpack_require__(42);
-	    var Transitionable = __webpack_require__(63);
-
-	    /**
-	     * @class
-	     * @extends LayoutNode
-	     * @param {Object} renderNode Render-node which this layout-node represents
-	     * @param {Spec} spec Initial state
-	     * @param {Object} physicsEngines physics-engines to use
-	     * @alias module:FlowLayoutNode
-	     */
-	    function FlowLayoutNode(renderNode, spec) {
-	        LayoutNode.apply(this, arguments);
-
-	        if (!this.options) {
-	            this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
-	            this._optionsManager = new OptionsManager(this.options);
-	        }
-
-	        if (!this._pe) {
-	            this._pe = new PhysicsEngine();
-	        }
-
-	        this._options = {
-	            spring: {
-	                dampingRatio: 0.8,
-	                period: 300
-	            }
-	        };
-
-	        if (!this._properties) {
-	            this._properties = {};
-	        }
-	        else {
-	            for (var propName in this._properties) {
-	                this._properties[propName].init = false;
-	            }
-	        }
-	        _verifyIntegrity.call(this);
-
-	        this._endStateReached = false;
-	        this._initial = true;
-	        if (spec) {
-	            this.setSpec(spec);
-	        }
-	        _verifyIntegrity.call(this);
-	    }
-	    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
-	    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
-
-	    FlowLayoutNode.DEFAULT_OPTIONS = {
-	        spring: {
-	            dampingRatio: 0.8,
-	            period: 300
-	        },
-	        particleRounding: 0.001
-	    };
-
-	    /**
-	     * Defaults
-	     */
-	    var DEFAULT = {
-	        opacity: 1,
-	        size: [0, 0],
-	        origin: [0, 0],
-	        align: [0, 0],
-	        scale: [1, 1, 1],
-	        translate: [0, 0, 0],
-	        rotate: [0, 0, 0],
-	        skew: [0, 0, 0]
-	    };
-
-	    /**
-	     * Verifies that the integrity of the layout-node is oke.
-	     */
-	    function _verifyIntegrity() {
-	        /*var i;
-	        for (var propName in this._properties) {
-	            var prop = this._properties[propName];
-	            if (prop.particle) {
-	                if (isNaN(prop.particle.getEnergy())) {
-	                    throw 'invalid particle energy: ' + propName;
-	                }
-	                var value = prop.particle.getPosition();
-	                for (i = 0; i < value.length; i++) {
-	                    if (isNaN(value[i])) {
-	                       throw 'invalid particle value: ' + propName + '(' + i + ')';
-	                    }
-	                }
-	                value = prop.endState.get();
-	                for (i = 0; i < value.length; i++) {
-	                    if (isNaN(value[i])) {
-	                       throw 'invalid endState value: ' + propName + '(' + i + ')';
-	                    }
-	                }
-	            }
-	        }*/
-	    }
-
-	    /**
-	     * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
-	     * move infinitely.
-	     */
-	    function _roundParticleValue(value, precision) {
-	        precision = precision || this.options.particleRounding;
-	        return Math.round(value / precision) * precision;
-	    }
-
-	    /**
-	     * Sets the configuration options
-	     */
-	    FlowLayoutNode.prototype.setOptions = function(options) {
-	        this._optionsManager.setOptions(options);
-	        for (var propName in this._properties) {
-	            var prop = this._properties[propName];
-	            if (prop.force) {
-	                prop.force.setOptions(prop.force);
-	            }
-	        }
-	        _verifyIntegrity.call(this);
-	        return this;
-	    };
-
-	    /**
-	     * Set the properties from a spec.
-	     */
-	    FlowLayoutNode.prototype.setSpec = function(spec) {
-	        var set;
-	        if (spec.transform) {
-	            set = Transform.interpret(spec.transform);
-	        }
-	        if (!set) {
-	            set = {};
-	        }
-	        set.opacity = spec.opacity;
-	        set.size = spec.size;
-	        set.align = spec.align;
-	        set.origin = spec.origin;
-	        _set.call(this, set, DEFAULT.size);
-	    };
-
-	    /**
-	     * Reset the end-state. This function is called on all layout-nodes prior to
-	     * calling the layout-function. So that the layout-function starts with a clean slate.
-	     */
-	    FlowLayoutNode.prototype.reset = function() {
-	        if (this._invalidated) {
-	            for (var propName in this._properties) {
-	                this._properties[propName].invalidated = false;
-	            }
-	            this._invalidated = false;
-	        }
-	        this.trueSizeRequested = false;
-	        this.usesTrueSize = false;
-	        _verifyIntegrity.call(this);
-	    };
-
-	    /**
-	     * Markes the node for removal.
-	     */
-	    FlowLayoutNode.prototype.remove = function(removeSpec) {
-
-	        // Transition to the remove-spec state
-	        this._removing = true;
-	        if (removeSpec) {
-	            this.setSpec(removeSpec);
-	        }
-	        else {
-	            this._pe.sleep();
-	            this._endStateReached = true;
-	        }
-
-	        // Mark for removal
-	        this._invalidated = false;
-	        _verifyIntegrity.call(this);
-	    };
-
-	    /**
-	     * Locks a property, or a specific array-dimension of the property
-	     * fixed to the end-state value. Use this to e.g. lock the x-translation
-	     * to a the fixed end-state, so that when scrolling the renderable sticks
-	     * to the x-axis and does not feel sluggish.
-	     */
-	    FlowLayoutNode.prototype.setDirectionLock = function(direction, value) {
-	        if (direction === undefined) {
-	            this._lockDirection = undefined;
-	        }
-	        else {
-	            this._lockDirection = direction;
-	            if (value !== undefined) {
-	                if (!this._lockTransitionable) {
-	                    this._lockTransitionable = new Transitionable(1);
-	                }
-	                this._lockTransitionable.halt();
-	                this._lockTransitionable.reset(value);
-	                if (value !== 1) {
-	                    this._lockTransitionable.set(1, {
-	                        duration: (1 - value) * 1000
-	                    });
-	                }
-	            }
-	        }
-	    };
-
-	    /**
-	     * Helper function for getting the property value.
-	     */
-	    function _getRoundedValue2D(prop, def, precision) {
-	        if (!prop || !prop.init) {
-	            return def;
-	        }
-	        var value = prop.particle.getPosition();
-	        return [
-	            _roundParticleValue.call(this, value[0], precision),
-	            _roundParticleValue.call(this, value[1], precision)
-	        ];
-	    }
-	    function _getRoundedValue3D(prop, def, precision) {
-	        if (!prop || !prop.init) {
-	            return def;
-	        }
-	        var value = prop.particle.getPosition();
-	        return [
-	            _roundParticleValue.call(this, value[0], precision),
-	            _roundParticleValue.call(this, value[1], precision),
-	            _roundParticleValue.call(this, value[2], precision)
-	        ];
-	    }
-	    function _getOpacityValue() {
-	        var prop = this._properties.opacity;
-	        return (prop && prop.init) ? _roundParticleValue.call(this, Math.max(0,Math.min(1, prop.particle.getPosition1D()))) : undefined;
-	    }
-	    function _getTranslateValue(def) {
-	        var prop = this._properties.translate;
-	        if (!prop || !prop.init) {
-	            return def;
-	        }
-	        var position = prop.particle.getPosition();
-	        if (this._lockDirection !== undefined) {
-	            var value = position[this._lockDirection];
-	            var endState = prop.endState.get()[this._lockDirection];
-	            var lockValue = value + ((endState - value) * this._lockTransitionable.get());
-	            position = [
-	                _roundParticleValue.call(this, position[0]),
-	                _roundParticleValue.call(this, position[1]),
-	                _roundParticleValue.call(this, position[2])
-	            ];
-	            position[this._lockDirection] = _roundParticleValue.call(this, lockValue);
-	        }
-	        return position;
-	    }
-
-	    /**
-	     * Creates the render-spec
-	     */
-	    FlowLayoutNode.prototype.getSpec = function() {
-
-	        // When the end state was reached, return the previous spec
-	        var endStateReached = this._pe.isSleeping();
-	        if (this._endStateReached && endStateReached) {
-	            if (this._invalidated) {
-	                return this._spec;
-	            }
-	            else {
-	                return undefined;
-	            }
-	        }
-	        this._endStateReached = endStateReached;
-
-	        // Build fresh spec
-	        this._initial = false;
-	        this._spec.opacity = _getOpacityValue.call(this);
-	        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
-	        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
-	        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
-	        var translate = _getTranslateValue.call(this, DEFAULT.translate);
-	        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
-	            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
-	        }
-	        else {
-	            this._spec.transform = Transform.build({
-	                translate: translate,
-	                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
-	                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
-	                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
-	            });
-	        }
-	        //if (this.renderNode._debug) {
-	            //this.renderNode._debug = false;
-	            /*console.log(JSON.stringify({
-	                opacity: this._spec.opacity,
-	                size: this._spec.size,
-	                align: this._spec.align,
-	                origin: this._spec.origin,
-	                transform: this._spec.transform
-	            }));*/
-	        //}
-
-	        _verifyIntegrity.call(this);
-	        return this._spec;
-	    };
-
-	    /**
-	     * Helper function to set the property of a node (e.g. opacity, translate, etc..)
-	     */
-	    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
-
-	        // Get property
-	        prop = prop || this._properties[propName];
-
-	        // Update the property
-	        if (prop && prop.init) {
-	            prop.invalidated = true;
-	            var value = defaultValue;
-	            if (endState !== undefined) {
-	                value = endState;
-	            }
-	            else if (this._removing) {
-	                value = prop.particle.getPosition();
-	            }
-	            prop.endState.set(value);
-	            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
-	                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
-	            }
-	            if (immediate) {
-	                prop.particle.setPosition(value);
-	                this._endStateReached = false;
-	            }
-	            else {
-	                this._pe.wake();
-	            }
-	            return;
-	        }
-
-	        // Create property if neccesary
-	        if (!prop) {
-	            prop = {
-	                particle: new Particle({
-	                    position: (this._initial || immediate) ? endState : defaultValue
-	                }),
-	                endState: new Vector(endState)
-	            };
-	            prop.force = new Spring(this.options.spring);
-	            prop.force.setOptions({
-	                anchor: prop.endState
-	            });
-	            this._pe.addBody(prop.particle);
-	            prop.forceId = this._pe.attach(prop.force, prop.particle);
-	            this._properties[propName] = prop;
-	        }
-	        else {
-	            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
-	            prop.endState.set(endState);
-	            if (!this._initial && !immediate) {
-	                this._pe.wake();
-	            }
-	        }
-	        prop.init = true;
-	        prop.invalidated = true;
-	    }
-
-	    /**
-	     * Get value if not equals.
-	     */
-	    function _getIfNE2D(a1, a2) {
-	        return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
-	    }
-	    function _getIfNE3D(a1, a2) {
-	        return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
-	    }
-
-	    /**
-	     * context.set(..)
-	     */
-	    FlowLayoutNode.prototype.set = function(set, defaultSize) {
-	        this._removing = false;
-	        this.scrollLength = set.scrollLength;
-	        _set.call(this, set, defaultSize);
-	        this._invalidated = true;
-	        _verifyIntegrity.call(this);
-	    };
-
-	    /**
-	     * context.set(..)
-	     */
-	    function _set(set, defaultSize) {
-
-	        // set opacity
-	        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
-	        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
-	            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
-	        }
-
-	        // set align
-	        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
-	        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
-	            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
-	        }
-
-	        // set orgin
-	        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
-	        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
-	            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
-	        }
-
-	        // set size
-	        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
-	        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
-	            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
-	        }
-
-	        // set translate
-	        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
-	        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
-	            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
-	        }
-
-	        // set scale
-	        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
-	        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
-	            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
-	        }
-
-	        // set rotate
-	        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
-	        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
-	            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
-	        }
-
-	        // set skew
-	        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
-	        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
-	            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
-	        }
-	    }
-
-	    module.exports = FlowLayoutNode;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -13556,8 +13162,8 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutContext = __webpack_require__(145);
-	    var LayoutUtility = __webpack_require__(40);
+	    var LayoutContext = __webpack_require__(146);
+	    var LayoutUtility = __webpack_require__(42);
 
 	    var MAX_POOL_SIZE = 100;
 	    var LOG_PREFIX = 'Nodes: ';
@@ -14251,214 +13857,344 @@
 
 
 /***/ },
+/* 44 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * Internal LayoutNode class used by `LayoutController`.
+	 *
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+
+	    // import dependencies
+	    var Transform = __webpack_require__(27);
+	    var LayoutUtility = __webpack_require__(42);
+
+	    /**
+	     * @class
+	     * @param {Object} renderNode Render-node which this layout-node represents
+	     * @alias module:LayoutNode
+	     */
+	    function LayoutNode(renderNode, spec) {
+	        this.renderNode = renderNode;
+	        this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
+	        this._spec.renderNode = renderNode; // also store in spec
+	        this._invalidated = false;
+	        this._removing = false;
+	        //this.scrollLength = undefined;
+	        //this.trueSizeRequested = false;
+	    }
+
+	    /**
+	     * Called to update the options for the node
+	     */
+	    LayoutNode.prototype.setOptions = function(options) {
+	        // override to implement
+	    };
+
+	    /**
+	     * Called when the node is destroyed
+	     */
+	    LayoutNode.prototype.destroy = function() {
+	        this.renderNode = undefined;
+	        this._spec.renderNode = undefined;
+	        this._viewSequence = undefined;
+	    };
+
+	    /**
+	     * Reset the end-state. This function is called on all layout-nodes prior to
+	     * calling the layout-function. So that the layout-function starts with a clean slate.
+	     */
+	    LayoutNode.prototype.reset = function() {
+	        this._invalidated = false;
+	        this.trueSizeRequested = false;
+	    };
+
+	    /**
+	     * Set the spec of the node
+	     *
+	     * @param {Object} spec
+	     */
+	    LayoutNode.prototype.setSpec = function(spec) {
+	        this._spec.align = spec.align;
+	        this._spec.origin = spec.origin;
+	        this._spec.size = spec.size;
+	        this._spec.transform = spec.transform;
+	        this._spec.opacity = spec.opacity;
+	    };
+
+	    /**
+	     * Set the content of the node
+	     *
+	     * @param {Object} set
+	     */
+	    LayoutNode.prototype.set = function(set, size) {
+	        this._invalidated = true;
+	        this._removing = false;
+	        var spec = this._spec;
+	        spec.opacity = set.opacity;
+	        spec.size = set.size;
+	        spec.origin = set.origin;
+	        spec.align = set.align;
+	        if (set.translate || set.skew || set.rotate || set.scale) {
+	            this._spec.transform = Transform.build({
+	                translate: set.translate || [0, 0, 0],
+	                skew: set.skew || [0, 0, 0],
+	                scale: set.scale || [1, 1, 1],
+	                rotate: set.rotate || [0, 0, 0]
+	            });
+	        }
+	        else {
+	            this._spec.transform = undefined;
+	        }
+	        this.scrollLength = set.scrollLength;
+	    };
+
+	    /**
+	     * Creates the render-spec
+	     */
+	    LayoutNode.prototype.getSpec = function() {
+	        return this._invalidated ? this._spec : undefined;
+	    };
+
+	    /**
+	     * Marks the node for removal
+	     */
+	    LayoutNode.prototype.remove = function(removeSpec) {
+	        this._removing = true;
+	    };
+
+	    module.exports = LayoutNode;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
 /* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
 	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
 	 */
 
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * FlowLayoutController transitions renderables smoothly from one
+	 * layout to another. When the data-source or layout is changed,
+	 * the renderables are transitioned from their old state (size,
+	 * transform, origin, etc..) to the new state.
+	 *
+	 * Inherited from: [LayoutController](./LayoutController.md)
+	 * @module
+	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(146);
+
+	    // import dependencies
+	    var LayoutController = __webpack_require__(18);
+	    var LayoutNodeManager = __webpack_require__(43);
+	    var FlowLayoutNode = __webpack_require__(46);
+	    var Transform = __webpack_require__(27);
 
 	    /**
-	     * EventHandler forwards received events to a set of provided callback functions.
-	     * It allows events to be captured, processed, and optionally piped through to other event handlers.
-	     *
-	     * @class EventHandler
-	     * @extends EventEmitter
-	     * @constructor
+	     * @class
+	     * @extends LayoutController
+	     * @param {Object} options Options.
+	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
+	     * @alias module:FlowLayoutController
 	     */
-	    function EventHandler() {
-	        EventEmitter.apply(this, arguments);
-
-	        this.downstream = []; // downstream event handlers
-	        this.downstreamFn = []; // downstream functions
-
-	        this.upstream = []; // upstream event handlers
-	        this.upstreamListeners = {}; // upstream listeners
+	    function FlowLayoutController(options, nodeManager) {
+	        LayoutController.call(this, FlowLayoutController.DEFAULT_OPTIONS, nodeManager || new LayoutNodeManager(FlowLayoutNode, _initLayoutNode.bind(this)));
+	        if (options) {
+	            this.setOptions(options);
+	        }
 	    }
-	    EventHandler.prototype = Object.create(EventEmitter.prototype);
-	    EventHandler.prototype.constructor = EventHandler;
+	    FlowLayoutController.prototype = Object.create(LayoutController.prototype);
+	    FlowLayoutController.prototype.constructor = FlowLayoutController;
 
-	    /**
-	     * Assign an event handler to receive an object's input events.
-	     *
-	     * @method setInputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix trigger, subscribe, and unsubscribe functions into
-	     * @param {EventHandler} handler assigned event handler
-	     */
-	    EventHandler.setInputHandler = function setInputHandler(object, handler) {
-	        object.trigger = handler.trigger.bind(handler);
-	        if (handler.subscribe && handler.unsubscribe) {
-	            object.subscribe = handler.subscribe.bind(handler);
-	            object.unsubscribe = handler.unsubscribe.bind(handler);
+	    FlowLayoutController.DEFAULT_OPTIONS = {
+	        nodeSpring: {
+	            dampingRatio: 0.8,
+	            period: 300
 	        }
+	        /*insertSpec: {
+	            opacity: undefined,
+	            size: undefined,
+	            transform: undefined,
+	            origin: undefined,
+	            align: undefined
+	        },
+	        removeSpec: {
+	            opacity: undefined,
+	            size: undefined,
+	            transform: undefined,
+	            origin: undefined,
+	            align: undefined
+	        }*/
 	    };
 
 	    /**
-	     * Assign an event handler to receive an object's output events.
-	     *
-	     * @method setOutputHandler
-	     * @static
-	     *
-	     * @param {Object} object object to mix pipe, unpipe, on, addListener, and removeListener functions into
-	     * @param {EventHandler} handler assigned event handler
+	     * Called whenever a layout-node is created/re-used. Initializes
+	     * the node with the `insertSpec` if it has been defined.
 	     */
-	    EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
-	        if (handler instanceof EventHandler) handler.bindThis(object);
-	        object.pipe = handler.pipe.bind(handler);
-	        object.unpipe = handler.unpipe.bind(handler);
-	        object.on = handler.on.bind(handler);
-	        object.addListener = object.on;
-	        object.removeListener = handler.removeListener.bind(handler);
-	    };
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.emit = function emit(type, event) {
-	        EventEmitter.prototype.emit.apply(this, arguments);
-	        var i = 0;
-	        for (i = 0; i < this.downstream.length; i++) {
-	            if (this.downstream[i].trigger) this.downstream[i].trigger(type, event);
+	    function _initLayoutNode(node, spec) {
+	        if (node.setOptions) {
+	            node.setOptions({
+	                spring: this.options.nodeSpring
+	            });
 	        }
-	        for (i = 0; i < this.downstreamFn.length; i++) {
-	            this.downstreamFn[i](type, event);
+	        if (!spec && this.options.insertSpec) {
+	            node.setSpec(this.options.insertSpec);
+	        }
+	    }
+
+	    var oldSetOptions = FlowLayoutController.prototype.setOptions;
+	    /**
+	     * Patches the FlowLayoutController instance's options with the passed-in ones.
+	     *
+	     * @param {Options} options An object of configurable options for the FlowLayoutController instance.
+	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
+	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
+	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
+	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
+	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene.
+	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene.
+	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning between states
+	     * @return {FlowLayoutController} this
+	     */
+	    FlowLayoutController.prototype.setOptions = function setOptions(options) {
+	        oldSetOptions.call(this, options);
+	        if (options.nodeSpring) {
+	            this._nodes.forEach(function(node) {
+	                node.setOptions({spring: options.nodeSpring});
+	            });
 	        }
 	        return this;
 	    };
 
 	    /**
-	     * Alias for emit
-	     * @method addListener
+	     * Apply changes from this component to the corresponding document element.
+	     * This includes changes to classes, styles, size, content, opacity, origin,
+	     * and matrix transforms.
+	     *
+	     * @private
+	     * @method commit
+	     * @param {Context} context commit context
 	     */
-	    EventHandler.prototype.trigger = EventHandler.prototype.emit;
+	    FlowLayoutController.prototype.commit = function commit(context) {
+	        var transform = context.transform;
+	        var origin = context.origin;
+	        var size = context.size;
+	        var opacity = context.opacity;
+	        var result;
 
-	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
-	     */
-	    EventHandler.prototype.pipe = function pipe(target) {
-	        if (target.subscribe instanceof Function) return target.subscribe(this);
+	        // When the size or layout function has changed, reflow the layout
+	        if (size[0] !== this._contextSizeCache[0] ||
+	            size[1] !== this._contextSizeCache[1] ||
+	            this._isDirty ||
+	            this._nodes._trueSizeRequested) {
 
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index < 0) downstreamCtx.push(target);
+	            // Emit start event
+	            var eventData = {
+	                target: this,
+	                oldSize: this._contextSizeCache,
+	                size: size,
+	                dirty: this._isDirty,
+	                trueSizeRequested: this._nodes._trueSizeRequested
+	            };
+	            this._eventOutput.emit('layoutstart', eventData);
 
-	        if (target instanceof Function) target('pipe', null);
-	        else if (target.trigger) target.trigger('pipe', null);
+	            // Update state
+	            this._contextSizeCache[0] = size[0];
+	            this._contextSizeCache[1] = size[1];
+	            this._isDirty = false;
 
-	        return target;
-	    };
+	            // Prepare for layout
+	            var layoutContext = this._nodes.prepareForLayout(
+	                this._viewSequence,     // first node to layout
+	                this._nodesById, {      // so we can do fast id lookups
+	                    size: size,
+	                    direction: this._direction
+	                }
+	            );
 
-	    /**
-	     * Remove handler object from set of downstream handlers.
-	     *   Undoes work of "pipe".
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
-	     */
-	    EventHandler.prototype.unpipe = function unpipe(target) {
-	        if (target.unsubscribe instanceof Function) return target.unsubscribe(this);
+	            // Layout objects
+	            if (this._layout.function) {
+	                this._layout.function(
+	                    layoutContext,          // context which the layout-function can use
+	                    this._layout.options    // additional layout-options
+	                );
+	            }
 
-	        var downstreamCtx = (target instanceof Function) ? this.downstreamFn : this.downstream;
-	        var index = downstreamCtx.indexOf(target);
-	        if (index >= 0) {
-	            downstreamCtx.splice(index, 1);
-	            if (target instanceof Function) target('unpipe', null);
-	            else if (target.trigger) target.trigger('unpipe', null);
-	            return target;
+	            // Mark non-invalidated nodes for removal
+	            this._nodes.removeNonInvalidatedNodes(this.options.removeSpec);
+
+	            // Update output and optionally emit event
+	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+	            this._commitOutput.target = result.specs;
+	            if (result.modified || true) {
+	                this._eventOutput.emit('reflow', {
+	                    target: this
+	                });
+	            }
+
+	            // Emit end event
+	            this._eventOutput.emit('layoutend', eventData);
 	        }
-	        else return false;
-	    };
+	        else {
 
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.on = function on(type, handler) {
-	        EventEmitter.prototype.on.apply(this, arguments);
-	        if (!(type in this.upstreamListeners)) {
-	            var upstreamListener = this.trigger.bind(this, type);
-	            this.upstreamListeners[type] = upstreamListener;
-	            for (var i = 0; i < this.upstream.length; i++) {
-	                this.upstream[i].on(type, upstreamListener);
+	            // Update output and optionally emit event
+	            result = this._nodes.buildSpecAndDestroyUnrenderedNodes();
+	            this._commitOutput.target = result.specs;
+	            if (result.modified) {
+	                this._eventOutput.emit('reflow', {
+	                    target: this
+	                });
 	            }
 	        }
-	        return this;
-	    };
 
-	    /**
-	     * Alias for "on"
-	     * @method addListener
-	     */
-	    EventHandler.prototype.addListener = EventHandler.prototype.on;
-
-	    /**
-	     * Listen for events from an upstream event handler.
-	     *
-	     * @method subscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.subscribe = function subscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index < 0) {
-	            this.upstream.push(source);
-	            for (var type in this.upstreamListeners) {
-	                source.on(type, this.upstreamListeners[type]);
-	            }
+	        // Render child-nodes every commit
+	        for (var i = 0; i < this._commitOutput.target.length; i++) {
+	            this._commitOutput.target[i].target = this._commitOutput.target[i].renderNode.render();
 	        }
-	        return this;
-	    };
 
-	    /**
-	     * Stop listening to events from an upstream event handler.
-	     *
-	     * @method unsubscribe
-	     *
-	     * @param {EventEmitter} source source emitter object
-	     * @return {EventHandler} this
-	     */
-	    EventHandler.prototype.unsubscribe = function unsubscribe(source) {
-	        var index = this.upstream.indexOf(source);
-	        if (index >= 0) {
-	            this.upstream.splice(index, 1);
-	            for (var type in this.upstreamListeners) {
-	                source.removeListener(type, this.upstreamListeners[type]);
-	            }
+	        // Return
+	        if (size) {
+	            transform = Transform.moveThen([-size[0]*origin[0], -size[1]*origin[1], 0], transform);
 	        }
-	        return this;
+	        this._commitOutput.size = size;
+	        this._commitOutput.opacity = opacity;
+	        this._commitOutput.transform = transform;
+	        return this._commitOutput;
 	    };
 
-	    module.exports = EventHandler;
+	    module.exports = FlowLayoutController;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -14466,206 +14202,470 @@
 /* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
 	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
 	 */
 
+	/*global define*/
+	/*eslint no-use-before-define:0 */
+
+	/**
+	 * Internal LayoutNode class used by `FlowLayoutController`.
+	 *
+	 * @module
+	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(45);
+
+	    // import dependencies
+	    var OptionsManager = __webpack_require__(40);
+	    var Transform = __webpack_require__(27);
+	    var Vector = __webpack_require__(55);
+	    var Particle = __webpack_require__(57);
+	    var Spring = __webpack_require__(59);
+	    var PhysicsEngine = __webpack_require__(56);
+	    var LayoutNode = __webpack_require__(44);
+	    var Transitionable = __webpack_require__(63);
 
 	    /**
-	     *  A collection of methods for setting options which can be extended
-	     *  onto other classes.
-	     *
-	     *
-	     *  **** WARNING ****
-	     *  You can only pass through objects that will compile into valid JSON.
-	     *
-	     *  Valid options:
-	     *      Strings,
-	     *      Arrays,
-	     *      Objects,
-	     *      Numbers,
-	     *      Nested Objects,
-	     *      Nested Arrays.
-	     *
-	     *    This excludes:
-	     *        Document Fragments,
-	     *        Functions
-	     * @class OptionsManager
-	     * @constructor
-	     * @param {Object} value options dictionary
+	     * @class
+	     * @extends LayoutNode
+	     * @param {Object} renderNode Render-node which this layout-node represents
+	     * @param {Spec} spec Initial state
+	     * @param {Object} physicsEngines physics-engines to use
+	     * @alias module:FlowLayoutNode
 	     */
-	    function OptionsManager(value) {
-	        this._value = value;
-	        this.eventOutput = null;
-	    }
+	    function FlowLayoutNode(renderNode, spec) {
+	        LayoutNode.apply(this, arguments);
 
-	    /**
-	     * Create options manager from source dictionary with arguments overriden by patch dictionary.
-	     *
-	     * @static
-	     * @method OptionsManager.patch
-	     *
-	     * @param {Object} source source arguments
-	     * @param {...Object} data argument additions and overwrites
-	     * @return {Object} source object
-	     */
-	    OptionsManager.patch = function patchObject(source, data) {
-	        var manager = new OptionsManager(source);
-	        for (var i = 1; i < arguments.length; i++) manager.patch(arguments[i]);
-	        return source;
-	    };
+	        if (!this.options) {
+	            this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
+	            this._optionsManager = new OptionsManager(this.options);
+	        }
 
-	    function _createEventOutput() {
-	        this.eventOutput = new EventHandler();
-	        this.eventOutput.bindThis(this);
-	        EventHandler.setOutputHandler(this, this.eventOutput);
-	    }
+	        if (!this._pe) {
+	            this._pe = new PhysicsEngine();
+	        }
 
-	    /**
-	     * Create OptionsManager from source with arguments overriden by patches.
-	     *   Triggers 'change' event on this object's event handler if the state of
-	     *   the OptionsManager changes as a result.
-	     *
-	     * @method patch
-	     *
-	     * @param {...Object} arguments list of patch objects
-	     * @return {OptionsManager} this
-	     */
-	    OptionsManager.prototype.patch = function patch() {
-	        var myState = this._value;
-	        for (var i = 0; i < arguments.length; i++) {
-	            var data = arguments[i];
-	            for (var k in data) {
-	                if ((k in myState) && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
-	                    if (!myState.hasOwnProperty(k)) myState[k] = Object.create(myState[k]);
-	                    this.key(k).patch(data[k]);
-	                    if (this.eventOutput) this.eventOutput.emit('change', {id: k, value: this.key(k).value()});
-	                }
-	                else this.set(k, data[k]);
+	        this._options = {
+	            spring: {
+	                dampingRatio: 0.8,
+	                period: 300
+	            }
+	        };
+
+	        if (!this._properties) {
+	            this._properties = {};
+	        }
+	        else {
+	            for (var propName in this._properties) {
+	                this._properties[propName].init = false;
 	            }
 	        }
+	        _verifyIntegrity.call(this);
+
+	        this._endStateReached = false;
+	        this._initial = true;
+	        if (spec) {
+	            this.setSpec(spec);
+	        }
+	        _verifyIntegrity.call(this);
+	    }
+	    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
+	    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
+
+	    FlowLayoutNode.DEFAULT_OPTIONS = {
+	        spring: {
+	            dampingRatio: 0.8,
+	            period: 300
+	        },
+	        particleRounding: 0.001
+	    };
+
+	    /**
+	     * Defaults
+	     */
+	    var DEFAULT = {
+	        opacity: 1,
+	        size: [0, 0],
+	        origin: [0, 0],
+	        align: [0, 0],
+	        scale: [1, 1, 1],
+	        translate: [0, 0, 0],
+	        rotate: [0, 0, 0],
+	        skew: [0, 0, 0]
+	    };
+
+	    /**
+	     * Verifies that the integrity of the layout-node is oke.
+	     */
+	    function _verifyIntegrity() {
+	        /*var i;
+	        for (var propName in this._properties) {
+	            var prop = this._properties[propName];
+	            if (prop.particle) {
+	                if (isNaN(prop.particle.getEnergy())) {
+	                    throw 'invalid particle energy: ' + propName;
+	                }
+	                var value = prop.particle.getPosition();
+	                for (i = 0; i < value.length; i++) {
+	                    if (isNaN(value[i])) {
+	                       throw 'invalid particle value: ' + propName + '(' + i + ')';
+	                    }
+	                }
+	                value = prop.endState.get();
+	                for (i = 0; i < value.length; i++) {
+	                    if (isNaN(value[i])) {
+	                       throw 'invalid endState value: ' + propName + '(' + i + ')';
+	                    }
+	                }
+	            }
+	        }*/
+	    }
+
+	    /**
+	     * Helper function which rounds a particle value to ensure it reaches an end-state and doesn't
+	     * move infinitely.
+	     */
+	    function _roundParticleValue(value, precision) {
+	        precision = precision || this.options.particleRounding;
+	        return Math.round(value / precision) * precision;
+	    }
+
+	    /**
+	     * Sets the configuration options
+	     */
+	    FlowLayoutNode.prototype.setOptions = function(options) {
+	        this._optionsManager.setOptions(options);
+	        for (var propName in this._properties) {
+	            var prop = this._properties[propName];
+	            if (prop.force) {
+	                prop.force.setOptions(prop.force);
+	            }
+	        }
+	        _verifyIntegrity.call(this);
 	        return this;
 	    };
 
 	    /**
-	     * Alias for patch
-	     *
-	     * @method setOptions
-	     *
+	     * Set the properties from a spec.
 	     */
-	    OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
-
-	    /**
-	     * Return OptionsManager based on sub-object retrieved by key
-	     *
-	     * @method key
-	     *
-	     * @param {string} identifier key
-	     * @return {OptionsManager} new options manager with the value
-	     */
-	    OptionsManager.prototype.key = function key(identifier) {
-	        var result = new OptionsManager(this._value[identifier]);
-	        if (!(result._value instanceof Object) || result._value instanceof Array) result._value = {};
-	        return result;
+	    FlowLayoutNode.prototype.setSpec = function(spec) {
+	        var set;
+	        if (spec.transform) {
+	            set = Transform.interpret(spec.transform);
+	        }
+	        if (!set) {
+	            set = {};
+	        }
+	        set.opacity = spec.opacity;
+	        set.size = spec.size;
+	        set.align = spec.align;
+	        set.origin = spec.origin;
+	        _set.call(this, set, DEFAULT.size);
 	    };
 
 	    /**
-	     * Look up value by key or get the full options hash
-	     * @method get
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object or full options hash
+	     * Reset the end-state. This function is called on all layout-nodes prior to
+	     * calling the layout-function. So that the layout-function starts with a clean slate.
 	     */
-	    OptionsManager.prototype.get = function get(key) {
-	        return key ? this._value[key] : this._value;
+	    FlowLayoutNode.prototype.reset = function() {
+	        if (this._invalidated) {
+	            for (var propName in this._properties) {
+	                this._properties[propName].invalidated = false;
+	            }
+	            this._invalidated = false;
+	        }
+	        this.trueSizeRequested = false;
+	        this.usesTrueSize = false;
+	        _verifyIntegrity.call(this);
 	    };
 
 	    /**
-	     * Alias for get
-	     * @method getOptions
+	     * Markes the node for removal.
 	     */
-	    OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
+	    FlowLayoutNode.prototype.remove = function(removeSpec) {
 
-	    /**
-	     * Set key to value.  Outputs 'change' event if a value is overwritten.
-	     *
-	     * @method set
-	     *
-	     * @param {string} key key string
-	     * @param {Object} value value object
-	     * @return {OptionsManager} new options manager based on the value object
-	     */
-	    OptionsManager.prototype.set = function set(key, value) {
-	        var originalValue = this.get(key);
-	        this._value[key] = value;
-	        if (this.eventOutput && value !== originalValue) this.eventOutput.emit('change', {id: key, value: value});
-	        return this;
+	        // Transition to the remove-spec state
+	        this._removing = true;
+	        if (removeSpec) {
+	            this.setSpec(removeSpec);
+	        }
+	        else {
+	            this._pe.sleep();
+	            this._endStateReached = true;
+	        }
+
+	        // Mark for removal
+	        this._invalidated = false;
+	        _verifyIntegrity.call(this);
 	    };
 
 	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
+	     * Locks a property, or a specific array-dimension of the property
+	     * fixed to the end-state value. Use this to e.g. lock the x-translation
+	     * to a the fixed end-state, so that when scrolling the renderable sticks
+	     * to the x-axis and does not feel sluggish.
 	     */
-	    OptionsManager.prototype.on = function on() {
-	        _createEventOutput.call(this);
-	        return this.on.apply(this, arguments);
+	    FlowLayoutNode.prototype.setDirectionLock = function(direction, value) {
+	        if (direction === undefined) {
+	            this._lockDirection = undefined;
+	        }
+	        else {
+	            this._lockDirection = direction;
+	            if (value !== undefined) {
+	                if (!this._lockTransitionable) {
+	                    this._lockTransitionable = new Transitionable(1);
+	                }
+	                this._lockTransitionable.halt();
+	                this._lockTransitionable.reset(value);
+	                if (value !== 1) {
+	                    this._lockTransitionable.set(1, {
+	                        duration: (1 - value) * 1000
+	                    });
+	                }
+	            }
+	        }
 	    };
 
 	    /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'change')
-	     * @param {function} handler function object to remove
-	     * @return {EventHandler} internal event handler object (for chaining)
+	     * Helper function for getting the property value.
 	     */
-	    OptionsManager.prototype.removeListener = function removeListener() {
-	        _createEventOutput.call(this);
-	        return this.removeListener.apply(this, arguments);
+	    function _getRoundedValue2D(prop, def, precision) {
+	        if (!prop || !prop.init) {
+	            return def;
+	        }
+	        var value = prop.particle.getPosition();
+	        return [
+	            _roundParticleValue.call(this, value[0], precision),
+	            _roundParticleValue.call(this, value[1], precision)
+	        ];
+	    }
+	    function _getRoundedValue3D(prop, def, precision) {
+	        if (!prop || !prop.init) {
+	            return def;
+	        }
+	        var value = prop.particle.getPosition();
+	        return [
+	            _roundParticleValue.call(this, value[0], precision),
+	            _roundParticleValue.call(this, value[1], precision),
+	            _roundParticleValue.call(this, value[2], precision)
+	        ];
+	    }
+	    function _getOpacityValue() {
+	        var prop = this._properties.opacity;
+	        return (prop && prop.init) ? _roundParticleValue.call(this, Math.max(0,Math.min(1, prop.particle.getPosition1D()))) : undefined;
+	    }
+	    function _getTranslateValue(def) {
+	        var prop = this._properties.translate;
+	        if (!prop || !prop.init) {
+	            return def;
+	        }
+	        var position = prop.particle.getPosition();
+	        if (this._lockDirection !== undefined) {
+	            var value = position[this._lockDirection];
+	            var endState = prop.endState.get()[this._lockDirection];
+	            var lockValue = value + ((endState - value) * this._lockTransitionable.get());
+	            position = [
+	                _roundParticleValue.call(this, position[0]),
+	                _roundParticleValue.call(this, position[1]),
+	                _roundParticleValue.call(this, position[2])
+	            ];
+	            position[this._lockDirection] = _roundParticleValue.call(this, lockValue);
+	        }
+	        return position;
+	    }
+
+	    /**
+	     * Creates the render-spec
+	     */
+	    FlowLayoutNode.prototype.getSpec = function() {
+
+	        // When the end state was reached, return the previous spec
+	        var endStateReached = this._pe.isSleeping();
+	        if (this._endStateReached && endStateReached) {
+	            if (this._invalidated) {
+	                return this._spec;
+	            }
+	            else {
+	                return undefined;
+	            }
+	        }
+	        this._endStateReached = endStateReached;
+
+	        // Build fresh spec
+	        this._initial = false;
+	        this._spec.opacity = _getOpacityValue.call(this);
+	        this._spec.size = _getRoundedValue2D.call(this, this._properties.size, undefined, 0.1);
+	        this._spec.align = _getRoundedValue2D.call(this, this._properties.align, undefined);
+	        this._spec.origin = _getRoundedValue2D.call(this, this._properties.origin, undefined);
+	        var translate = _getTranslateValue.call(this, DEFAULT.translate);
+	        if (!this._properties.scale && !this._properties.rotate && !this._properties.skew) {
+	            this._spec.transform = Transform.translate(translate[0], translate[1], translate[2]);
+	        }
+	        else {
+	            this._spec.transform = Transform.build({
+	                translate: translate,
+	                skew: _getRoundedValue3D.call(this, this._properties.skew, DEFAULT.skew),
+	                scale: _getRoundedValue3D.call(this, this._properties.scale, DEFAULT.scale),
+	                rotate: _getRoundedValue3D.call(this, this._properties.rotate, DEFAULT.rotate)
+	            });
+	        }
+	        //if (this.renderNode._debug) {
+	            //this.renderNode._debug = false;
+	            /*console.log(JSON.stringify({
+	                opacity: this._spec.opacity,
+	                size: this._spec.size,
+	                align: this._spec.align,
+	                origin: this._spec.origin,
+	                transform: this._spec.transform
+	            }));*/
+	        //}
+
+	        _verifyIntegrity.call(this);
+	        return this._spec;
 	    };
 
 	    /**
-	     * Add event handler object to set of downstream handlers.
-	     *
-	     * @method pipe
-	     *
-	     * @param {EventHandler} target event handler target object
-	     * @return {EventHandler} passed event handler
+	     * Helper function to set the property of a node (e.g. opacity, translate, etc..)
 	     */
-	    OptionsManager.prototype.pipe = function pipe() {
-	        _createEventOutput.call(this);
-	        return this.pipe.apply(this, arguments);
+	    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
+
+	        // Get property
+	        prop = prop || this._properties[propName];
+
+	        // Update the property
+	        if (prop && prop.init) {
+	            prop.invalidated = true;
+	            var value = defaultValue;
+	            if (endState !== undefined) {
+	                value = endState;
+	            }
+	            else if (this._removing) {
+	                value = prop.particle.getPosition();
+	            }
+	            prop.endState.set(value);
+	            if (isTranslate && (this._lockDirection !== undefined) && (this._lockTransitionable.get() === 1)) {
+	                immediate = true; // this is a bit dirty, it should check !_lockDirection for non changes as well before setting immediate to true
+	            }
+	            if (immediate) {
+	                prop.particle.setPosition(value);
+	                this._endStateReached = false;
+	            }
+	            else {
+	                this._pe.wake();
+	            }
+	            return;
+	        }
+
+	        // Create property if neccesary
+	        if (!prop) {
+	            prop = {
+	                particle: new Particle({
+	                    position: (this._initial || immediate) ? endState : defaultValue
+	                }),
+	                endState: new Vector(endState)
+	            };
+	            prop.force = new Spring(this.options.spring);
+	            prop.force.setOptions({
+	                anchor: prop.endState
+	            });
+	            this._pe.addBody(prop.particle);
+	            prop.forceId = this._pe.attach(prop.force, prop.particle);
+	            this._properties[propName] = prop;
+	        }
+	        else {
+	            prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
+	            prop.endState.set(endState);
+	            if (!this._initial && !immediate) {
+	                this._pe.wake();
+	            }
+	        }
+	        prop.init = true;
+	        prop.invalidated = true;
+	    }
+
+	    /**
+	     * Get value if not equals.
+	     */
+	    function _getIfNE2D(a1, a2) {
+	        return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
+	    }
+	    function _getIfNE3D(a1, a2) {
+	        return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
+	    }
+
+	    /**
+	     * context.set(..)
+	     */
+	    FlowLayoutNode.prototype.set = function(set, defaultSize) {
+	        this._removing = false;
+	        this.scrollLength = set.scrollLength;
+	        _set.call(this, set, defaultSize);
+	        this._invalidated = true;
+	        _verifyIntegrity.call(this);
 	    };
 
 	    /**
-	     * Remove handler object from set of downstream handlers.
-	     * Undoes work of "pipe"
-	     *
-	     * @method unpipe
-	     *
-	     * @param {EventHandler} target target handler object
-	     * @return {EventHandler} provided target
+	     * context.set(..)
 	     */
-	    OptionsManager.prototype.unpipe = function unpipe() {
-	        _createEventOutput.call(this);
-	        return this.unpipe.apply(this, arguments);
-	    };
+	    function _set(set, defaultSize) {
 
-	    module.exports = OptionsManager;
+	        // set opacity
+	        var opacity = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
+	        if ((opacity !== undefined) || (this._properties.opacity && this._properties.opacity.init)) {
+	            _setPropertyValue.call(this, this._properties.opacity, 'opacity', opacity, DEFAULT.opacity);
+	        }
+
+	        // set align
+	        var align = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
+	        if ((align !== undefined) || (this._properties.align && this._properties.align.init)) {
+	            _setPropertyValue.call(this, this._properties.align, 'align', align, DEFAULT.align);
+	        }
+
+	        // set orgin
+	        var origin = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
+	        if ((origin !== undefined) || (this._properties.origin && this._properties.origin.init)) {
+	            _setPropertyValue.call(this, this._properties.origin, 'origin', origin, DEFAULT.origin);
+	        }
+
+	        // set size
+	        var size = set.size ? _getIfNE2D(set.size, defaultSize) : undefined;
+	        if ((size !== undefined) || (this._properties.size && this._properties.size.init)) {
+	            _setPropertyValue.call(this, this._properties.size, 'size', size, defaultSize, this.usesTrueSize);
+	        }
+
+	        // set translate
+	        var translate = set.translate ? _getIfNE3D(set.translate, DEFAULT.translate) : undefined;
+	        if ((translate !== undefined) || (this._properties.translate && this._properties.translate.init)) {
+	            _setPropertyValue.call(this, this._properties.translate, 'translate', translate, DEFAULT.translate, undefined, true);
+	        }
+
+	        // set scale
+	        var scale = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
+	        if ((scale !== undefined) || (this._properties.scale && this._properties.scale.init)) {
+	            _setPropertyValue.call(this, this._properties.scale, 'scale', scale, DEFAULT.scale);
+	        }
+
+	        // set rotate
+	        var rotate = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
+	        if ((rotate !== undefined) || (this._properties.rotate && this._properties.rotate.init)) {
+	            _setPropertyValue.call(this, this._properties.rotate, 'rotate', rotate, DEFAULT.rotate);
+	        }
+
+	        // set skew
+	        var skew = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
+	        if ((skew !== undefined) || (this._properties.skew && this._properties.skew.init)) {
+	            _setPropertyValue.call(this, this._properties.skew, 'skew', skew, DEFAULT.skew);
+	        }
+	    }
+
+	    module.exports = FlowLayoutNode;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -14684,7 +14684,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var RenderNode = __webpack_require__(50);
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 	    var ElementAllocator = __webpack_require__(147);
 	    var Transform = __webpack_require__(27);
 	    var Transitionable = __webpack_require__(63);
@@ -14922,8 +14922,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(53);
-	    var EventHandler = __webpack_require__(45);
+	    var Entity = __webpack_require__(51);
+	    var EventHandler = __webpack_require__(41);
 	    var Transform = __webpack_require__(27);
 
 	    var usePrefix = !('transform' in document.documentElement.style);
@@ -15250,13 +15250,13 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(53);
-	    var Group = __webpack_require__(52);
-	    var OptionsManager = __webpack_require__(46);
+	    var Entity = __webpack_require__(51);
+	    var Group = __webpack_require__(53);
+	    var OptionsManager = __webpack_require__(40);
 	    var Transform = __webpack_require__(27);
-	    var Utility = __webpack_require__(31);
+	    var Utility = __webpack_require__(32);
 	    var ViewSequence = __webpack_require__(24);
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 
 	    /**
 	     * Scroller lays out a collection of renderables, and will browse through them based on
@@ -15575,7 +15575,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(53);
+	    var Entity = __webpack_require__(51);
 	    var SpecParser = __webpack_require__(148);
 
 	    /**
@@ -15738,6 +15738,89 @@
 /* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * A singleton that maintains a global registry of Surfaces.
+	     *   Private.
+	     *
+	     * @private
+	     * @static
+	     * @class Entity
+	     */
+
+	    var entities = [];
+
+	    /**
+	     * Get entity from global index.
+	     *
+	     * @private
+	     * @method get
+	     * @param {Number} id entity registration id
+	     * @return {Surface} entity in the global index
+	     */
+	    function get(id) {
+	        return entities[id];
+	    }
+
+	    /**
+	     * Overwrite entity in the global index
+	     *
+	     * @private
+	     * @method set
+	     * @param {Number} id entity registration id
+	     * @param {Surface} entity to add to the global index
+	     */
+	    function set(id, entity) {
+	        entities[id] = entity;
+	    }
+
+	    /**
+	     * Add entity to global index
+	     *
+	     * @private
+	     * @method register
+	     * @param {Surface} entity to add to global index
+	     * @return {Number} new id
+	     */
+	    function register(entity) {
+	        var id = entities.length;
+	        set(id, entity);
+	        return id;
+	    }
+
+	    /**
+	     * Remove entity from global index
+	     *
+	     * @private
+	     * @method unregister
+	     * @param {Number} id entity registration id
+	     */
+	    function unregister(id) {
+	        set(id, null);
+	    }
+
+	    module.exports = {
+	        register: register,
+	        unregister: unregister,
+	        get: get,
+	        set: set
+	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 52 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;
 	/* This Source Code Form is subject to the terms of the Mozilla Public
 	 * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15856,7 +15939,7 @@
 
 
 /***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15986,90 +16069,275 @@
 
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
 	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
 	 */
 
+	/*global define*/
+
+	/**
+	 * LayoutDockHelper helps positioning nodes using docking principles.
+	 *
+	 * **Example:**
+	 *
+	 * ```javascript
+	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
+	 *
+	 * function HeaderFooterLayout(context, options) {
+	 *   var dock = new LayoutDockHelper(context);
+	 *   dock.top('header', options.headerHeight);
+	 *   dock.bottom('footer', options.footerHeight);
+	 *   dock.fill('content');
+	 * };
+	 * ```
+	 *
+	 * You can also use layout-literals to create layouts using docking semantics:
+	 *
+	 * ```javascript
+	 * var layoutController = new LayoutController({
+	 *   layout: {dock: [
+	 *     ['top', 'header', 40],
+	 *     ['bottom', 'footer', 40, 1], // z-index +1
+	 *     ['fill', 'content']
+	 *   ]},
+	 *   dataSource: {
+	 *     header: new Surface({content: 'header'}),
+	 *     footer: new Surface({content: 'footer'}),
+	 *     content: new Surface({content: 'content'}),
+	 *   }
+	 * });
+	 * ```
+	 *
+	 * @module
+	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * A singleton that maintains a global registry of Surfaces.
-	     *   Private.
-	     *
-	     * @private
-	     * @static
-	     * @class Entity
-	     */
 
-	    var entities = [];
+	    // import dependencies
+	    var LayoutUtility = __webpack_require__(42);
 
 	    /**
-	     * Get entity from global index.
-	     *
-	     * @private
-	     * @method get
-	     * @param {Number} id entity registration id
-	     * @return {Surface} entity in the global index
+	     * @class
+	     * @param {LayoutContext} context layout-context
+	     * @param {Object} [options] additional options
+	     * @param {Object} [options.margins] margins to start out with (default: 0px)
+	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
+	     * @alias module:LayoutDockHelper
 	     */
-	    function get(id) {
-	        return entities[id];
+	    function LayoutDockHelper(context, options) {
+	        var size = context.size;
+	        this._size = size;
+	        this._context = context;
+	        this._options = options;
+	        this._z = (options && options.translateZ) ? options.translateZ : 0;
+	        if (options && options.margins) {
+	            var margins = LayoutUtility.normalizeMargins(options.margins);
+	            this._left = margins[3];
+	            this._top = margins[0];
+	            this._right = size[0] - margins[1];
+	            this._bottom = size[1] - margins[2];
+	        }
+	        else {
+	            this._left = 0;
+	            this._top = 0;
+	            this._right = size[0];
+	            this._bottom = size[1];
+	        }
 	    }
 
 	    /**
-	     * Overwrite entity in the global index
+	     * Parses the layout-rules based on a JSON data object.
+	     * The object should be an array with the following syntax:
+	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
 	     *
-	     * @private
-	     * @method set
-	     * @param {Number} id entity registration id
-	     * @param {Surface} entity to add to the global index
-	     */
-	    function set(id, entity) {
-	        entities[id] = entity;
-	    }
-
-	    /**
-	     * Add entity to global index
+	     * **Example:**
 	     *
-	     * @private
-	     * @method register
-	     * @param {Surface} entity to add to global index
-	     * @return {Number} new id
-	     */
-	    function register(entity) {
-	        var id = entities.length;
-	        set(id, entity);
-	        return id;
-	    }
-
-	    /**
-	     * Remove entity from global index
+	     * ```JSON
+	     * [
+	     *   ['top', 'header', 50],
+	     *   ['bottom', 'footer', 50, 10], // z-index: 10
+	     *   ['margins', [10, 5]], // marginate remaining space: 10px top/bottom, 5px left/right
+	     *   ['fill', 'content']
+	     * ]
+	     * ```
 	     *
-	     * @private
-	     * @method unregister
-	     * @param {Number} id entity registration id
+	     * @param {Object} data JSON object
 	     */
-	    function unregister(id) {
-	        set(id, null);
-	    }
-
-	    module.exports = {
-	        register: register,
-	        unregister: unregister,
-	        get: get,
-	        set: set
+	    LayoutDockHelper.prototype.parse = function(data) {
+	        for (var i = 0; i < data.length; i++) {
+	            var rule = data[i];
+	            var value = (rule.length >= 3) ? rule[2] : undefined;
+	            if (rule[0] === 'top') {
+	                this.top(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'left') {
+	                this.left(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'right') {
+	                this.right(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'bottom') {
+	                this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
+	            } else if (rule[0] === 'fill') {
+	                this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
+	            } else if (rule[0] === 'margins') {
+	                this.margins(rule[1]);
+	            }
+	        }
 	    };
+
+	    /**
+	     * Dock the node to the top.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.top = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._top += height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the left
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.left = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (width === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            width = size[0];
+	        }
+	        this._context.set(node, {
+	            size: [width, this._bottom - this._top],
+	            origin: [0, 0],
+	            align: [0, 0],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        this._left += width;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the bottom
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
+	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
+	        if (height instanceof Array) {
+	            height = height[1];
+	        }
+	        if (height === undefined) {
+	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	            height = size[1];
+	        }
+	        this._context.set(node, {
+	            size: [this._right - this._left, height],
+	            origin: [0, 1],
+	            align: [0, 1],
+	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+	        });
+	        this._bottom -= height;
+	        return this;
+	    };
+
+	    /**
+	     * Dock the node to the right.
+	     *
+	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
+	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.right = function(node, width, z) {
+	        if (width instanceof Array) {
+	            width = width[0];
+	        }
+	        if (node) {
+	            if (width === undefined) {
+	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+	                width = size[0];
+	            }
+	            this._context.set(node, {
+	                size: [width, this._bottom - this._top],
+	                origin: [1, 0],
+	                align: [1, 0],
+	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+	            });
+	        }
+	        if (width) {
+	            this._right -= width;
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Fills the node to the remaining content.
+	     *
+	     * @param {LayoutNode|String} node layout-node to dock
+	     * @param {Number} [z] z-index to use for the node
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.fill = function(node, z) {
+	        this._context.set(node, {
+	            size: [this._right - this._left, this._bottom - this._top],
+	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
+	        });
+	        return this;
+	    };
+
+	    /**
+	     * Applies indent margins to the remaining content.
+	     *
+	     * @param {Number|Array} margins margins shorthand (e.g. '5', [10, 10], [5, 10, 5, 10])
+	     * @return {LayoutDockHelper} this
+	     */
+	    LayoutDockHelper.prototype.margins = function(margins) {
+	        margins = LayoutUtility.normalizeMargins(margins);
+	        this._left += margins[3];
+	        this._top += margins[0];
+	        this._right -= margins[1];
+	        this._bottom -= margins[2];
+	        return this;
+	    };
+
+	    // Register the helper
+	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
+
+	    module.exports = LayoutDockHelper;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
-/* 54 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16455,7 +16723,7 @@
 
 
 /***/ },
-/* 55 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16466,7 +16734,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 
 	    /**
 	     * The Physics Engine is responsible for mediating bodies with their
@@ -16984,7 +17252,7 @@
 
 
 /***/ },
-/* 56 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -16997,9 +17265,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(54);
+	    var Vector = __webpack_require__(55);
 	    var Transform = __webpack_require__(27);
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 	    var Integrator = __webpack_require__(153);
 
 	    /**
@@ -17377,7 +17645,7 @@
 
 
 /***/ },
-/* 57 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17502,7 +17770,7 @@
 
 
 /***/ },
-/* 58 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17518,7 +17786,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Force = __webpack_require__(149);
-	    var Vector = __webpack_require__(54);
+	    var Vector = __webpack_require__(55);
 
 	    /**
 	     *  A force that moves a physics body to a location with a spring motion.
@@ -17775,7 +18043,7 @@
 
 
 /***/ },
-/* 59 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17787,9 +18055,9 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 	    var Engine = __webpack_require__(23);
-	    var OptionsManager = __webpack_require__(46);
+	    var OptionsManager = __webpack_require__(40);
 
 	    /**
 	     * Handles piped in mousewheel events.
@@ -17978,7 +18246,7 @@
 
 
 /***/ },
-/* 60 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17991,7 +18259,7 @@
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 
 	    /**
 	     * Combines multiple types of sync classes (e.g. mouse, touch,
@@ -18109,7 +18377,7 @@
 
 
 /***/ },
-/* 61 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -18122,8 +18390,8 @@
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var TouchTracker = __webpack_require__(150);
-	    var EventHandler = __webpack_require__(45);
-	    var OptionsManager = __webpack_require__(46);
+	    var EventHandler = __webpack_require__(41);
+	    var OptionsManager = __webpack_require__(40);
 
 	    /**
 	     * Handles piped in touch events. Emits 'start', 'update', and 'events'
@@ -18332,256 +18600,6 @@
 	    };
 
 	    module.exports = TouchSync;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 62 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define*/
-
-	/**
-	 * LayoutDockHelper helps positioning nodes using docking principles.
-	 *
-	 * **Example:**
-	 *
-	 * ```javascript
-	 * var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
-	 *
-	 * function HeaderFooterLayout(context, options) {
-	 *   var dock = new LayoutDockHelper(context);
-	 *   dock.top('header', options.headerHeight);
-	 *   dock.bottom('footer', options.footerHeight);
-	 *   dock.fill('content');
-	 * };
-	 * ```
-	 *
-	 * You can also use layout-literals to create layouts using docking semantics:
-	 *
-	 * ```javascript
-	 * var layoutController = new LayoutController({
-	 *   layout: {dock: [
-	 *     ['top', 'header', 40],
-	 *     ['bottom', 'footer', 40, 1], // z-index +1
-	 *     ['fill', 'content']
-	 *   ]},
-	 *   dataSource: {
-	 *     header: new Surface({content: 'header'}),
-	 *     footer: new Surface({content: 'footer'}),
-	 *     content: new Surface({content: 'content'}),
-	 *   }
-	 * });
-	 * ```
-	 *
-	 * @module
-	 */
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-
-	    // import dependencies
-	    var LayoutUtility = __webpack_require__(40);
-
-	    /**
-	     * @class
-	     * @param {LayoutContext} context layout-context
-	     * @param {Object} [options] additional options
-	     * @param {Object} [options.margins] margins to start out with (default: 0px)
-	     * @param {Number} [options.translateZ] z-index to use when translating objects (default: 0)
-	     * @alias module:LayoutDockHelper
-	     */
-	    function LayoutDockHelper(context, options) {
-	        var size = context.size;
-	        this._size = size;
-	        this._context = context;
-	        this._options = options;
-	        this._z = (options && options.translateZ) ? options.translateZ : 0;
-	        if (options && options.margins) {
-	            var margins = LayoutUtility.normalizeMargins(options.margins);
-	            this._left = margins[3];
-	            this._top = margins[0];
-	            this._right = size[0] - margins[1];
-	            this._bottom = size[1] - margins[2];
-	        }
-	        else {
-	            this._left = 0;
-	            this._top = 0;
-	            this._right = size[0];
-	            this._bottom = size[1];
-	        }
-	    }
-
-	    /**
-	     * Parses the layout-rules based on a JSON data object.
-	     * The object should be an array with the following syntax:
-	     * `[[rule, node, value, z], [rule, node, value, z], ...]`
-	     *
-	     * **Example:**
-	     *
-	     * ```JSON
-	     * [
-	     *   ['top': 'header', 50],
-	     *   ['bottom': 'footer', 50, 10], // z-index: 10
-	     *   ['fill', 'content']
-	     * ]
-	     * ```
-	     *
-	     * @param {Object} data JSON object
-	     */
-	    LayoutDockHelper.prototype.parse = function(data) {
-	        for (var i = 0; i < data.length; i++) {
-	            var rule = data[i];
-	            var value = (rule.length >= 3) ? rule[2] : undefined;
-	            if (rule[0] === 'top') {
-	                this.top(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'left') {
-	                this.left(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'right') {
-	                this.right(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'bottom') {
-	                this.bottom(rule[1], value, (rule.length >=4) ? rule[3] : undefined);
-	            } else if (rule[0] === 'fill') {
-	                this.fill(rule[1], (rule.length >=3) ? rule[2] : undefined);
-	            }
-	        }
-	    };
-
-	    /**
-	     * Dock the node to the top.
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.top = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._top += height;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the left
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.left = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (width === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            width = size[0];
-	        }
-	        this._context.set(node, {
-	            size: [width, this._bottom - this._top],
-	            origin: [0, 0],
-	            align: [0, 0],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        this._left += width;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the bottom
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `height` argument argument is used for padding
-	     * @param {Number} [height] height of the layout-node, when ommited the height of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.bottom = function(node, height, z) {
-	        if (height instanceof Array) {
-	            height = height[1];
-	        }
-	        if (height === undefined) {
-	            var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	            height = size[1];
-	        }
-	        this._context.set(node, {
-	            size: [this._right - this._left, height],
-	            origin: [0, 1],
-	            align: [0, 1],
-	            translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
-	        });
-	        this._bottom -= height;
-	        return this;
-	    };
-
-	    /**
-	     * Dock the node to the right.
-	     *
-	     * @param {LayoutNode|String} [node] layout-node to dock, when ommited the `width` argument argument is used for padding
-	     * @param {Number} [width] width of the layout-node, when ommited the width of the node is used
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.right = function(node, width, z) {
-	        if (width instanceof Array) {
-	            width = width[0];
-	        }
-	        if (node) {
-	            if (width === undefined) {
-	                var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-	                width = size[0];
-	            }
-	            this._context.set(node, {
-	                size: [width, this._bottom - this._top],
-	                origin: [1, 0],
-	                align: [1, 0],
-	                translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
-	            });
-	        }
-	        if (width) {
-	            this._right -= width;
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Fills the node to the remaining content.
-	     *
-	     * @param {LayoutNode|String} node layout-node to dock
-	     * @param {Number} [z] z-index to use for the node
-	     * @return {LayoutDockHelper} this
-	     */
-	    LayoutDockHelper.prototype.fill = function(node, z) {
-	        this._context.set(node, {
-	            size: [this._right - this._left, this._bottom - this._top],
-	            translate: [this._left, this._top, (z === undefined) ? this._z : z]
-	        });
-	        return this;
-	    };
-
-	    // Register the helper
-	    LayoutUtility.registerHelper('dock', LayoutDockHelper);
-
-	    module.exports = LayoutDockHelper;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -18829,7 +18847,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Transitionable = __webpack_require__(63);
 	    var Transform = __webpack_require__(27);
-	    var Utility = __webpack_require__(31);
+	    var Utility = __webpack_require__(32);
 
 	    /**
 	     * A class for transitioning the state of a Transform by transitioning
@@ -26312,6 +26330,107 @@
 /* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * EventEmitter represents a channel for events.
+	     *
+	     * @class EventEmitter
+	     * @constructor
+	     */
+	    function EventEmitter() {
+	        this.listeners = {};
+	        this._owner = this;
+	    }
+
+	    /**
+	     * Trigger an event, sending to all downstream handlers
+	     *   listening for provided 'type' key.
+	     *
+	     * @method emit
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {Object} event event data
+	     * @return {EventHandler} this
+	     */
+	    EventEmitter.prototype.emit = function emit(type, event) {
+	        var handlers = this.listeners[type];
+	        if (handlers) {
+	            for (var i = 0; i < handlers.length; i++) {
+	                handlers[i].call(this._owner, event);
+	            }
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Bind a callback function to an event type handled by this object.
+	     *
+	     * @method "on"
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function(string, Object)} handler callback
+	     * @return {EventHandler} this
+	     */
+	   EventEmitter.prototype.on = function on(type, handler) {
+	        if (!(type in this.listeners)) this.listeners[type] = [];
+	        var index = this.listeners[type].indexOf(handler);
+	        if (index < 0) this.listeners[type].push(handler);
+	        return this;
+	    };
+
+	    /**
+	     * Alias for "on".
+	     * @method addListener
+	     */
+	    EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+	   /**
+	     * Unbind an event by type and handler.
+	     *   This undoes the work of "on".
+	     *
+	     * @method removeListener
+	     *
+	     * @param {string} type event type key (for example, 'click')
+	     * @param {function} handler function object to remove
+	     * @return {EventEmitter} this
+	     */
+	    EventEmitter.prototype.removeListener = function removeListener(type, handler) {
+	        var listener = this.listeners[type];
+	        if (listener !== undefined) {
+	            var index = listener.indexOf(handler);
+	            if (index >= 0) listener.splice(index, 1);
+	        }
+	        return this;
+	    };
+
+	    /**
+	     * Call event handlers with this set to owner.
+	     *
+	     * @method bindThis
+	     *
+	     * @param {Object} owner object this EventEmitter belongs to
+	     */
+	    EventEmitter.prototype.bindThis = function bindThis(owner) {
+	        this._owner = owner;
+	    };
+
+	    module.exports = EventEmitter;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 146 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
 	 * This Source Code is licensed under the MIT license. If a copy of the
 	 * MIT-license was not distributed with this file, You can obtain one at:
@@ -26582,107 +26701,6 @@
 	    };
 
 	    module.exports = LayoutContext;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 146 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * EventEmitter represents a channel for events.
-	     *
-	     * @class EventEmitter
-	     * @constructor
-	     */
-	    function EventEmitter() {
-	        this.listeners = {};
-	        this._owner = this;
-	    }
-
-	    /**
-	     * Trigger an event, sending to all downstream handlers
-	     *   listening for provided 'type' key.
-	     *
-	     * @method emit
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {Object} event event data
-	     * @return {EventHandler} this
-	     */
-	    EventEmitter.prototype.emit = function emit(type, event) {
-	        var handlers = this.listeners[type];
-	        if (handlers) {
-	            for (var i = 0; i < handlers.length; i++) {
-	                handlers[i].call(this._owner, event);
-	            }
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Bind a callback function to an event type handled by this object.
-	     *
-	     * @method "on"
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function(string, Object)} handler callback
-	     * @return {EventHandler} this
-	     */
-	   EventEmitter.prototype.on = function on(type, handler) {
-	        if (!(type in this.listeners)) this.listeners[type] = [];
-	        var index = this.listeners[type].indexOf(handler);
-	        if (index < 0) this.listeners[type].push(handler);
-	        return this;
-	    };
-
-	    /**
-	     * Alias for "on".
-	     * @method addListener
-	     */
-	    EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-
-	   /**
-	     * Unbind an event by type and handler.
-	     *   This undoes the work of "on".
-	     *
-	     * @method removeListener
-	     *
-	     * @param {string} type event type key (for example, 'click')
-	     * @param {function} handler function object to remove
-	     * @return {EventEmitter} this
-	     */
-	    EventEmitter.prototype.removeListener = function removeListener(type, handler) {
-	        var listener = this.listeners[type];
-	        if (listener !== undefined) {
-	            var index = listener.indexOf(handler);
-	            if (index >= 0) listener.splice(index, 1);
-	        }
-	        return this;
-	    };
-
-	    /**
-	     * Call event handlers with this set to owner.
-	     *
-	     * @method bindThis
-	     *
-	     * @param {Object} owner object this EventEmitter belongs to
-	     */
-	    EventEmitter.prototype.bindThis = function bindThis(owner) {
-	        this._owner = owner;
-	    };
-
-	    module.exports = EventEmitter;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -26994,8 +27012,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(54);
-	    var EventHandler = __webpack_require__(45);
+	    var Vector = __webpack_require__(55);
+	    var EventHandler = __webpack_require__(41);
 
 	    /**
 	     * Force base class.
@@ -27060,7 +27078,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(45);
+	    var EventHandler = __webpack_require__(41);
 
 	    var _now = Date.now;
 
@@ -27191,7 +27209,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Utility = __webpack_require__(31);
+	    var Utility = __webpack_require__(32);
 
 	    /**
 	     * Transition meta-method to support transitioning multiple
