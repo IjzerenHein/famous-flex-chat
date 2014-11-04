@@ -38,6 +38,7 @@
     "expose-loader": "^0.5.3",
     "famous": "^0.3.0",
     "famous-flex": "latest",
+    "famous-autosizetextarea": "latest",
     "famous-lagometer": "0.0.4",
     "famous-polyfills": "^0.2.2",
     "fastclick": "^1.0.3",

@@ -37,7 +37,7 @@ define(function(require) {
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
-    var AutosizeTextareaSurface = require('./AutosizeTextareaSurface');
+    var AutosizeTextareaSurface = require('famous-autosizetextarea/AutosizeTextareaSurface');
     var Timer = require('famous/utilities/Timer');
     var Console = require('./Console');
     var InputSurface = require('famous/surfaces/InputSurface');
