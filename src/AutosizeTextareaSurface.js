@@ -32,6 +32,7 @@ define(function(require, exports, module) {
         TextareaSurface.apply(this, arguments);
         this.on('change', _onValueChanged.bind(this));
         this.on('keyup', _onValueChanged.bind(this));
+        this.on('keydown', _onValueChanged.bind(this));
     }
     AutosizeTextareaSurface.prototype = Object.create(TextareaSurface.prototype);
     AutosizeTextareaSurface.prototype.constructor = AutosizeTextareaSurface;
@@ -100,22 +101,23 @@ define(function(require, exports, module) {
         // Caluclate preferred height
         if (this._hiddenTextarea._currentTarget && this._heightInvalidated) {
             this._heightInvalidated = false;
+
+            // Calculate ideal scrollheight
+            this._hiddenTextarea._currentTarget.rows = 1;
+            this._hiddenTextarea._currentTarget.style.height = '';
             var scrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
-            if (this._scrollHeightCache !== scrollHeight) {
-                this._scrollHeightCache = scrollHeight;
-                this._hiddenTextarea._currentTarget.style.height = '10px';
-                scrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
-                if (scrollHeight !== this._preferredScrollHeight) {
-                    this._preferredScrollHeight = scrollHeight;
-                    //console.log('scrollHeight changed: ' + this._preferredScrollHeight);
-                    this._eventOutput.emit('scrollHeightChanged', this._preferredScrollHeight);
-                }
+            if (scrollHeight !== this._preferredScrollHeight) {
+                this._preferredScrollHeight = scrollHeight;
+                //console.log('scrollHeight changed: ' + this._preferredScrollHeight);
+                this._eventOutput.emit('scrollHeightChanged', this._preferredScrollHeight);
             }
         }
     };
 
     /**
      * Get the height of the scrollable content.
+     *
+     * @return {Number} Ideal height that would fit all the content.
      */
     AutosizeTextareaSurface.prototype.getScrollHeight = function() {
         return this._preferredScrollHeight;
