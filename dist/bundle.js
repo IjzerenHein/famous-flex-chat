@@ -117,7 +117,6 @@
 	    }
 
 	    // Initialize
-	    //var mobileDetect = new MobileDetect(window.navigator.userAgent);
 	    var mainContext = Engine.createContext();
 	    var viewSequence = new ViewSequence();
 	    _setupFirebase();
@@ -200,9 +199,11 @@
 	    var messageInputTextArea;
 	    function _createMessageInput() {
 	        messageInputTextArea = new AutosizeTextareaSurface({
-	            rows: 1,
 	            classes: ['message-input'],
-	            placeholder: 'famous-flex-chat...'
+	            placeholder: 'famous-flex-chat...',
+	            properties: {
+	                resize: 'none'
+	            }
 	        });
 	        messageInputTextArea.on('scrollHeightChanged', _updateMessageBarHeight);
 	        messageInputTextArea.on('keydown', function(e) {
@@ -321,11 +322,16 @@
 	            viewSequence.push(chatBubble);
 	        }
 	        if (!stockScrollView) {
+
+	            // Scroll the latest (newest) chat message
 	            if (afterInitialRefresh) {
 	                scrollView.goToLastPage();
 	                scrollView.reflowLayout();
 	            }
 	            else {
+
+	                // On startup, set datasource to the last page immediately
+	                // so it doesn't scroll from top to bottom all the way
 	                viewSequence = viewSequence.getNext() || viewSequence;
 	                scrollView.setDataSource(viewSequence);
 	                scrollView.goToLastPage();
@@ -362,9 +368,6 @@
 	                message: data.message
 	            }
 	        });
-	        /*surface.on('onresize', function(event) {
-	            console.log('whut');
-	        });*/
 	        return surface;
 	    }
 
@@ -442,7 +445,7 @@
 	    }*/
 
 	    //
-	    // Shows the Console
+	    // Loads the chat messages from demoMessages.json
 	    //
 	    function _loadDemoData() {
 	        var data = __webpack_require__(11);
@@ -836,6 +839,7 @@
 	        TextareaSurface.apply(this, arguments);
 	        this.on('change', _onValueChanged.bind(this));
 	        this.on('keyup', _onValueChanged.bind(this));
+	        this.on('keydown', _onValueChanged.bind(this));
 	    }
 	    AutosizeTextareaSurface.prototype = Object.create(TextareaSurface.prototype);
 	    AutosizeTextareaSurface.prototype.constructor = AutosizeTextareaSurface;
@@ -904,22 +908,23 @@
 	        // Caluclate preferred height
 	        if (this._hiddenTextarea._currentTarget && this._heightInvalidated) {
 	            this._heightInvalidated = false;
+
+	            // Calculate ideal scrollheight
+	            this._hiddenTextarea._currentTarget.rows = 1;
+	            this._hiddenTextarea._currentTarget.style.height = '';
 	            var scrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
-	            if (this._scrollHeightCache !== scrollHeight) {
-	                this._scrollHeightCache = scrollHeight;
-	                this._hiddenTextarea._currentTarget.style.height = '10px';
-	                scrollHeight = this._hiddenTextarea._currentTarget.scrollHeight;
-	                if (scrollHeight !== this._preferredScrollHeight) {
-	                    this._preferredScrollHeight = scrollHeight;
-	                    //console.log('scrollHeight changed: ' + this._preferredScrollHeight);
-	                    this._eventOutput.emit('scrollHeightChanged', this._preferredScrollHeight);
-	                }
+	            if (scrollHeight !== this._preferredScrollHeight) {
+	                this._preferredScrollHeight = scrollHeight;
+	                //console.log('scrollHeight changed: ' + this._preferredScrollHeight);
+	                this._eventOutput.emit('scrollHeightChanged', this._preferredScrollHeight);
 	            }
 	        }
 	    };
 
 	    /**
 	     * Get the height of the scrollable content.
+	     *
+	     * @return {Number} Ideal height that would fit all the content.
 	     */
 	    AutosizeTextareaSurface.prototype.getScrollHeight = function() {
 	        return this._preferredScrollHeight;
