@@ -33,7 +33,7 @@ define(function(require) {
     var Transform = require('famous/core/Transform');
     var StockScrollView = require('famous/views/ScrollView');
     var ScrollView = require('famous-flex/ScrollView');
-    var ChatLayout = require('./ChatLayout');
+    var TableLayout = require('famous-flex/layouts/TableLayout');
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
@@ -201,7 +201,7 @@ define(function(require) {
         }
         else {
             scrollView = new ScrollView({
-                layout: ChatLayout,
+                layout: TableLayout,
                 layoutOptions: {
                     // callback that is called by the layout-function to check
                     // whether a node is a section
