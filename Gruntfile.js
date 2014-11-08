@@ -55,6 +55,6 @@ module.exports = function(grunt) {
   // Default task.
   grunt.registerTask('default', ['eslint', 'jscs', 'jsdoc2md']);
   grunt.registerTask('clean', ['exec:clean']);
-  grunt.registerTask('run', ['eslint', 'jscs', 'exec:open-dev', 'exec:run-dev']);
+  grunt.registerTask('serve', ['eslint', 'jscs', 'exec:open-dev', 'exec:run-dev']);
   grunt.registerTask('deploy', ['eslint', 'jscs', 'exec:clean', 'exec:build-debug', 'ftp-deploy']);
 };
