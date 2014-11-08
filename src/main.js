@@ -32,7 +32,7 @@ define(function(require) {
     var Modifier = require('famous/core/Modifier');
     var Transform = require('famous/core/Transform');
     var StockScrollView = require('famous/views/ScrollView');
-    var ScrollView = require('famous-flex/ScrollView');
+    var ScrollController = require('famous-flex/ScrollController');
     var TableLayout = require('famous-flex/layouts/TableLayout');
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
     var LayoutController = require('famous-flex/LayoutController');
@@ -200,7 +200,7 @@ define(function(require) {
             scrollView.sequenceFrom(viewSequence);
         }
         else {
-            scrollView = new ScrollView({
+            scrollView = new ScrollController({
                 layout: TableLayout,
                 layoutOptions: {
                     // callback that is called by the layout-function to check
