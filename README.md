@@ -59,7 +59,7 @@ To use your own database, register as a new user on Firebase.com and create a ne
 ```
 fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
 ```
-to this where &lt;your-app-name&gt; is the name of you Firebase app:
+to this where &lt;your-app-name&gt; is the name of your Firebase app:
 
 ```
 fbMessages = new Firebase('https://<your-app-name>.firebaseio.com/messages');
