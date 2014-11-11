@@ -109,6 +109,7 @@
 	    var stickySections = true;
 	    var duplicateCount = 1;
 	    var trueSize = true;
+	    var pullToRefresh = false;
 
 	    // On mobile or other devices that have keyboards that slide in, ensure
 	    // that container mode is enabled.
@@ -119,6 +120,9 @@
 	    // Initialize
 	    var mainContext = Engine.createContext();
 	    var viewSequence = new ViewSequence();
+	    if (pullToRefresh) {
+	        _createPullToRefreshCell();
+	    }
 	    _setupFirebase();
 	    mainContext.add(_createMainLayout());
 	    //_createLagometer();
@@ -261,8 +265,10 @@
 	                    isSectionCallback: function(renderNode) {
 	                        return renderNode.properties.isSection && stickySections;
 	                    },
-	                    isPullToRefreshCallback: function(renderNode) {
-	                        return renderNode.isPullToRefresh;
+	                    firstPullToRefresh: {
+	                        renderNode: pullToRefreshCell,
+	                        expanded: false,
+	                        size: 100
 	                    }
 	                },
 	                dataSource: viewSequence,
@@ -436,13 +442,14 @@
 	    /**
 	     * Create pull to refresh cell
 	     */
-	    /*function _createPullToRefreshCell(index) {
+	    var pullToRefreshCell;
+	    function _createPullToRefreshCell() {
 	        var surface = new Surface({
 	            classes: ['pull-to-refresh']
 	        });
-	        surface.isPullToRefresh = true;
-	        return surface;
-	    }*/
+	        pullToRefreshCell = surface;
+	        viewSequence.push(surface);
+	    }
 
 	    //
 	    // Loads the chat messages from demoMessages.json
@@ -617,7 +624,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
-		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n}\n.message-bubble .author {\n  font-size: 14px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n\n/*.pull-to-refresh {\n  z-index: 0;\n  background-image: url(reload.gif);\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n*/\n";
+		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Pull to refresh\n */\n.pull-to-refresh {\n  z-index: 0;\n  background-image: url("+__webpack_require__(142)+");\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n}\n.message-bubble .author {\n  font-size: 14px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n";
 
 /***/ },
 /* 6 */
@@ -629,7 +636,7 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(142).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
@@ -655,7 +662,7 @@
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(142).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(143).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
@@ -4056,7 +4063,7 @@
 	    }
 	}).call(this);
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(143)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(144)(module)))
 
 /***/ },
 /* 13 */
@@ -5242,7 +5249,9 @@
 	            scrollDelta: 0,
 	            normalizedScrollDelta: 0,
 	            scrollForce: 0,
-	            scrollForceCount: 0
+	            scrollForceCount: 0,
+	            // state
+	            isScrolling: false
 	        };
 
 	        // Diagnostics
@@ -5337,10 +5346,11 @@
 	            scale: 0.2
 	        },
 	        paginated: false,
-	        //paginationEnergyThresshold: 0.001,
+	        paginationEnergyThresshold: 0.005,
 	        alignment: 0,         // [0: top/left, 1: bottom/right]
 	        touchMoveDirectionThresshold: undefined, // 0..1
 	        mouseMove: false,
+	        enabled: true, // set to false to disable scrolling
 	        scrollCallback: undefined, //function(offset, force)
 	        debug: false,
 	        stressTest: 0
@@ -5486,7 +5496,7 @@
 	    function _mouseMove(event) {
 
 	        // Check if any mouse-move is active
-	        if (!this._scroll.mouseMove) {
+	        if (!this._scroll.mouseMove || !this.options.enabled) {
 	            return;
 	        }
 
@@ -5519,7 +5529,7 @@
 
 	        // Calculate delta and velocity
 	        var velocity = 0;
-	        var diffTime = Date.now() - this._scroll.mouseMove.prevTime;
+	        var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
 	        if (diffTime > 0) {
 	            var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
 	            velocity = diffOffset / diffTime;
@@ -5601,6 +5611,9 @@
 	     * Updates the moveOffset so that the scroll-offset on the view is updated.
 	     */
 	    function _touchMove(event) {
+	        if (!this.options.enabled) {
+	            return;
+	        }
 	        //_log.call(this, 'touchMove');
 	        //this._eventOutput.emit('touchmove', event);
 
@@ -5661,7 +5674,7 @@
 	                var touch = this._scroll.activeTouches[j];
 	                if (touch.id === changedTouch.identifier) {
 
-	                    // Remove touch
+	                    // Remove touch from active-touches
 	                    this._scroll.activeTouches.splice(j, 1);
 
 	                    // When a different touch now becomes the primary touch, update
@@ -5677,13 +5690,13 @@
 	        }
 
 	        // Wait for all fingers to be released from the screen before resetting the move-spring
-	        if (this._scroll.activeTouches.length) {
+	        if (!primaryTouch || this._scroll.activeTouches.length) {
 	            return;
 	        }
 
 	        // Determine velocity and add to particle
 	        var velocity = 0;
-	        var diffTime = Date.now() - primaryTouch.prevTime;
+	        var diffTime = primaryTouch.time - primaryTouch.prevTime;
 	        if (diffTime > 0) {
 	            var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
 	            velocity = diffOffset / diffTime;
@@ -5708,6 +5721,9 @@
 	     * scroll wheel or a track-pad.
 	     */
 	    function _scrollUpdate(event) {
+	        if (!this.options.enabled) {
+	            return;
+	        }
 	        var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
 	        if (this.options.scrollCallback) {
 	            offset = this.options.scrollCallback(offset, 0);
@@ -5743,17 +5759,7 @@
 	        // finger. When the bounds is exceeded, decrease the scroll distance
 	        // by two.
 	        if (refreshParticle || (this._scroll.particleValue === undefined)) {
-	            var particleValueTime = Date.now();
-	            var particleValue = this._scroll.particle.getPosition1D();
-	            /*if (this._scroll.particleValue !== undefined) {
-	                var diff = (particleValue - this._scroll.particleValue);
-	                if ((this._debug.particleDiff !== undefined) && (Math.abs(diff - this._debug.particleDiff) >= 1)) {
-	                    _log.call(this, 'particle speed variation:', (diff - this._debug.particleDiff), ', diff: ', diff, ', timeDiff: ', (particleValueTime - this._scroll.particleValueTime));
-	                }
-	                this._debug.particleDiff = diff;
-	            }*/
-	            this._scroll.particleValue = particleValue;
-	            this._scroll.particleValueTime = particleValueTime;
+	            this._scroll.particleValue = this._scroll.particle.getPosition1D();
 	        }
 
 	        // do stuff
@@ -5775,7 +5781,7 @@
 	            }
 	        }
 
-	        if (this._scroll.scrollForceCount) {
+	        if (this._scroll.scrollForceCount && this._scroll.scrollForce) {
 	            if (this._scroll.springPosition !== undefined) {
 	                scrollOffset = (scrollOffset + this._scroll.scrollForce + this._scroll.springPosition) / 2.0;
 	            }
@@ -5954,7 +5960,6 @@
 	        // Check whether pagination is active
 	        if (!this.options.paginated ||
 	            this._scroll.scrollForceCount ||
-	            (Math.abs(this._scroll.particle.getEnergy()) > this.options.paginationEnergyThresshold) ||
 	            (this._scroll.springPosition !== undefined)) {
 	            return;
 	        }
@@ -5999,13 +6004,23 @@
 	            return;
 	        }
 
+	        // When velocity exceeds thresshold, treat as flip to
+	        // a certain direction and select that page.
+	        var flipToPrev;
+	        var flipToNext;
+	        if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+	            var velocity = this._scroll.particle.getVelocity1D();
+	            flipToPrev = velocity > 0;
+	            flipToNext = velocity < 0;
+	        }
+
 	        // Determine snap spring-position
 	        var boundOffset = pageOffset - bound;
 	        var snapSpringPosition;
-	        if (!hasNext || (Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))) {
+	        if (!hasNext || flipToPrev || (!flipToNext && ((Math.abs(boundOffset) < Math.abs(boundOffset + pageLength))))) {
 	            snapSpringPosition = (scrollOffset - pageOffset) + (this.options.alignment ? size[this._direction] : 0);
 	            if (snapSpringPosition !== this._scroll.springPosition) {
-	                //_log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+	                _log.call(this, 'setting snap-spring to #1: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
 	                this._scroll.springPosition = snapSpringPosition;
 	                this._scroll.springSource = SpringSource.SNAPPREV;
 	            }
@@ -6013,7 +6028,7 @@
 	        else {
 	            snapSpringPosition = (scrollOffset - (pageOffset + pageLength)) + (this.options.alignment ? size[this._direction] : 0);
 	            if (snapSpringPosition !== this._scroll.springPosition) {
-	                //_log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
+	                _log.call(this, 'setting snap-spring to #2: ', snapSpringPosition, ', previous: ', this._scroll.springPosition);
 	                this._scroll.springPosition = snapSpringPosition;
 	                this._scroll.springSource = SpringSource.SNAPNEXT;
 	            }
@@ -6491,6 +6506,15 @@
 	    };
 
 	    /**
+	     * Checks whether scrolling is in progress or not.
+	     *
+	     * @return {Bool} true when scrolling is active
+	     */
+	    ScrollController.prototype.isScrolling = function() {
+	        return this._scroll.isScrolling;
+	    };
+
+	    /**
 	     * Checks whether any boundaries have been reached.
 	     *
 	     * @return {ScrollController.Bounds} Either, Bounds.PREV, Bounds.NEXT, Bounds.BOTH or Bounds.NONE
@@ -6696,6 +6720,8 @@
 	        var scrollOffset = _calcScrollOffset.call(this, true, true);
 
 	        // When the size or layout function has changed, reflow the layout
+	        var emitEndScrollingEvent = false;
+	        var eventData;
 	        if (size[0] !== this._contextSizeCache[0] ||
 	            size[1] !== this._contextSizeCache[1] ||
 	            this._isDirty ||
@@ -6704,16 +6730,20 @@
 	            this.options.stressTest ||
 	            this._scrollOffsetCache !== scrollOffset) {
 
-	            // Emit start event
-	            var eventData = {
+	            // Prepare event data
+	            eventData = {
 	                target: this,
 	                oldSize: this._contextSizeCache,
 	                size: size,
 	                oldScrollOffset: this._scrollOffsetCache,
-	                scrollOffset: scrollOffset,
-	                dirty: this._isDirty,
-	                trueSizeRequested: this._nodes._trueSizeRequested
+	                scrollOffset: scrollOffset
 	            };
+
+	            // When scroll-offset has changed, emit scroll-start event
+	            if (!this._scroll.isScrolling && (this._scrollOffsetCache !== scrollOffset)) {
+	                this._scroll.isScrolling = true;
+	                this._eventOutput.emit('scrollstart', eventData);
+	            }
 	            this._eventOutput.emit('layoutstart', eventData);
 
 	            // When the layout has changed, and we are not just scrolling,
@@ -6744,7 +6774,11 @@
 	            this._scrollOffsetCache = scrollOffset;
 
 	            // Emit end event
+	            eventData.scrollOffset = this._scrollOffsetCache;
 	            this._eventOutput.emit('layoutend', eventData);
+	        }
+	        else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
+	            emitEndScrollingEvent = true;
 	        }
 
 	        // Update output and optionally emit event
@@ -6759,6 +6793,19 @@
 	            this._eventOutput.emit('reflow', {
 	                target: this
 	            });
+	        }
+
+	        // Emit end scrolling event
+	        if (emitEndScrollingEvent) {
+	            this._scroll.isScrolling = false;
+	            eventData = {
+	                target: this,
+	                oldSize: size,
+	                size: size,
+	                oldScrollOffset: scrollOffset,
+	                scrollOffset: scrollOffset
+	            };
+	            this._eventOutput.emit('scrollend', eventData);
 	        }
 
 	        // When renderables are layed out sequentiall (e.g. a ListLayout or
@@ -7557,6 +7604,7 @@
 	        var firstCellOffset;
 	        var lastCell;
 	        var lastCellOffset;
+	        var firstPullToRefresh = options_.firstPullToRefresh;
 
 	        // init
 	        context = context_;
@@ -7598,7 +7646,7 @@
 	            if (!firstCell) {
 	                firstCell = node;
 	                firstCellOffset = offset;
-	                if (options.isPullToRefreshCallback && options.isPullToRefreshCallback(node.renderNode)) {
+	                if (firstPullToRefresh && (firstPullToRefresh.renderNode === node.renderNode) && !firstPullToRefresh.expaned) {
 	                    nodeSize = 0;
 	                }
 	            }
@@ -7646,6 +7694,16 @@
 	            //
 	            nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
 	            nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
+
+	            if (firstPullToRefresh && (firstPullToRefresh.renderNode === node.renderNode) && !firstPullToRefresh.expanded) {
+	                if (offset > nodeSize) {
+	                    //firstPullToRefresh.expanded = true;
+	                }
+	                else {
+	                    nodeSize = 0;
+	                }
+	                nodeSize = 0;
+	            }
 
 	            //
 	            // Position node
@@ -7718,21 +7776,17 @@
 	        //
 	        // Reposition "pull to refresh" renderable at the top
 	        //
-	        /*if (firstCell && (firstCellOffset > 0) &&
-	           options.isPullToRefreshCallback && options.isPullToRefreshCallback(firstCell.renderNode)) {
-	            firstCell.set.translate[direction] = 0;
-	            firstCell.set.size[direction] = firstCellOffset;
-	            context.set(firstCell, {
-	                size: firstCell.set.size,
-	                translate: firstCell.set.translate,
-	                scrollLength: firstCell.set.scrollLength
-	            });
+	        if (firstCell && (firstCellOffset > 0) && firstPullToRefresh && (firstCell.renderNode === firstPullToRefresh.renderNode)) {
+	            set.translate[direction] = 0;
+	            set.size[direction] = firstCellOffset;
+	            set.scrollLength = 0;
+	            context.set(firstCell, set);
 	        }
 
 	        //
 	        // Reposition "pull to refresh" renderable at the bottom
 	        //
-	        if (lastCell && (lastCellOffset < context.size[direction]) &&
+	        /*if (lastCell && (lastCellOffset < context.size[direction]) &&
 	           options.isPullToRefreshCallback && options.isPullToRefreshCallback(lastCell.renderNode)) {
 	            lastCell.set.translate[direction] = lastCellOffset;
 	            lastCell.set.size[direction] = context.size[direction] - lastCellOffset;
@@ -13319,7 +13373,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutContext = __webpack_require__(144);
+	    var LayoutContext = __webpack_require__(145);
 	    var LayoutUtility = __webpack_require__(39);
 
 	    var MAX_POOL_SIZE = 100;
@@ -13989,7 +14043,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(145);
+	    var EventEmitter = __webpack_require__(146);
 
 	    /**
 	     * EventHandler forwards received events to a set of provided callback functions.
@@ -14537,7 +14591,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var RenderNode = __webpack_require__(49);
 	    var EventHandler = __webpack_require__(43);
-	    var ElementAllocator = __webpack_require__(146);
+	    var ElementAllocator = __webpack_require__(147);
 	    var Transform = __webpack_require__(27);
 	    var Transitionable = __webpack_require__(62);
 
@@ -15425,7 +15479,7 @@
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 	    var Entity = __webpack_require__(52);
-	    var SpecParser = __webpack_require__(147);
+	    var SpecParser = __webpack_require__(148);
 
 	    /**
 	     * A wrapper for inserting a renderable component (like a Modifer or
@@ -16849,7 +16903,7 @@
 	    var Vector = __webpack_require__(53);
 	    var Transform = __webpack_require__(27);
 	    var EventHandler = __webpack_require__(43);
-	    var Integrator = __webpack_require__(152);
+	    var Integrator = __webpack_require__(153);
 
 	    /**
 	     * A point body that is controlled by the Physics Engine. A particle has
@@ -17239,7 +17293,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(148);
+	    var Force = __webpack_require__(149);
 
 	    /**
 	     * Drag is a force that opposes velocity. Attach it to the physics engine
@@ -17366,7 +17420,7 @@
 	/*global console */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(148);
+	    var Force = __webpack_require__(149);
 	    var Vector = __webpack_require__(53);
 
 	    /**
@@ -17970,7 +18024,7 @@
 	 * @copyright Famous Industries, Inc. 2014
 	 */
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var TouchTracker = __webpack_require__(149);
+	    var TouchTracker = __webpack_require__(150);
 	    var EventHandler = __webpack_require__(43);
 	    var OptionsManager = __webpack_require__(45);
 
@@ -18466,8 +18520,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var MultipleTransition = __webpack_require__(150);
-	    var TweenTransition = __webpack_require__(151);
+	    var MultipleTransition = __webpack_require__(151);
+	    var TweenTransition = __webpack_require__(152);
 
 	    /**
 	     * A state maintainer for a smooth transition between
@@ -26154,13 +26208,19 @@
 /* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Create a simple path alias to allow browserify to resolve
-	// the runtime on a supported path.
-	module.exports = __webpack_require__(153);
-
+	module.exports = __webpack_require__.p + "reload.gif"
 
 /***/ },
 /* 143 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Create a simple path alias to allow browserify to resolve
+	// the runtime on a supported path.
+	module.exports = __webpack_require__(154);
+
+
+/***/ },
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -26176,7 +26236,7 @@
 
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -26446,7 +26506,7 @@
 
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26547,7 +26607,7 @@
 
 
 /***/ },
-/* 146 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26659,7 +26719,7 @@
 
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26841,7 +26901,7 @@
 
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26908,7 +26968,7 @@
 
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -27038,7 +27098,7 @@
 
 
 /***/ },
-/* 150 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -27121,7 +27181,7 @@
 
 
 /***/ },
-/* 151 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -27553,7 +27613,7 @@
 
 
 /***/ },
-/* 152 */
+/* 153 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -27661,19 +27721,19 @@
 
 
 /***/ },
-/* 153 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*globals Handlebars: true */
-	var base = __webpack_require__(154);
+	var base = __webpack_require__(155);
 
 	// Each of these augment the Handlebars object. No need to setup here.
 	// (This is done to easily share code between commonjs and browse envs)
-	var SafeString = __webpack_require__(155)["default"];
-	var Exception = __webpack_require__(156)["default"];
-	var Utils = __webpack_require__(157);
-	var runtime = __webpack_require__(158);
+	var SafeString = __webpack_require__(156)["default"];
+	var Exception = __webpack_require__(157)["default"];
+	var Utils = __webpack_require__(158);
+	var runtime = __webpack_require__(159);
 
 	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
 	var create = function() {
@@ -27698,12 +27758,12 @@
 	exports["default"] = Handlebars;
 
 /***/ },
-/* 154 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(157);
-	var Exception = __webpack_require__(156)["default"];
+	var Utils = __webpack_require__(158);
+	var Exception = __webpack_require__(157)["default"];
 
 	var VERSION = "1.3.0";
 	exports.VERSION = VERSION;var COMPILER_REVISION = 4;
@@ -27883,7 +27943,7 @@
 	exports.createFrame = createFrame;
 
 /***/ },
-/* 155 */
+/* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27899,7 +27959,7 @@
 	exports["default"] = SafeString;
 
 /***/ },
-/* 156 */
+/* 157 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27932,12 +27992,12 @@
 	exports["default"] = Exception;
 
 /***/ },
-/* 157 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*jshint -W004 */
-	var SafeString = __webpack_require__(155)["default"];
+	var SafeString = __webpack_require__(156)["default"];
 
 	var escape = {
 	  "&": "&amp;",
@@ -28013,14 +28073,14 @@
 	exports.isEmpty = isEmpty;
 
 /***/ },
-/* 158 */
+/* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(157);
-	var Exception = __webpack_require__(156)["default"];
-	var COMPILER_REVISION = __webpack_require__(154).COMPILER_REVISION;
-	var REVISION_CHANGES = __webpack_require__(154).REVISION_CHANGES;
+	var Utils = __webpack_require__(158);
+	var Exception = __webpack_require__(157)["default"];
+	var COMPILER_REVISION = __webpack_require__(155).COMPILER_REVISION;
+	var REVISION_CHANGES = __webpack_require__(155).REVISION_CHANGES;
 
 	function checkRevision(compilerInfo) {
 	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
