@@ -53,6 +53,18 @@ Or use the live-reload server:
 grunt serve
 ```
 
+As default Firebase is used as a backend server and connects to a ready made demo database. To set up your own database quickly, register as a new user on firebase.com and create a new free app. Then change this line in main.js to your database. 
+
+```
+fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
+```
+to 
+
+```
+fbMessages = new Firebase('https://<your-app-name>.firebaseio.com/messages');
+```
+
+That's it and that's that. Your chat page should now be empty and ready to be filled up with new messages.
 
 ## Contribute
 
