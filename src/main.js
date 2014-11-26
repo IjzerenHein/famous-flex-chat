@@ -31,51 +31,28 @@ define(function(require) {
     var Surface = require('famous/core/Surface');
     var Modifier = require('famous/core/Modifier');
     var Transform = require('famous/core/Transform');
-    var StockScrollView = require('famous/views/ScrollView');
-    var ScrollController = require('famous-flex/ScrollController');
-    var TableLayout = require('famous-flex/layouts/TableLayout');
+    var FlexScrollView = require('famous-flex/ScrollView');
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('famous-autosizetextarea/AutosizeTextareaSurface');
     var Timer = require('famous/utilities/Timer');
-    var Console = require('./Console');
     var InputSurface = require('famous/surfaces/InputSurface');
+    var Spinner = require('./Spinner');
     var moment = require('moment/moment');
     var cuid = require('cuid');
-    var browser = require('ua_parser').userAgent(window.navigator.userAgent);
     // templates
     var chatBubbleTemplate = require('./chat-bubble.handlebars');
     var daySectionTemplate = require('./day-section.handlebars');
 
-    // debugging
-    var flow = true;
-    var debug = false;
-    var useContainer = false;
-    var stockScrollView = false;
-    var stickySections = true;
-    var duplicateCount = 1;
-    var trueSize = true;
-
-    // On mobile or other devices that have keyboards that slide in, ensure
-    // that container mode is enabled.
-    if ((browser.platform === 'tablet') || (browser.platform === 'mobile')) {
-        useContainer = true;
-    }
-
     // Initialize
     var mainContext = Engine.createContext();
     var viewSequence = new ViewSequence();
+    _createPullToRefreshCell();
     _setupFirebase();
     mainContext.add(_createMainLayout());
     //_createLagometer();
     //_loadDemoData();
-
-    // Fix for android, which causes a repaint after a resize, which
-    // repositions the keyboard correctly.
-    if (browser.os.android) {
-        _createConsole();
-    }
 
     //
     // Main layout, bottom text input, top chat messages
@@ -195,85 +172,77 @@ define(function(require) {
     //
     var scrollView;
     function _createScrollView() {
-        if (stockScrollView) {
-            scrollView = new StockScrollView();
-            scrollView.sequenceFrom(viewSequence);
-        }
-        else {
-            scrollView = new ScrollController({
-                layout: TableLayout,
-                layoutOptions: {
-                    // callback that is called by the layout-function to check
-                    // whether a node is a section
-                    isSectionCallback: function(renderNode) {
-                        return renderNode.properties.isSection && stickySections;
-                    },
-                    isPullToRefreshCallback: function(renderNode) {
-                        return renderNode.isPullToRefresh;
-                    }
+        scrollView = new FlexScrollView({
+            layoutOptions: {
+                // callback that is called by the layout-function to check
+                // whether a node is a section
+                isSectionCallback: function(renderNode) {
+                    return renderNode.properties.isSection;
                 },
-                dataSource: viewSequence,
-                flow: flow,
-                alignment: 1,
-                useContainer: useContainer,
-                mouseMove: true,
-                debug: debug
-            });
-        }
+                margins: [5, 0, 0, 0]
+            },
+            dataSource: viewSequence,
+            flow: true,
+            alignment: 1,
+            mouseMove: true,
+            debug: false,
+            pullToRefreshHeader: pullToRefreshHeader
+        });
         return scrollView;
     }
-
-    //
-    // Test for getLastVisibleItem
-    //
-    /*scrollView.on('reflow', function() {
-        var item = scrollView.getLastVisibleItem();
-        if (item) {
-            var chatText = item.renderNode.properties.message;
-            console.log('Chat: last item: ' + chatText);
-        }
-        else {
-            console.log('Chat: no last item found');
-        }
-    });*/
 
     //
     // Adds a message to the scrollview
     //
     var afterInitialRefreshTimerId;
     var afterInitialRefresh;
-    function _addMessage(data) {
+    var firstKey;
+    function _addMessage(data, top, key) {
         var time = moment(data.timeStamp || new Date());
         data.time = time.format('LT');
         if (!data.author || (data.author === '')) {
             data.author = 'Anonymous bastard';
         }
 
+        // Store first key
+        firstKey = firstKey || key;
+        if (top && key) {
+            firstKey = key;
+        }
+
         // Insert section
-        //var day = time.calander();
         var day = time.format('LL');
-        if (day !== lastSectionDay) {
+        var daySection;
+        if (!top && (day !== lastSectionDay)) {
             lastSectionDay = day;
-            var daySection = _createDaySection(day);
-            if (stockScrollView || !useContainer) {
-                daySection.pipe(scrollView);
-            }
-            viewSequence.push(daySection);
+            firstSectionDay = firstSectionDay || day;
+            daySection = _createDaySection(day);
+            daySection.pipe(scrollView);
+            scrollView.push(daySection);
+        } else if (top && (day !== firstSectionDay)) {
+            firstSectionDay = day;
+            daySection = _createDaySection(day);
+            daySection.pipe(scrollView);
+            scrollView.insert(0, daySection);
         }
+
         //console.log('adding message: ' + JSON.stringify(data));
-        for (var i = 0; i < duplicateCount; i++) {
-            var chatBubble = _createChatBubble(data);
-            if (stockScrollView || !useContainer) {
-                chatBubble.pipe(scrollView);
-            }
-            viewSequence.push(chatBubble);
+        var chatBubble = _createChatBubble(data);
+        chatBubble.pipe(scrollView);
+        if (top) {
+            scrollView.insert(1, chatBubble);
         }
-        if (!stockScrollView) {
+        else {
+            scrollView.push(chatBubble);
+        }
+        if (!top) {
 
             // Scroll the latest (newest) chat message
             if (afterInitialRefresh) {
-                scrollView.goToLastPage();
-                scrollView.reflowLayout();
+                if (top === undefined) {
+                    scrollView.goToLastPage();
+                    scrollView.reflowLayout();
+                }
             }
             else {
 
@@ -295,11 +264,12 @@ define(function(require) {
     // setup firebase
     //
     var fbMessages;
+    var firstSectionDay;
     var lastSectionDay;
     function _setupFirebase() {
         fbMessages = new Firebase('https://famous-flex-chat.firebaseio.com/messages');
-        fbMessages.limit(30).on('child_added', function(snapshot) {
-            _addMessage(snapshot.val());
+        fbMessages.limitToLast(30).on('child_added', function(snapshot) {
+            _addMessage(snapshot.val(), false, snapshot.key());
         });
     }
 
@@ -308,7 +278,7 @@ define(function(require) {
     //
     function _createChatBubble(data) {
         var surface = new Surface({
-            size: [undefined, trueSize ? true : 65],
+            size: [undefined, true],
             classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
             content: chatBubbleTemplate(data),
             properties: {
@@ -366,62 +336,39 @@ define(function(require) {
         messageInputTextArea.focus();
     }
 
-    // create view-sequence containing items
-    /*viewSequence.push(_createPullToRefreshCell());
-    for (j = 1; j <= 10; j++) {
-        var title = 'This is a sticky section ' + j;
-        if (j === 1) {
-            title = 'Try pull down to refresh!';
-        }
-        viewSequence.push(_createSection(title));
-        for (i = 1 ; i <= 5; i++) {
-            viewSequence.push(_createCell(i));
-        }
-    }
-    viewSequence.push(_createPullToRefreshCell());*/
-
     /**
-     * Create pull to refresh cell
+     * Create pull to refresh header
      */
-    /*function _createPullToRefreshCell(index) {
-        var surface = new Surface({
-            classes: ['pull-to-refresh']
+    var pullToRefreshHeader;
+    function _createPullToRefreshCell() {
+        pullToRefreshHeader = new Spinner({
+            size: [undefined, 100]
         });
-        surface.isPullToRefresh = true;
-        return surface;
-    }*/
+    }
+    scrollView.on('refresh', function(event) {
+        var queryKey = firstKey;
+        fbMessages.endAt(null, firstKey).limitToLast(2).once('value', function(snapshot) {
+            var val = snapshot.val();
+            for (var key in val) {
+                if (key !== queryKey) {
+                    _addMessage(val[key], true, key);
+                }
+            }
+            scrollView.hidePullToRefresh(event.footer);
+        });
+
+    });
 
     //
     // Loads the chat messages from demoMessages.json
     //
+    /*var demoData = require('./demoMessages.json');
     function _loadDemoData() {
         var data = require('./demoMessages.json');
-        for (var i = 0 ; i < data.length; i++) {
-            _addMessage(data[i]);
-        }
-    }
-
-    //
-    // Shows the Console
-    //
-    function _createConsole() {
-        var consoleMod = new Modifier({
-            size: [undefined, 2],
-            align: [0, 1],
-            origin: [0, 1],
-            transform: Transform.translate(0, 0, 1000)
-        });
-        var console = new Console();
-        mainContext.add(consoleMod).add(console);
-
-        // IMPORTANT NOTE: For some reason the following code prevents a
-        // very annoying bug on android from triggering. The bug occurs when the
-        // keyboard is shown, and the content would become invisible and you
-        // had to scroll down to make the main layout visible....
-        mainLayout.on('layoutstart', function(event) {
-            console.log('oldSize: ' + JSON.stringify(event.oldSize) + ', newSize: ' + JSON.stringify(event.size));
-        });
-    }
+        _addMessage(data[0]);
+        _addMessage(data[1]);
+        _addMessage(data[2]);
+    }*/
 
     //
     // Shows the lagometer

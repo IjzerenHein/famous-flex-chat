@@ -4,6 +4,7 @@ body, div {
 }
 body {
   background: white;
+  position: absolute;
 }
 
 /**
@@ -42,6 +43,19 @@ body {
 
 
 /**
+ * Pull to refresh
+ */
+.pull-to-refresh {
+  z-index: 0;
+  background-image: url(./reload.gif);
+  background-repeat: no-repeat no-repeat;
+  -background-position: center top 20px;
+  background-position: center center;
+  background-size: 40px auto;
+}
+
+
+/**
  * Message-day
  */
 .message-day {
@@ -49,6 +63,7 @@ body {
   overflow: hidden;
   text-align: center;
   z-index: 10;
+  /*background: white;*/
   /* disable text selection */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -82,6 +97,7 @@ body {
   -ms-user-select: none;
   user-select: none;
   overflow: hidden;
+  background: white;
 }
 .message-bubble.send {
   padding: 0 10px 10px 30px;
@@ -95,17 +111,23 @@ body {
   border-radius: 10px;
   background-color: #DDDDDD;
   padding: 8px 8px 8px 8px;
+  float: left;
+  max-width: 100%;
 }
 .message-bubble.send .back {
   background-color: rgb(114, 173, 191);
+  float: right;
 }
 .message-bubble .author {
   font-size: 14px;
+  line-height: 18px;
   font-weight: bold;
 }
 .message-bubble .time {
   float: right;
   font-size: 12px;
+  line-height: 18px;
+  margin-left: 10px;
   color: #888888;
 }
 .message-bubble.send .time {
@@ -115,6 +137,7 @@ body {
   margin-top: 3px;
   font-size: 16px;
   word-wrap: break-word;
+  -word-break: break-all;
 }
 .message-bubble .back:after {
   content: "";
@@ -135,13 +158,3 @@ body {
   left: 2px;
 }
 
-
-/*.pull-to-refresh {
-  z-index: 0;
-  background-image: url(reload.gif);
-  background-repeat: no-repeat no-repeat;
-  -background-position: center top 20px;
-  background-position: center center;
-  background-size: 40px auto;
-}
-*/
