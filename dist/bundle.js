@@ -67,10 +67,10 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 
 	    //<webpack>
-	    __webpack_require__(3);
+	    __webpack_require__(2);
 	    __webpack_require__(19);
-	    __webpack_require__(4);
-	    __webpack_require__(6);
+	    __webpack_require__(3);
+	    __webpack_require__(5);
 	    //</webpack>
 
 	    // Fast-click
@@ -87,16 +87,16 @@
 	    var FlexScrollView = __webpack_require__(15);
 	    var HeaderFooterLayout = __webpack_require__(17);
 	    var LayoutController = __webpack_require__(16);
-	    var Lagometer = __webpack_require__(9);
-	    var AutosizeTextareaSurface = __webpack_require__(10);
+	    var Lagometer = __webpack_require__(8);
+	    var AutosizeTextareaSurface = __webpack_require__(9);
 	    var Timer = __webpack_require__(26);
 	    var InputSurface = __webpack_require__(27);
-	    var Spinner = __webpack_require__(2);
+	    var RefreshLoader = __webpack_require__(10);
 	    var moment = __webpack_require__(11);
 	    var cuid = __webpack_require__(18);
 	    // templates
-	    var chatBubbleTemplate = __webpack_require__(7);
-	    var daySectionTemplate = __webpack_require__(8);
+	    var chatBubbleTemplate = __webpack_require__(6);
+	    var daySectionTemplate = __webpack_require__(7);
 
 	    // Initialize
 	    var mainContext = Engine.createContext();
@@ -236,9 +236,6 @@
 	            },
 	            dataSource: viewSequence,
 	            flow: true,
-	            insertSpec: {
-	                opacity: 0
-	            },
 	            alignment: 1,
 	            mouseMove: true,
 	            debug: false,
@@ -395,8 +392,10 @@
 	     */
 	    var pullToRefreshHeader;
 	    function _createPullToRefreshCell() {
-	        pullToRefreshHeader = new Spinner({
-	            size: [undefined, 100]
+	        pullToRefreshHeader = new RefreshLoader({
+	            size: [undefined, 60],
+	            pullToRefresh: true,
+	            pullToRefreshBackgroundColor: 'white'
 	        });
 	    }
 	    scrollView.on('refresh', function(event) {
@@ -408,21 +407,12 @@
 	                    _addMessage(val[key], true, key);
 	                }
 	            }
-	            scrollView.hidePullToRefresh(event.footer);
+	            Timer.setTimeout(function() {
+	                scrollView.hidePullToRefresh(event.footer);
+	            }, 200);
 	        });
 
 	    });
-
-	    //
-	    // Loads the chat messages from demoMessages.json
-	    //
-	    /*var demoData = require('./demoMessages.json');
-	    function _loadDemoData() {
-	        var data = require('./demoMessages.json');
-	        _addMessage(data[0]);
-	        _addMessage(data[1]);
-	        _addMessage(data[2]);
-	    }*/
 
 	    //
 	    // Shows the lagometer
@@ -446,99 +436,18 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * This Source Code is licensed under the MIT license. If a copy of the
-	 * MIT-license was not distributed with this file, You can obtain one at:
-	 * http://opensource.org/licenses/mit-license.html.
-	 *
-	 * @author: Hein Rutjes (IjzerenHein)
-	 * @license MIT
-	 * @copyright Gloey Apps, 2014
-	 */
-
-	/*global define, Please, console*/
-	/*eslint no-console:0 no-use-before-define:0*/
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
-
-	  // import dependencies
-	  var Surface = __webpack_require__(23);
-	  var View = __webpack_require__(28);
-	  var LayoutController = __webpack_require__(16);
-
-	  function Spinner(options) {
-	    View.apply(this, arguments);
-
-	    // Create background surface behind which the spinner hides
-	    var background = new Surface({
-	      properties: {
-	        backgroundColor: this.options.backgroundColor || 'white'
-	      }
-	    });
-	    background.pipe(this._eventOutput);
-
-	    // Create spinner
-	    var spinner = new Surface({
-	      classes: ['pull-to-refresh']
-	    });
-	    spinner.pipe(this._eventOutput);
-
-	    // Create layout
-	    this.layoutController = new LayoutController({
-	      layout: function(context) {
-	        context.set('back', {
-	          size: this.options.size,
-	          translate: [0, context.size[1], 0]
-	        });
-	        context.set('spinner', {
-	          size: this.options.size,
-	          translate: [0, 0, -1]
-	        });
-	      }.bind(this),
-	      dataSource: {
-	        back: background,
-	        spinner: spinner
-	      }
-	    });
-	    this.add(this.layoutController);
-	  }
-	  Spinner.prototype = Object.create(View.prototype);
-	  Spinner.prototype.constructor = Spinner;
-
-	  //
-	  // Called by the scrollview whenever the pull-to-refresh renderable is shown
-	  // or the state has changed. States:
-	  // 0: hidden/showing
-	  // 1: shown
-	  // 2: hiding
-	  //
-	  Spinner.prototype.setPullToRefreshStatus = function(status) {
-	    if (this._status !== status) {
-	      this._status = status;
-	      this.layoutController.reflowLayout();
-	    }
-	  };
-
-	  return Spinner;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
+	__webpack_require__(28);
+	__webpack_require__(29);
+	__webpack_require__(30);
 
 /***/ },
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(29);
-	__webpack_require__(30);
-	__webpack_require__(31);
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	var dispose = __webpack_require__(12)
 		// The css code:
-		(__webpack_require__(5));
+		(__webpack_require__(4));
 	// Hot Module Replacement
 	if(false) {
 		module.hot.accept();
@@ -546,23 +455,23 @@
 	}
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports =
-		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n  position: absolute;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Pull to refresh\n */\n.pull-to-refresh {\n  z-index: 0;\n  background-image: url("+__webpack_require__(129)+");\n  background-repeat: no-repeat no-repeat;\n  -background-position: center top 20px;\n  background-position: center center;\n  background-size: 40px auto;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /*background: white;*/\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n  background: white;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n  float: left;\n  max-width: 100%;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n  float: right;\n}\n.message-bubble .author {\n  font-size: 14px;\n  line-height: 18px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  line-height: 18px;\n  margin-left: 10px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n  -word-break: break-all;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n";
+		"body, div {\n    font-family: \"HelveticaNeue\", \"Helvetica Neue\", Helvetica, Arial, \"Lucida Grande\", sans-serif;\n    font-weight: normal;\n}\nbody {\n  background: white;\n  position: absolute;\n}\n\n/**\n * Name-bar\n */\n.name-input {\n  font-size: 16px;\n  padding: 6px 10px 6px 10px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  border: none;\n  border-bottom: 1px solid #CCCCCC;\n  z-index: 10;\n}\n\n/**\n * Message-bar\n */\n.message-back {\n  border-top: 1px solid #CCCCCC;\n  background-color: #EEEEEE;\n}\n.message-input {\n  border-radius: 7px;\n  border-color: #CCCCCC;\n  font-size: 16px;\n  padding: 6px 5px 6px 5px;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n}\n.message-send {\n  text-align: center;\n  line-height: 34px;\n  font-weight: 600;\n}\n\n\n/**\n * Message-day\n */\n.message-day {\n  padding: 5px 10px 15px 10px;\n  overflow: hidden;\n  text-align: center;\n  z-index: 10;\n  /*background: white;*/\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.message-day .text{\n  -webkit-border-radius: 15px;\n  -moz-border-radius: 15px;\n  border-radius: 15px;\n  padding: 5px 10px;\n  background: rgb(187, 191, 114);\n  color: white;\n  display: inline-block;\n  font-size: 12px;\n}\n\n\n/**\n * Message-bubbles\n */\n.message-bubble {\n  padding: 0 10px 10px 10px;\n  /* disable text selection */\n  -webkit-touch-callout: none;\n  -webkit-user-select: none;\n  -khtml-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n  overflow: hidden;\n  background: white;\n}\n.message-bubble.send {\n  padding: 0 10px 10px 30px;\n}\n.message-bubble.received {\n  padding: 0 30px 10px 10px;\n}\n.message-bubble .back {\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n  border-radius: 10px;\n  background-color: #DDDDDD;\n  padding: 8px 8px 8px 8px;\n  float: left;\n  max-width: 100%;\n}\n.message-bubble.send .back {\n  background-color: rgb(114, 173, 191);\n  float: right;\n}\n.message-bubble .author {\n  font-size: 14px;\n  line-height: 18px;\n  font-weight: bold;\n}\n.message-bubble .time {\n  float: right;\n  font-size: 12px;\n  line-height: 18px;\n  margin-left: 10px;\n  color: #888888;\n}\n.message-bubble.send .time {\n  color: #444444;\n}\n.message-bubble .message {\n  margin-top: 3px;\n  font-size: 16px;\n  word-wrap: break-word;\n  -word-break: break-all;\n}\n.message-bubble .back:after {\n  content: \"\";\n  position: absolute;\n  bottom: 16px;\n  border-style: solid;\n  border-color: transparent #DDDDDD;\n  display: block;\n  width: 0;\n}\n.message-bubble.send .back:after {\n  border-width: 5px 0 5px 10px;\n  right: 2px;\n  border-color: transparent rgb(114, 173, 191);\n}\n.message-bubble.received .back:after {\n  border-width: 5px 10px 5px 0;\n  left: 2px;\n}\n\n";
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "index.html"
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(130).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(128).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
@@ -585,10 +494,10 @@
 	  });
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(130).default.template(function (Handlebars,depth0,helpers,partials,data) {
+	module.exports = __webpack_require__(128).default.template(function (Handlebars,depth0,helpers,partials,data) {
 	  this.compilerInfo = [4,'>= 1.0.0'];
 	helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 	  var buffer = "", stack1, helper, functionType="function", escapeExpression=this.escapeExpression;
@@ -603,7 +512,7 @@
 	  });
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -624,8 +533,8 @@
 
 	    // import dependencies
 	    var Engine = __webpack_require__(21);
-	    var CanvasSurface = __webpack_require__(32);
-	    var View = __webpack_require__(28);
+	    var CanvasSurface = __webpack_require__(31);
+	    var View = __webpack_require__(32);
 
 	    /**
 	     * @class Lagometer
@@ -898,7 +807,7 @@
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -1129,6 +1038,223 @@
 	    };
 
 	    module.exports = AutosizeTextareaSurface;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * This Source Code is licensed under the MIT license. If a copy of the
+	 * MIT-license was not distributed with this file, You can obtain one at:
+	 * http://opensource.org/licenses/mit-license.html.
+	 *
+	 * @author: Hein Rutjes (IjzerenHein)
+	 * @license MIT
+	 * @copyright Gloey Apps, 2014
+	 */
+
+	/*global define*/
+	/*eslint no-use-before-define:0*/
+
+	/**
+	 * @module
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    'use strict';
+
+	    // import dependencies
+	    var Entity = __webpack_require__(34);
+	    var Surface = __webpack_require__(23);
+	    var Transform = __webpack_require__(25);
+	    var Modifier = __webpack_require__(24);
+	    var View = __webpack_require__(32);
+
+	    /**
+	     * @class
+	     * @extends View
+	     * @param {Object} [options] Configuration options
+	     */
+	    function RefreshLoader(options) {
+	        View.apply(this, arguments);
+
+	        this._rotateOffset = 0;
+	        this._scale = 1;
+	        this.id = Entity.register(this); // register entity-id to capture size prior to rendering
+
+	        if (this.options.pullToRefresh && this.options.pullToRefreshBackgroundColor) {
+	            _createForeground.call(this, _translateBehind.call(this));
+	        }
+	        _createParticles.call(this, _translateBehind.call(this), this.options.particleCount);
+	    }
+	    RefreshLoader.prototype = Object.create(View.prototype);
+	    RefreshLoader.prototype.constructor = RefreshLoader;
+
+	    // default options
+	    RefreshLoader.DEFAULT_OPTIONS = {
+	        color: '#AAAAAA',
+	        particleCount: 10,
+	        particleSize: 6,
+	        rotateVelocity: 0.09,
+	        hideVelocity: 0.05,
+	        quickHideVelocity: 0.2,
+	        pullToRefresh: false,
+	        pullToRefreshBackgroundColor: 'white',
+	        pullToRefreshDirection: 1,
+	        pullToRefreshFooter: false
+	    };
+
+	    /**
+	     * Helper function for giving all surfaces the correct z-index.
+	     */
+	    function _translateBehind() {
+	        if (this._zNode) {
+	            this._zNode = this._zNode.add(new Modifier({
+	                transform: Transform.behind
+	            }));
+	        }
+	        else {
+	            this._zNode = this.add(new Modifier({
+	                transform: Transform.behind
+	            }));
+	        }
+	        return this._zNode;
+	    }
+
+	    /**
+	     * Creates the particles
+	     */
+	    function _createParticles(node, count) {
+	        this._particles = [];
+	        var options = {
+	            size: [this.options.particleSize, this.options.particleSize],
+	            properties: {
+	                backgroundColor: this.options.color,
+	                borderRadius: '50%'
+	            }
+	        };
+	        for (var i = 0; i < count; i++) {
+	            var particle = {
+	                surface: new Surface(options),
+	                mod: new Modifier({})
+	            };
+	            this._particles.push(particle);
+	            node.add(particle.mod).add(particle.surface);
+	        }
+	    }
+
+	    /**
+	     * Creates the foreground behind which the particles can hide in case of pull to refresh.
+	     */
+	    function _createForeground(node) {
+	        this._foreground = {
+	            surface: new Surface({
+	                size: this.options.size,
+	                properties: {
+	                    backgroundColor: this.options.pullToRefreshBackgroundColor
+	                }
+	            }),
+	            mod: new Modifier({})
+	        };
+	        node.add(this._foreground.mod).add(this._foreground.surface);
+	    }
+
+	     /**
+	     * Positions/rotates partciles.
+	     */
+	    var devicePixelRatio = window.devicePixelRatio || 1;
+	    function _positionParticles(renderSize) {
+	        var shapeSize = this.options.size[this.options.pullToRefreshDirection] / 2;
+	        var visiblePerc = Math.min(Math.max(renderSize[this.options.pullToRefreshDirection] / (this.options.size[this.options.pullToRefreshDirection] * 2), 0), 1);
+	        switch (this._pullToRefreshStatus) {
+	            case 0:
+	            case 1:
+	                this._rotateOffset = 0;
+	                this._scale = 1;
+	                break;
+	            case 2:
+	                visiblePerc = 1;
+	                this._rotateOffset += this.options.rotateVelocity;
+	                break;
+	            case 3:
+	                visiblePerc = 1;
+	                this._rotateOffset += this.options.rotateVelocity;
+	                this._scale -= this.options.hideVelocity;
+	                this._scale = Math.max(0, this._scale);
+	                break;
+	            case 4:
+	                visiblePerc = 1;
+	                this._rotateOffset += this.options.rotateVelocity;
+	                this._scale -= this.options.quickHideVelocity;
+	                this._scale = Math.max(0, this._scale);
+	                break;
+	        }
+	        //console.log('visiblePerc: ' + visiblePerc + ', renderSize: ' + JSON.stringify(renderSize));
+	        var rTotal = visiblePerc * Math.PI * 2;
+	        for (var i = 0, cnt = this._particles.length; i < cnt; i++) {
+	            var mod = this._particles[i].mod;
+	            var r = (((i / cnt) * rTotal) - (Math.PI / 2)) + this._rotateOffset + (this.options.pullToRefreshFooter ? Math.PI : 0);
+	            var x = Math.cos(r) * (shapeSize / 2) * this._scale;
+	            var y = Math.sin(r) * (shapeSize / 2) * this._scale;
+	            if (this.options.pullToRefreshDirection) {
+	                x += (renderSize[0] / 2);
+	                y += shapeSize;
+	                y = Math.round(y * devicePixelRatio) / devicePixelRatio;
+	            }
+	            else {
+	                x += shapeSize;
+	                y += (renderSize[1] / 2);
+	                x = Math.round(x * devicePixelRatio) / devicePixelRatio;
+	            }
+	            mod.transformFrom(Transform.translate(x, y, 0));
+	            mod.opacityFrom(this._scale);
+	        }
+	    }
+
+	    /**
+	     * Positions the foreground in front of the particles.
+	     */
+	    function _positionForeground(renderSize) {
+	        if (this._pullToRefreshDirection) {
+	            this._foreground.mod.transformFrom(Transform.translate(0, renderSize[1], 0));
+	        }
+	        else {
+	            this._foreground.mod.transformFrom(Transform.translate(renderSize[0], 0, 0));
+	        }
+	    }
+
+	    /**
+	     * Ensure that our commit is called passing along the size.
+	     * @private
+	     */
+	    RefreshLoader.prototype.render = function render() {
+	        return [this.id, this._node.render()];
+	    };
+
+	    /**
+	     * Position renderables based on size
+	     * @private
+	     */
+	    RefreshLoader.prototype.commit = function commit(context) {
+	        _positionParticles.call(this, context.size);
+	        if (this._foreground) {
+	            _positionForeground.call(this, context.size);
+	        }
+	        return {};
+	    };
+
+	    /**
+	     * Called by the flex ScrollView whenever the pull-to-refresh renderable is shown
+	     * or the state has changed.
+	     *
+	     * @param {Number} status Status, 0: hidden, 1: pulling, 2: active, 3: completed, 4: hidding
+	     */
+	    RefreshLoader.prototype.setPullToRefreshStatus = function(status) {
+	        this._pullToRefreshStatus = status;
+	    };
+
+	    module.exports = RefreshLoader;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -1905,7 +2031,7 @@
 	        if (!locales[name] && hasModule) {
 	            try {
 	                oldLocale = moment.locale();
-	                __webpack_require__(34)("./" + name);
+	                __webpack_require__(35)("./" + name);
 	                // because defineLocale currently also sets the global locale, we want to undo that for lazy loaded locales
 	                moment.locale(oldLocale);
 	            } catch (e) { }
@@ -3993,7 +4119,7 @@
 	    }
 	}).call(this);
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(131)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(130)(module)))
 
 /***/ },
 /* 12 */
@@ -5127,7 +5253,7 @@
 	 * -    Customizable layout (uses ListLayout by default)
 	 * -    Insert/remove at any position using animations
 	 * -    Support for `true` size renderables
-	 * -    Pull to refresh
+	 * -    Pull to refresh (header & footer)
 	 * -    Horizontal/vertical direction
 	 * -    Top/left or bottom/right alignment
 	 * -    Pagination
@@ -5140,35 +5266,38 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(35);
-	    var ScrollController = __webpack_require__(36);
-	    var ListLayout = __webpack_require__(37);
+	    var LayoutUtility = __webpack_require__(36);
+	    var ScrollController = __webpack_require__(37);
+	    var ListLayout = __webpack_require__(38);
 
 	    //
 	    // Pull to refresh states
 	    //
 	    var PullToRefreshState = {
 	        HIDDEN: 0,
-	        SHOWN: 1,
-	        HIDDING: 2
+	        PULLING: 1,
+	        ACTIVE: 2,
+	        COMPLETED: 3,
+	        HIDDING: 4
 	    };
 
 	    /**
 	     * @class
 	     * @extends ScrollController
-	     * @param {Object} options Options (see ScrollController).
+	     * @param {Object} options Configurable options (see ScrollController for all inherited options).
+	     * @param {Renderable} [options.pullToRefreshHeader] Pull to refresh renderable that is displayed when pulling down from the top.
+	     * @param {Renderable} [options.pullToRefreshFooter] Pull to refresh renderable that is displayed when pulling up from the bottom.
 	     * @alias module:ScrollView
 	     */
 	    function ScrollView(options) {
 	        ScrollController.call(this, LayoutUtility.combineOptions(ScrollView.DEFAULT_OPTIONS, options));
-	        this._pullToRefreshHeaderState = PullToRefreshState.HIDDEN;
-	        this._pullToRefreshFooterState = PullToRefreshState.HIDDEN;
 	        this._thisScrollViewDelta = 0;
 	        this._leadingScrollViewDelta = 0;
 	        this._trailingScrollViewDelta = 0;
 	    }
 	    ScrollView.prototype = Object.create(ScrollController.prototype);
 	    ScrollView.prototype.constructor = ScrollView;
+	    ScrollView.PullToRefrehState = PullToRefreshState;
 
 	    ScrollView.DEFAULT_OPTIONS = {
 	        layout: ListLayout,         // sequential layout, uses width/height from renderable
@@ -5184,6 +5313,54 @@
 	        leadingScrollView: undefined,
 	        trailingScrollView: undefined
 	        // see ScrollController for all other options
+	    };
+
+	    /**
+	     * Patches the ScrollView instance's options with the passed-in ones.
+	     *
+	     * @param {Object} options Configurable options (see ScrollController for all inherited options).
+	     * @param {Renderable} [options.pullToRefreshHeader] Pull to refresh renderable that is displayed when pulling down from the top.
+	     * @param {Renderable} [options.pullToRefreshFooter] Pull to refresh renderable that is displayed when pulling up from the bottom.
+	     * @return {ScrollView} this
+	     */
+	    ScrollView.prototype.setOptions = function(options) {
+	        ScrollController.prototype.setOptions.call(this, options);
+
+	        // Update pull to refresh renderables
+	        if (options.pullToRefreshHeader || options.pullToRefreshFooter || this._pullToRefresh) {
+	            if (options.pullToRefreshHeader) {
+	                this._pullToRefresh = this._pullToRefresh || [undefined, undefined];
+	                if (!this._pullToRefresh[0]) {
+	                    this._pullToRefresh[0] = {
+	                        state: PullToRefreshState.HIDDEN,
+	                        prevState: PullToRefreshState.HIDDEN,
+	                        footer: false
+	                    };
+	                }
+	                this._pullToRefresh[0].node = options.pullToRefreshHeader;
+	            }
+	            else if (!this.options.pullToRefreshHeader && this._pullToRefresh) {
+	                this._pullToRefresh[0] = undefined;
+	            }
+	            if (options.pullToRefreshFooter) {
+	                this._pullToRefresh = this._pullToRefresh || [undefined, undefined];
+	                if (!this._pullToRefresh[1]) {
+	                    this._pullToRefresh[1] = {
+	                        state: PullToRefreshState.HIDDEN,
+	                        prevState: PullToRefreshState.HIDDEN,
+	                        footer: true
+	                    };
+	                }
+	                this._pullToRefresh[1].node = options.pullToRefreshFooter;
+	            }
+	            else if (!this.options.pullToRefreshFooter && this._pullToRefresh) {
+	                this._pullToRefresh[1] = undefined;
+	            }
+	            if (this._pullToRefresh && !this._pullToRefresh[0] && !this._pullToRefresh[1]) {
+	                this._pullToRefresh = undefined;
+	            }
+	        }
+	        return this;
 	    };
 
 	    /**
@@ -5267,13 +5444,32 @@
 	    ScrollView.prototype.getPosition = ScrollView.prototype.getOffset;
 
 	    /**
+	     * Helper function for setting the pull-to-refresh status.
+	     */
+	    function _setPullToRefreshState(pullToRefresh, state) {
+	        if (pullToRefresh.state !== state) {
+	            pullToRefresh.state = state;
+	            if (pullToRefresh.node && pullToRefresh.node.setPullToRefreshStatus) {
+	                pullToRefresh.node.setPullToRefreshStatus(state);
+	            }
+	        }
+	    }
+
+	    /**
+	     * Helper function for getting the pull-to-refresh data.
+	     */
+	    function _getPullToRefresh(footer) {
+	        return this._pullToRefresh ? this._pullToRefresh[footer ? 1 : 0] : undefined;
+	    }
+
+	    /**
 	     * Post-layout function that adds the pull-to-refresh renderables.
 	     * @private
 	     */
 	    ScrollView.prototype._postLayout = function(size, scrollOffset) {
 
 	        // Exit immediately when pull to refresh is not configured
-	        if (!this.options.pullToRefreshHeader && !this.options.pullToRefreshFooter) {
+	        if (!this._pullToRefresh) {
 	            return;
 	        }
 
@@ -5287,134 +5483,104 @@
 	        var nextHeight;
 	        var totalHeight;
 
-	        // Show/activate pull to refresh header
-	        var pullToRefreshHeader = this.options.pullToRefreshHeader;
-	        if (pullToRefreshHeader) {
+	        // Show/activate pull to refresh renderables
+	        for (var i = 0; i < 2 ; i++) {
+	            var pullToRefresh = this._pullToRefresh[i];
+	            if (pullToRefresh) {
 
-	            // Calculate offset
-	            prevHeight = this._calcScrollHeight(false);
-	            prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
-	            var length = pullToRefreshHeader.getSize()[this._direction];
-	            var offset = (prevHeight >= 0) ? (scrollOffset - prevHeight) : prevHeight;
-	            if (this.options.alignment) {
-	                nextHeight = this._calcScrollHeight(true);
-	                nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
-	                totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
-	                if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
-	                    offset = Math.round((scrollOffset - size[this._direction]) + nextHeight);
-	                }
-	            }
-
-	            // Determine whether to show or hide the pull-to-refresh node
-	            var showing = (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN);
-	            if (!showing) {
-	                var visiblePerc = Math.max(Math.min(offset / length, 1), 0);
-	                if (offset > 0.2) {
-	                    if (this._scroll.scrollForceCount) {
-	                        showing = true;
-	                        this._pullToRefreshHeaderVisiblePerc = visiblePerc;
-	                    } else if (this._pullToRefreshHeaderVisiblePerc > 0) {
-	                        showing = true;
+	                // Calculate offset
+	                var length = pullToRefresh.node.getSize()[this._direction];
+	                var pullLength = length * 2;
+	                var offset;
+	                if (!pullToRefresh.footer) {
+	                    // header
+	                    prevHeight = this._calcScrollHeight(false);
+	                    prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
+	                    offset = (prevHeight >= 0) ? (scrollOffset - prevHeight) : prevHeight;
+	                    if (this.options.alignment) {
+	                        nextHeight = this._calcScrollHeight(true);
+	                        nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
+	                        totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
+	                        if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
+	                            offset = Math.round((scrollOffset - size[this._direction]) + nextHeight);
+	                        }
 	                    }
 	                }
 	                else {
-	                    this._pullToRefreshHeaderVisiblePerc = 0;
-	                }
-	            }
-	            else {
-	                this._pullToRefreshHeaderVisiblePerc = 1;
-	            }
-
-	            // Detect when fully shown
-	            if ((this._pullToRefreshHeaderVisiblePerc >= 1) && this._scroll.scrollForceCount &&
-	                (this._pullToRefreshHeaderState === PullToRefreshState.HIDDEN)) {
-	                this._pullToRefreshHeaderState = PullToRefreshState.SHOWN;
-	                if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
-	                    this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
-	                }
-	            }
-
-	            // Show pull to refresh node
-	            if (showing) {
-	                var contextNode = {
-	                    renderNode: pullToRefreshHeader,
-	                    prev: true,
-	                    index: --this._nodes._contextState.prevGetIndex
-	                };
-	                var scrollLength = (this._scroll.scrollForceCount || (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN)) ? length : undefined;
-	                var set = {
-	                    size: [size[0], size[1]],
-	                    translate: [0, 0, -1e-3], // transform.behind
-	                    scrollLength: scrollLength
-	                };
-	                set.size[this._direction] = Math.max(Math.min(offset, length), 0);
-	                this._nodes._context.set(contextNode, set);
-	            }
-	        }
-
-	        // Show/activate pull to refresh header
-	        var pullToRefreshFooter = this.options.pullToRefreshFooter;
-	        if (pullToRefreshFooter) {
-	            nextHeight = (nextHeight === undefined) ? nextHeight = this._calcScrollHeight(true) : nextHeight;
-	            nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
-	            length = pullToRefreshFooter.getSize()[this._direction];
-	            offset = (nextHeight >= 0) ? (scrollOffset + nextHeight) : (size[this._direction] + 1);
-	            if (!this.options.alignment) {
-	                prevHeight = (prevHeight === undefined) ? this._calcScrollHeight(false) : prevHeight;
-	                prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
-	                totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
-	                if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
-	                    offset = Math.round((scrollOffset - prevHeight) + size[this._direction]);
-	                }
-	            }
-	            offset = -(offset - size[this._direction]);
-
-	            // Determine whether to show or hide the pull-to-refresh node
-	            showing = (this._pullToRefreshFooterState === PullToRefreshState.SHOWN);
-	            if (!showing) {
-	                visiblePerc = Math.max(Math.min(offset / length, 1), 0);
-	                if (offset > 0.2) {
-	                    if (this._scroll.scrollForceCount) {
-	                        showing = true;
-	                        this._pullToRefreshFooterVisiblePerc = visiblePerc;
+	                    // footer
+	                    nextHeight = (nextHeight === undefined) ? nextHeight = this._calcScrollHeight(true) : nextHeight;
+	                    nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
+	                    offset = (nextHeight >= 0) ? (scrollOffset + nextHeight) : (size[this._direction] + 1);
+	                    if (!this.options.alignment) {
+	                        prevHeight = (prevHeight === undefined) ? this._calcScrollHeight(false) : prevHeight;
+	                        prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
+	                        totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
+	                        if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
+	                            offset = Math.round((scrollOffset - prevHeight) + size[this._direction]);
+	                        }
 	                    }
-	                    else if (this._pullToRefreshFooterVisiblePerc > 0) {
-	                        showing = true;
-	                    }
+	                    offset = -(offset - size[this._direction]);
 	                }
-	                else {
-	                    this._pullToRefreshFooterVisiblePerc = 0;
-	                }
-	            }
-	            else {
-	                this._pullToRefreshFooterVisiblePerc = 1;
-	            }
 
-	            // Detect when fully shown
-	            if ((this._pullToRefreshFooterVisiblePerc >= 1) && this._scroll.scrollForceCount &&
-	                (this._pullToRefreshFooterState === PullToRefreshState.HIDDEN)) {
-	                this._pullToRefreshFooterState = PullToRefreshState.SHOWN;
-	                if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
-	                    this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
+	                // Determine current state
+	                var visiblePerc = Math.max(Math.min(offset / pullLength, 1), 0);
+	                switch (pullToRefresh.state) {
+	                    case PullToRefreshState.HIDDEN:
+	                        if (this._scroll.scrollForceCount) {
+	                            if (visiblePerc >= 1) {
+	                                _setPullToRefreshState(pullToRefresh, PullToRefreshState.ACTIVE);
+	                            }
+	                            else if (offset >= 0.2) {
+	                                _setPullToRefreshState(pullToRefresh, PullToRefreshState.PULLING);
+	                            }
+	                        }
+	                        break;
+	                    case PullToRefreshState.PULLING:
+	                        if (this._scroll.scrollForceCount && (visiblePerc >= 1)) {
+	                            _setPullToRefreshState(pullToRefresh, PullToRefreshState.ACTIVE);
+	                        }
+	                        else if (offset < 0.2) {
+	                            _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDEN);
+	                        }
+	                        break;
+	                    case PullToRefreshState.ACTIVE:
+	                        // nothing to do, wait for completed
+	                        break;
+	                    case PullToRefreshState.COMPLETED:
+	                        if (!this._scroll.scrollForceCount) {
+	                            if (offset >= 0.2) {
+	                                _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDING);
+	                            }
+	                            else {
+	                                _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDEN);
+	                            }
+	                        }
+	                        break;
+	                    case PullToRefreshState.HIDDING:
+	                        if (offset < 0.2) {
+	                            _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDEN);
+	                        }
+	                        break;
 	                }
-	            }
 
-	            // Show pull to refresh node
-	            if (showing) {
-	                contextNode = {
-	                    renderNode: pullToRefreshFooter,
-	                    next: true,
-	                    index: ++this._nodes._contextState.nextGetIndex
-	                };
-	                scrollLength = (this._scroll.scrollForceCount || (this._pullToRefreshFooterState === PullToRefreshState.SHOWN)) ? length : undefined;
-	                set = {
-	                    size: [size[0], size[1]],
-	                    translate: [0, 0, -1e-3], // transform.behind
-	                    scrollLength: scrollLength
-	                };
-	                set.translate[this._direction] = size[this._direction] - length;
-	                set.size[this._direction] = Math.max(Math.min(offset, length), 0);
-	                this._nodes._context.set(contextNode, set);
+	                // Show pull to refresh node
+	                if (pullToRefresh.state !== PullToRefreshState.HIDDEN) {
+	                    var contextNode = {
+	                        renderNode: pullToRefresh.node,
+	                        prev: !pullToRefresh.footer,
+	                        next: pullToRefresh.footer,
+	                        index: !pullToRefresh.footer ? --this._nodes._contextState.prevGetIndex : ++this._nodes._contextState.nextGetIndex
+	                    };
+	                    var scrollLength = (this._scroll.scrollForceCount || (pullToRefresh.state === PullToRefreshState.ACTIVE)) ? length : undefined;
+	                    var set = {
+	                        size: [size[0], size[1]],
+	                        translate: [0, 0, -1e-3], // transform.behind
+	                        scrollLength: scrollLength
+	                    };
+	                    set.size[this._direction] = Math.max(Math.min(offset, pullLength), 0);
+	                    set.translate[this._direction] = pullToRefresh.footer ? (size[this._direction] - length) : 0;
+	                    this._nodes._context.set(contextNode, set);
+	                }
 	            }
 	        }
 	    };
@@ -5425,50 +5591,21 @@
 	     * @param {Bool} [footer] set to true to show pull-to-refresh at the end (default: false).
 	     */
 	    ScrollView.prototype.showPullToRefresh = function(footer) {
-	        if (footer) {
-	            if (this._pullToRefreshFooterState !== PullToRefreshState.SHOWN) {
-	                this._pullToRefreshFooterState = PullToRefreshState.SHOWN;
-	                if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
-	                    this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
-	                }
-	                this._scroll.scrollDirty = true;
-	            }
+	        var pullToRefresh = _getPullToRefresh.call(this, footer);
+	        if (pullToRefresh) {
+	            _setPullToRefreshState(PullToRefreshState.SHOWN, pullToRefresh);
+	            this._scroll.scrollDirty = true;
 	        }
-	        else {
-	            if (this._pullToRefreshHeaderState !== PullToRefreshState.SHOWN) {
-	                this._pullToRefreshHeaderState = PullToRefreshState.SHOWN;
-	                if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
-	                    this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
-	                }
-	                this._scroll.scrollDirty = true;
-	            }
-	        }
-	        return this;
 	    };
 
 	    /**
 	     * Hides the pull-to-refresh renderable in case it was visible.
 	     */
 	    ScrollView.prototype.hidePullToRefresh = function(footer) {
-	        if (footer) {
-	            if (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) {
-	                this._pullToRefreshFooterState = PullToRefreshState.HIDDING;
-	                if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
-	                    this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
-	                }
-	                this._pullToRefreshFooterVisiblePerc = 0;
-	                this._scroll.scrollDirty = true;
-	            }
-	        }
-	        else {
-	            if (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN) {
-	                this._pullToRefreshHeaderState = PullToRefreshState.HIDDING;
-	                if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
-	                    this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
-	                }
-	                this._pullToRefreshHeaderVisiblePerc = 0;
-	                this._scroll.scrollDirty = true;
-	            }
+	        var pullToRefresh = _getPullToRefresh.call(this, footer);
+	        if (pullToRefresh && (pullToRefresh.state === PullToRefreshState.ACTIVE)) {
+	            _setPullToRefreshState(pullToRefresh, PullToRefreshState.COMPLETED);
+	            this._scroll.scrollDirty = true;
 	        }
 	        return this;
 	    };
@@ -5477,7 +5614,8 @@
 	     * Get the visible state of the pull-to-refresh renderable.
 	     */
 	    ScrollView.prototype.isPullToRefreshVisible = function(footer) {
-	        return footer ? (this._pullToRefreshFooterState === PullToRefreshState.SHOWN) : (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN);
+	        var pullToRefresh = _getPullToRefresh.call(this, footer);
+	        return pullToRefresh ? (pullToRefresh.state === PullToRefreshState.ACTIVE) : false;
 	    };
 
 	    /**
@@ -5647,47 +5785,27 @@
 	     */
 	    ScrollView.prototype.commit = function(context) {
 
-	        // Must release touch first, prior to detect a new pull to refresh change
-	        if ((this._pullToRefreshHeaderState === PullToRefreshState.HIDDING) &&
-	            !this._scroll.scrollForceCount) {
-	            this._pullToRefreshHeaderState = PullToRefreshState.HIDDEN;
-	            if (this.options.pullToRefreshHeader && this.options.pullToRefreshHeader.setPullToRefreshStatus) {
-	                this.options.pullToRefreshHeader.setPullToRefreshStatus(this._pullToRefreshHeaderState);
-	            }
-	            this._scroll.scrollDirty = true;
-	        }
-
-	        // Must release touch first, prior to detect a new pull to refresh change
-	        if ((this._pullToRefreshFooterState === PullToRefreshState.HIDDING) &&
-	            (!this._scroll.scrollForceCount)) {
-	            this._pullToRefreshFooterState = PullToRefreshState.HIDDEN;
-	            if (this.options.pullToRefreshFooter && this.options.pullToRefreshFooter.setPullToRefreshStatus) {
-	                this.options.pullToRefreshFooter.setPullToRefreshStatus(this._pullToRefreshFooterState);
-	            }
-	            this._scroll.scrollDirty = true;
-	        }
-
 	        // Call base class
 	        var result = ScrollController.prototype.commit.call(this, context);
 
 	        // Emit pull to refresh events after the whole commit call has been executed
-	        // so that when code is executed in the event, the ScrollView is in a correct state.
-	        if ((this._cachedPullToRefreshHeaderState === PullToRefreshState.HIDDEN) &&
-	            (this._pullToRefreshHeaderState === PullToRefreshState.SHOWN)) {
-	            this._eventOutput.emit('refresh', {
-	                target: this,
-	                footer: false
-	            });
+	        // so that when the refresh event is received, the ScrollView is in a valid state
+	        // and can be queried.
+	        if (this._pullToRefresh) {
+	            for (var i = 0; i < 2; i++) {
+	                var pullToRefresh = this._pullToRefresh[i];
+	                if (pullToRefresh) {
+	                    if ((pullToRefresh.state === PullToRefreshState.ACTIVE) &&
+	                        (pullToRefresh.prevState !== PullToRefreshState.ACTIVE)) {
+	                        this._eventOutput.emit('refresh', {
+	                            target: this,
+	                            footer: pullToRefresh.footer
+	                        });
+	                    }
+	                    pullToRefresh.prevState = pullToRefresh.state;
+	                }
+	            }
 	        }
-	        this._cachedPullToRefreshHeaderState = this._pullToRefreshHeaderState;
-	        if ((this._cachedPullToRefreshFooterState === PullToRefreshState.HIDDEN) &&
-	            (this._pullToRefreshFooterState === PullToRefreshState.SHOWN)) {
-	            this._eventOutput.emit('refresh', {
-	                target: this,
-	                footer: true
-	            });
-	        }
-	        this._cachedPullToRefreshFooterState = this._pullToRefreshFooterState;
 	        return result;
 	    };
 
@@ -5721,17 +5839,17 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(38);
-	    var Entity = __webpack_require__(47);
+	    var Utility = __webpack_require__(47);
+	    var Entity = __webpack_require__(34);
 	    var ViewSequence = __webpack_require__(22);
 	    var OptionsManager = __webpack_require__(39);
 	    var EventHandler = __webpack_require__(40);
-	    var LayoutUtility = __webpack_require__(35);
+	    var LayoutUtility = __webpack_require__(36);
 	    var LayoutNodeManager = __webpack_require__(41);
 	    var LayoutNode = __webpack_require__(42);
 	    var FlowLayoutNode = __webpack_require__(43);
 	    var Transform = __webpack_require__(25);
-	    __webpack_require__(48);
+	    __webpack_require__(46);
 
 	    /**
 	     * @class
@@ -6384,7 +6502,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutDockHelper = __webpack_require__(48);
+	    var LayoutDockHelper = __webpack_require__(46);
 
 	    // Layout function
 	    module.exports = function HeaderFooterLayout(context, options) {
@@ -7781,8 +7899,8 @@
 	    var Transform = __webpack_require__(25);
 
 	    /* TODO: remove these dependencies when deprecation complete */
-	    var Transitionable = __webpack_require__(49);
-	    var TransitionableTransform = __webpack_require__(50);
+	    var Transitionable = __webpack_require__(48);
+	    var TransitionableTransform = __webpack_require__(49);
 
 	    /**
 	     *
@@ -9272,122 +9390,6 @@
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
-	    var OptionsManager = __webpack_require__(39);
-	    var RenderNode = __webpack_require__(46);
-	    var Utility = __webpack_require__(38);
-
-	    /**
-	     * Useful for quickly creating elements within applications
-	     *   with large event systems.  Consists of a RenderNode paired with
-	     *   an input EventHandler and an output EventHandler.
-	     *   Meant to be extended by the developer.
-	     *
-	     * @class View
-	     * @uses EventHandler
-	     * @uses OptionsManager
-	     * @uses RenderNode
-	     * @constructor
-	     */
-	    function View(options) {
-	        this._node = new RenderNode();
-
-	        this._eventInput = new EventHandler();
-	        this._eventOutput = new EventHandler();
-	        EventHandler.setInputHandler(this, this._eventInput);
-	        EventHandler.setOutputHandler(this, this._eventOutput);
-
-	        this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
-	        this._optionsManager = new OptionsManager(this.options);
-
-	        if (options) this.setOptions(options);
-	    }
-
-	    View.DEFAULT_OPTIONS = {}; // no defaults
-
-	    /**
-	     * Look up options value by key
-	     * @method getOptions
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object
-	     */
-	    View.prototype.getOptions = function getOptions(key) {
-	        return this._optionsManager.getOptions(key);
-	    };
-
-	    /*
-	     *  Set internal options.
-	     *  No defaults options are set in View.
-	     *
-	     *  @method setOptions
-	     *  @param {Object} options
-	     */
-	    View.prototype.setOptions = function setOptions(options) {
-	        this._optionsManager.patch(options);
-	    };
-
-	    /**
-	     * Add a child renderable to the view.
-	     *   Note: This is meant to be used by an inheriting class
-	     *   rather than from outside the prototype chain.
-	     *
-	     * @method add
-	     * @return {RenderNode}
-	     * @protected
-	     */
-	    View.prototype.add = function add() {
-	        return this._node.add.apply(this._node, arguments);
-	    };
-
-	    /**
-	     * Alias for add
-	     * @method _add
-	     */
-	    View.prototype._add = View.prototype.add;
-
-	    /**
-	     * Generate a render spec from the contents of this component.
-	     *
-	     * @private
-	     * @method render
-	     * @return {number} Render spec for this component
-	     */
-	    View.prototype.render = function render() {
-	        return this._node.render();
-	    };
-
-	    /**
-	     * Return size of contained element.
-	     *
-	     * @method getSize
-	     * @return {Array.Number} [width, height]
-	     */
-	    View.prototype.getSize = function getSize() {
-	        if (this._node && this._node.getSize) {
-	            return this._node.getSize.apply(this._node, arguments) || this.options.size;
-	        }
-	        else return this.options.size;
-	    };
-
-	    module.exports = View;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
-
 	
 	/*
 	 * classList.js: Cross-browser full element.classList implementation.
@@ -9529,7 +9531,7 @@
 
 
 /***/ },
-/* 30 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (!Function.prototype.bind) {
@@ -9558,7 +9560,7 @@
 
 
 /***/ },
-/* 31 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// adds requestAnimationFrame functionality
@@ -9577,7 +9579,7 @@
 
 
 /***/ },
-/* 32 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -9696,6 +9698,122 @@
 	    };
 
 	    module.exports = CanvasSurface;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(40);
+	    var OptionsManager = __webpack_require__(39);
+	    var RenderNode = __webpack_require__(129);
+	    var Utility = __webpack_require__(47);
+
+	    /**
+	     * Useful for quickly creating elements within applications
+	     *   with large event systems.  Consists of a RenderNode paired with
+	     *   an input EventHandler and an output EventHandler.
+	     *   Meant to be extended by the developer.
+	     *
+	     * @class View
+	     * @uses EventHandler
+	     * @uses OptionsManager
+	     * @uses RenderNode
+	     * @constructor
+	     */
+	    function View(options) {
+	        this._node = new RenderNode();
+
+	        this._eventInput = new EventHandler();
+	        this._eventOutput = new EventHandler();
+	        EventHandler.setInputHandler(this, this._eventInput);
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+
+	        this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
+	        this._optionsManager = new OptionsManager(this.options);
+
+	        if (options) this.setOptions(options);
+	    }
+
+	    View.DEFAULT_OPTIONS = {}; // no defaults
+
+	    /**
+	     * Look up options value by key
+	     * @method getOptions
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object
+	     */
+	    View.prototype.getOptions = function getOptions(key) {
+	        return this._optionsManager.getOptions(key);
+	    };
+
+	    /*
+	     *  Set internal options.
+	     *  No defaults options are set in View.
+	     *
+	     *  @method setOptions
+	     *  @param {Object} options
+	     */
+	    View.prototype.setOptions = function setOptions(options) {
+	        this._optionsManager.patch(options);
+	    };
+
+	    /**
+	     * Add a child renderable to the view.
+	     *   Note: This is meant to be used by an inheriting class
+	     *   rather than from outside the prototype chain.
+	     *
+	     * @method add
+	     * @return {RenderNode}
+	     * @protected
+	     */
+	    View.prototype.add = function add() {
+	        return this._node.add.apply(this._node, arguments);
+	    };
+
+	    /**
+	     * Alias for add
+	     * @method _add
+	     */
+	    View.prototype._add = View.prototype.add;
+
+	    /**
+	     * Generate a render spec from the contents of this component.
+	     *
+	     * @private
+	     * @method render
+	     * @return {number} Render spec for this component
+	     */
+	    View.prototype.render = function render() {
+	        return this._node.render();
+	    };
+
+	    /**
+	     * Return size of contained element.
+	     *
+	     * @method getSize
+	     * @return {Array.Number} [width, height]
+	     */
+	    View.prototype.getSize = function getSize() {
+	        if (this._node && this._node.getSize) {
+	            return this._node.getSize.apply(this._node, arguments) || this.options.size;
+	        }
+	        else return this.options.size;
+	    };
+
+	    module.exports = View;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -9903,163 +10021,246 @@
 /* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * A singleton that maintains a global registry of Surfaces.
+	     *   Private.
+	     *
+	     * @private
+	     * @static
+	     * @class Entity
+	     */
+
+	    var entities = [];
+
+	    /**
+	     * Get entity from global index.
+	     *
+	     * @private
+	     * @method get
+	     * @param {Number} id entity registration id
+	     * @return {Surface} entity in the global index
+	     */
+	    function get(id) {
+	        return entities[id];
+	    }
+
+	    /**
+	     * Overwrite entity in the global index
+	     *
+	     * @private
+	     * @method set
+	     * @param {Number} id entity registration id
+	     * @param {Surface} entity to add to the global index
+	     */
+	    function set(id, entity) {
+	        entities[id] = entity;
+	    }
+
+	    /**
+	     * Add entity to global index
+	     *
+	     * @private
+	     * @method register
+	     * @param {Surface} entity to add to global index
+	     * @return {Number} new id
+	     */
+	    function register(entity) {
+	        var id = entities.length;
+	        set(id, entity);
+	        return id;
+	    }
+
+	    /**
+	     * Remove entity from global index
+	     *
+	     * @private
+	     * @method unregister
+	     * @param {Number} id entity registration id
+	     */
+	    function unregister(id) {
+	        set(id, null);
+	    }
+
+	    module.exports = {
+	        register: register,
+	        unregister: unregister,
+	        get: get,
+	        set: set
+	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var map = {
-		"./af": 51,
-		"./af.js": 51,
-		"./ar": 54,
-		"./ar-ma": 52,
-		"./ar-ma.js": 52,
-		"./ar-sa": 53,
-		"./ar-sa.js": 53,
-		"./ar.js": 54,
-		"./az": 55,
-		"./az.js": 55,
-		"./be": 56,
-		"./be.js": 56,
-		"./bg": 57,
-		"./bg.js": 57,
-		"./bn": 58,
-		"./bn.js": 58,
-		"./bo": 59,
-		"./bo.js": 59,
-		"./br": 60,
-		"./br.js": 60,
-		"./bs": 61,
-		"./bs.js": 61,
-		"./ca": 62,
-		"./ca.js": 62,
-		"./cs": 63,
-		"./cs.js": 63,
-		"./cv": 64,
-		"./cv.js": 64,
-		"./cy": 65,
-		"./cy.js": 65,
-		"./da": 66,
-		"./da.js": 66,
-		"./de": 68,
-		"./de-at": 67,
-		"./de-at.js": 67,
-		"./de.js": 68,
-		"./el": 69,
-		"./el.js": 69,
-		"./en-au": 70,
-		"./en-au.js": 70,
-		"./en-ca": 71,
-		"./en-ca.js": 71,
-		"./en-gb": 72,
-		"./en-gb.js": 72,
-		"./eo": 73,
-		"./eo.js": 73,
-		"./es": 74,
-		"./es.js": 74,
-		"./et": 75,
-		"./et.js": 75,
-		"./eu": 76,
-		"./eu.js": 76,
-		"./fa": 77,
-		"./fa.js": 77,
-		"./fi": 78,
-		"./fi.js": 78,
-		"./fo": 79,
-		"./fo.js": 79,
-		"./fr": 81,
-		"./fr-ca": 80,
-		"./fr-ca.js": 80,
-		"./fr.js": 81,
-		"./gl": 82,
-		"./gl.js": 82,
-		"./he": 83,
-		"./he.js": 83,
-		"./hi": 84,
-		"./hi.js": 84,
-		"./hr": 85,
-		"./hr.js": 85,
-		"./hu": 86,
-		"./hu.js": 86,
-		"./hy-am": 87,
-		"./hy-am.js": 87,
-		"./id": 88,
-		"./id.js": 88,
-		"./is": 89,
-		"./is.js": 89,
-		"./it": 90,
-		"./it.js": 90,
-		"./ja": 91,
-		"./ja.js": 91,
-		"./ka": 92,
-		"./ka.js": 92,
-		"./km": 93,
-		"./km.js": 93,
-		"./ko": 94,
-		"./ko.js": 94,
-		"./lb": 95,
-		"./lb.js": 95,
-		"./lt": 96,
-		"./lt.js": 96,
-		"./lv": 97,
-		"./lv.js": 97,
-		"./mk": 98,
-		"./mk.js": 98,
-		"./ml": 99,
-		"./ml.js": 99,
-		"./mr": 100,
-		"./mr.js": 100,
-		"./ms-my": 101,
-		"./ms-my.js": 101,
-		"./my": 102,
-		"./my.js": 102,
-		"./nb": 103,
-		"./nb.js": 103,
-		"./ne": 104,
-		"./ne.js": 104,
-		"./nl": 105,
-		"./nl.js": 105,
-		"./nn": 106,
-		"./nn.js": 106,
-		"./pl": 107,
-		"./pl.js": 107,
-		"./pt": 109,
-		"./pt-br": 108,
-		"./pt-br.js": 108,
-		"./pt.js": 109,
-		"./ro": 110,
-		"./ro.js": 110,
-		"./ru": 111,
-		"./ru.js": 111,
-		"./sk": 112,
-		"./sk.js": 112,
-		"./sl": 113,
-		"./sl.js": 113,
-		"./sq": 114,
-		"./sq.js": 114,
-		"./sr": 116,
-		"./sr-cyrl": 115,
-		"./sr-cyrl.js": 115,
-		"./sr.js": 116,
-		"./sv": 117,
-		"./sv.js": 117,
-		"./ta": 118,
-		"./ta.js": 118,
-		"./th": 119,
-		"./th.js": 119,
-		"./tl-ph": 120,
-		"./tl-ph.js": 120,
-		"./tr": 121,
-		"./tr.js": 121,
-		"./tzm": 123,
-		"./tzm-latn": 122,
-		"./tzm-latn.js": 122,
-		"./tzm.js": 123,
-		"./uk": 124,
-		"./uk.js": 124,
-		"./uz": 125,
-		"./uz.js": 125,
-		"./vi": 126,
-		"./vi.js": 126,
-		"./zh-cn": 127,
-		"./zh-cn.js": 127,
-		"./zh-tw": 128,
-		"./zh-tw.js": 128
+		"./af": 50,
+		"./af.js": 50,
+		"./ar": 53,
+		"./ar-ma": 51,
+		"./ar-ma.js": 51,
+		"./ar-sa": 52,
+		"./ar-sa.js": 52,
+		"./ar.js": 53,
+		"./az": 54,
+		"./az.js": 54,
+		"./be": 55,
+		"./be.js": 55,
+		"./bg": 56,
+		"./bg.js": 56,
+		"./bn": 57,
+		"./bn.js": 57,
+		"./bo": 58,
+		"./bo.js": 58,
+		"./br": 59,
+		"./br.js": 59,
+		"./bs": 60,
+		"./bs.js": 60,
+		"./ca": 61,
+		"./ca.js": 61,
+		"./cs": 62,
+		"./cs.js": 62,
+		"./cv": 63,
+		"./cv.js": 63,
+		"./cy": 64,
+		"./cy.js": 64,
+		"./da": 65,
+		"./da.js": 65,
+		"./de": 67,
+		"./de-at": 66,
+		"./de-at.js": 66,
+		"./de.js": 67,
+		"./el": 68,
+		"./el.js": 68,
+		"./en-au": 69,
+		"./en-au.js": 69,
+		"./en-ca": 70,
+		"./en-ca.js": 70,
+		"./en-gb": 71,
+		"./en-gb.js": 71,
+		"./eo": 72,
+		"./eo.js": 72,
+		"./es": 73,
+		"./es.js": 73,
+		"./et": 74,
+		"./et.js": 74,
+		"./eu": 75,
+		"./eu.js": 75,
+		"./fa": 76,
+		"./fa.js": 76,
+		"./fi": 77,
+		"./fi.js": 77,
+		"./fo": 78,
+		"./fo.js": 78,
+		"./fr": 80,
+		"./fr-ca": 79,
+		"./fr-ca.js": 79,
+		"./fr.js": 80,
+		"./gl": 81,
+		"./gl.js": 81,
+		"./he": 82,
+		"./he.js": 82,
+		"./hi": 83,
+		"./hi.js": 83,
+		"./hr": 84,
+		"./hr.js": 84,
+		"./hu": 85,
+		"./hu.js": 85,
+		"./hy-am": 86,
+		"./hy-am.js": 86,
+		"./id": 87,
+		"./id.js": 87,
+		"./is": 88,
+		"./is.js": 88,
+		"./it": 89,
+		"./it.js": 89,
+		"./ja": 90,
+		"./ja.js": 90,
+		"./ka": 91,
+		"./ka.js": 91,
+		"./km": 92,
+		"./km.js": 92,
+		"./ko": 93,
+		"./ko.js": 93,
+		"./lb": 94,
+		"./lb.js": 94,
+		"./lt": 95,
+		"./lt.js": 95,
+		"./lv": 96,
+		"./lv.js": 96,
+		"./mk": 97,
+		"./mk.js": 97,
+		"./ml": 98,
+		"./ml.js": 98,
+		"./mr": 99,
+		"./mr.js": 99,
+		"./ms-my": 100,
+		"./ms-my.js": 100,
+		"./my": 101,
+		"./my.js": 101,
+		"./nb": 102,
+		"./nb.js": 102,
+		"./ne": 103,
+		"./ne.js": 103,
+		"./nl": 104,
+		"./nl.js": 104,
+		"./nn": 105,
+		"./nn.js": 105,
+		"./pl": 106,
+		"./pl.js": 106,
+		"./pt": 108,
+		"./pt-br": 107,
+		"./pt-br.js": 107,
+		"./pt.js": 108,
+		"./ro": 109,
+		"./ro.js": 109,
+		"./ru": 110,
+		"./ru.js": 110,
+		"./sk": 111,
+		"./sk.js": 111,
+		"./sl": 112,
+		"./sl.js": 112,
+		"./sq": 113,
+		"./sq.js": 113,
+		"./sr": 115,
+		"./sr-cyrl": 114,
+		"./sr-cyrl.js": 114,
+		"./sr.js": 115,
+		"./sv": 116,
+		"./sv.js": 116,
+		"./ta": 117,
+		"./ta.js": 117,
+		"./th": 118,
+		"./th.js": 118,
+		"./tl-ph": 119,
+		"./tl-ph.js": 119,
+		"./tr": 120,
+		"./tr.js": 120,
+		"./tzm": 122,
+		"./tzm-latn": 121,
+		"./tzm-latn.js": 121,
+		"./tzm.js": 122,
+		"./uk": 123,
+		"./uk.js": 123,
+		"./uz": 124,
+		"./uz.js": 124,
+		"./vi": 125,
+		"./vi.js": 125,
+		"./zh-cn": 126,
+		"./zh-cn.js": 126,
+		"./zh-tw": 127,
+		"./zh-tw.js": 127
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -10072,11 +10273,11 @@
 	};
 	webpackContext.resolve = webpackContextResolve;
 	module.exports = webpackContext;
-	webpackContext.id = 34;
+	webpackContext.id = 35;
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -10100,7 +10301,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(38);
+	    var Utility = __webpack_require__(47);
 
 	    /**
 	     * @class
@@ -10366,7 +10567,7 @@
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -10400,21 +10601,21 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(35);
+	    var LayoutUtility = __webpack_require__(36);
 	    var LayoutController = __webpack_require__(16);
 	    var LayoutNode = __webpack_require__(42);
 	    var FlowLayoutNode = __webpack_require__(43);
 	    var LayoutNodeManager = __webpack_require__(41);
-	    var ContainerSurface = __webpack_require__(132);
+	    var ContainerSurface = __webpack_require__(131);
 	    var Transform = __webpack_require__(25);
 	    var EventHandler = __webpack_require__(40);
-	    var Group = __webpack_require__(133);
-	    var Vector = __webpack_require__(138);
-	    var PhysicsEngine = __webpack_require__(139);
-	    var Particle = __webpack_require__(140);
-	    var Drag = __webpack_require__(141);
-	    var Spring = __webpack_require__(142);
-	    var ScrollSync = __webpack_require__(143);
+	    var Group = __webpack_require__(132);
+	    var Vector = __webpack_require__(136);
+	    var PhysicsEngine = __webpack_require__(137);
+	    var Particle = __webpack_require__(138);
+	    var Drag = __webpack_require__(139);
+	    var Spring = __webpack_require__(140);
+	    var ScrollSync = __webpack_require__(141);
 
 	    /**
 	     * Boudary reached detection
@@ -10444,24 +10645,18 @@
 	    /**
 	     * @class
 	     * @extends LayoutController
-	     * @param {Object} options Options.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Bool} [options.flow] Enables flow animations when the layout changes (default: `false`).
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
+	     * @param {Object} options Configurable options (see LayoutController for all inherited options).
+	     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
 	     * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
 	     * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
 	     * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
+	     * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
 	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
 	     * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
 	     * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 350}`)
 	     * @param {Object} [options.scrollDrag] Drag-force options to apply on the scroll particle
 	     * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
 	     * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-	     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
 	     * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
 	     * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
 	     * @alias module:ScrollController
@@ -10593,7 +10788,6 @@
 	        enabled: true,          // set to false to disable scrolling
 	        layoutAll: false,       // set to true is you want all renderables layed out/rendered
 	        alwaysLayout: false,    // set to true to always call the layout function
-	        scrollCallback: undefined, //function(offset, force)
 	        extraBoundsSpace: [100, 100],
 	        debug: false
 	    };
@@ -10601,17 +10795,11 @@
 	    /**
 	     * Patches the ScrollController instance's options with the passed-in ones.
 	     *
-	     * @param {Object} options An object of configurable options for the ScrollController instance.
-	     * @param {Function|Object} [options.layout] Layout function or layout-literal.
-	     * @param {Object} [options.layoutOptions] Options to pass in to the layout-function.
-	     * @param {Array|ViewSequence|Object} [options.dataSource] Array, ViewSequence or Object with key/value pairs.
-	     * @param {Utility.Direction} [options.direction] Direction to layout into (e.g. Utility.Direction.Y) (when ommited the default direction of the layout is used)
-	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
-	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
-	     * @param {Bool} [options.useContainer] Embeds the view in a ContainerSurface to hide any overflow and capture input events (default: `false`).
+	     * @param {Object} options Configurable options (see LayoutController for all inherited options).
 	     * @param {Bool} [options.paginated] Enabled pagination when set to `true` (default: `false`).
 	     * @param {Number} [options.alignment] Alignment of the renderables (0 = top/left, 1 = bottom/right) (default: `0`).
 	     * @param {Bool} [options.mouseMove] Enables scrolling by holding the mouse-button down and moving the mouse (default: `false`).
+	     * @param {Bool} [options.enabled] Enables or disabled user input (default: `true`).
 	     * @param {Object} [options.nodeSpring] Spring options to use when transitioning renderables between scenes
 	     * @param {Object} [options.scrollParticle] Options for the scroll particle (default: `{}`)
 	     * @param {Object} [options.scrollSpring] Spring-force options that are applied on the scroll particle when e.g. bounds is reached (default: `{dampingRatio: 1.0, period: 500}`)
@@ -10619,7 +10807,6 @@
 	     * @param {Object} [options.scrollFriction] Friction-force options to apply on the scroll particle
 	     * @param {Number} [options.visibleItemThresshold] Thresshold (0..1) used for determining whether an item is considered to be the first/last visible item (default: `0.5`).
 	     * @param {Bool} [options.layoutAll] When set to true, always lays out all renderables in the datasource (default: `false`).
-	     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
 	     * @param {Bool} [options.debug] Logs debug output to the console (default: `false`).
 	     * @return {ScrollController} this
 	     */
@@ -10847,9 +11034,6 @@
 	        if (!oldTouchesCount && this._scroll.activeTouches.length) {
 	            this.applyScrollForce(0);
 	            this._scroll.touchDelta = 0;
-	            if (this.options.scrollCallback) {
-	                this.options.scrollCallback(0, 1);
-	            }
 	        }
 	    }
 
@@ -10892,9 +11076,6 @@
 	        // Update move offset and emit event
 	        if (primaryTouch) {
 	            var delta = primaryTouch.current[this._direction] - primaryTouch.start[this._direction];
-	            if (this.options.scrollCallback) {
-	                delta = this.options.scrollCallback(delta, 2);
-	            }
 	            this.updateScrollForce(this._scroll.touchDelta, delta);
 	            this._scroll.touchDelta = delta;
 	        }
@@ -10944,13 +11125,8 @@
 	            velocity = diffOffset / diffTime;
 	        }
 
-	        // Execute callback
-	        var delta = this._scroll.touchDelta;
-	        if (this.options.scrollCallback) {
-	            delta = this.options.scrollCallback(delta, 3, velocity);
-	        }
-
 	        // Release scroll force
+	        var delta = this._scroll.touchDelta;
 	        this.releaseScrollForce(delta, velocity);
 	        this._scroll.touchDelta = 0;
 	    }
@@ -10964,9 +11140,6 @@
 	            return;
 	        }
 	        var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
-	        if (this.options.scrollCallback) {
-	            offset = this.options.scrollCallback(offset, 0);
-	        }
 	        this.scroll(offset);
 	    }
 
@@ -12164,7 +12337,7 @@
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -12237,8 +12410,8 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var Utility = __webpack_require__(38);
-	    var LayoutUtility = __webpack_require__(35);
+	    var Utility = __webpack_require__(47);
+	    var LayoutUtility = __webpack_require__(36);
 
 	    // Define capabilities of this layout function
 	    var capabilities = {
@@ -12458,133 +12631,6 @@
 	    ListLayout.Name = 'ListLayout';
 	    ListLayout.Description = 'List-layout with margins, spacing and sticky headers';
 	    module.exports = ListLayout;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * This namespace holds standalone functionality.
-	     *  Currently includes name mapping for transition curves,
-	     *  name mapping for origin pairs, and the after() function.
-	     *
-	     * @class Utility
-	     * @static
-	     */
-	    var Utility = {};
-
-	    /**
-	     * Table of direction array positions
-	     *
-	     * @property {object} Direction
-	     * @final
-	     */
-	    Utility.Direction = {
-	        X: 0,
-	        Y: 1,
-	        Z: 2
-	    };
-
-	    /**
-	     * Return wrapper around callback function. Once the wrapper is called N
-	     *   times, invoke the callback function. Arguments and scope preserved.
-	     *
-	     * @method after
-	     *
-	     * @param {number} count number of calls before callback function invoked
-	     * @param {Function} callback wrapped callback function
-	     *
-	     * @return {function} wrapped callback with coundown feature
-	     */
-	    Utility.after = function after(count, callback) {
-	        var counter = count;
-	        return function() {
-	            counter--;
-	            if (counter === 0) callback.apply(this, arguments);
-	        };
-	    };
-
-	    /**
-	     * Load a URL and return its contents in a callback
-	     *
-	     * @method loadURL
-	     *
-	     * @param {string} url URL of object
-	     * @param {function} callback callback to dispatch with content
-	     */
-	    Utility.loadURL = function loadURL(url, callback) {
-	        var xhr = new XMLHttpRequest();
-	        xhr.onreadystatechange = function onreadystatechange() {
-	            if (this.readyState === 4) {
-	                if (callback) callback(this.responseText);
-	            }
-	        };
-	        xhr.open('GET', url);
-	        xhr.send();
-	    };
-
-	    /**
-	     * Create a document fragment from a string of HTML
-	     *
-	     * @method createDocumentFragmentFromHTML
-	     *
-	     * @param {string} html HTML to convert to DocumentFragment
-	     *
-	     * @return {DocumentFragment} DocumentFragment representing input HTML
-	     */
-	    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
-	        var element = document.createElement('div');
-	        element.innerHTML = html;
-	        var result = document.createDocumentFragment();
-	        while (element.hasChildNodes()) result.appendChild(element.firstChild);
-	        return result;
-	    };
-
-	    /*
-	     *  Deep clone an object.
-	     *  @param b {Object} Object to clone
-	     *  @return a {Object} Cloned object.
-	     */
-	    Utility.clone = function clone(b) {
-	        var a;
-	        if (typeof b === 'object') {
-	            a = (b instanceof Array) ? [] : {};
-	            for (var key in b) {
-	                if (typeof b[key] === 'object' && b[key] !== null) {
-	                    if (b[key] instanceof Array) {
-	                        a[key] = new Array(b[key].length);
-	                        for (var i = 0; i < b[key].length; i++) {
-	                            a[key][i] = Utility.clone(b[key][i]);
-	                        }
-	                    }
-	                    else {
-	                      a[key] = Utility.clone(b[key]);
-	                    }
-	                }
-	                else {
-	                    a[key] = b[key];
-	                }
-	            }
-	        }
-	        else {
-	            a = b;
-	        }
-	        return a;
-	    };
-
-	    module.exports = Utility;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -12809,7 +12855,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventEmitter = __webpack_require__(134);
+	    var EventEmitter = __webpack_require__(133);
 
 	    /**
 	     * EventHandler forwards received events to a set of provided callback functions.
@@ -13041,8 +13087,8 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutContext = __webpack_require__(135);
-	    var LayoutUtility = __webpack_require__(35);
+	    var LayoutContext = __webpack_require__(134);
+	    var LayoutUtility = __webpack_require__(36);
 
 	    var MAX_POOL_SIZE = 100;
 
@@ -13724,7 +13770,7 @@
 
 	    // import dependencies
 	    var Transform = __webpack_require__(25);
-	    var LayoutUtility = __webpack_require__(35);
+	    var LayoutUtility = __webpack_require__(36);
 
 	    /**
 	     * @class
@@ -13926,12 +13972,12 @@
 	    // import dependencies
 	    var OptionsManager = __webpack_require__(39);
 	    var Transform = __webpack_require__(25);
-	    var Vector = __webpack_require__(138);
-	    var Particle = __webpack_require__(140);
-	    var Spring = __webpack_require__(142);
-	    var PhysicsEngine = __webpack_require__(139);
+	    var Vector = __webpack_require__(136);
+	    var Particle = __webpack_require__(138);
+	    var Spring = __webpack_require__(140);
+	    var PhysicsEngine = __webpack_require__(137);
 	    var LayoutNode = __webpack_require__(42);
-	    var Transitionable = __webpack_require__(49);
+	    var Transitionable = __webpack_require__(48);
 
 	    /**
 	     * @class
@@ -14453,11 +14499,11 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var RenderNode = __webpack_require__(46);
+	    var RenderNode = __webpack_require__(129);
 	    var EventHandler = __webpack_require__(40);
-	    var ElementAllocator = __webpack_require__(136);
+	    var ElementAllocator = __webpack_require__(135);
 	    var Transform = __webpack_require__(25);
-	    var Transitionable = __webpack_require__(49);
+	    var Transitionable = __webpack_require__(48);
 
 	    var _zeroZero = [0, 0];
 	    var usePrefix = !('perspective' in document.documentElement.style);
@@ -14692,7 +14738,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(47);
+	    var Entity = __webpack_require__(34);
 	    var EventHandler = __webpack_require__(40);
 	    var Transform = __webpack_require__(25);
 
@@ -15016,262 +15062,6 @@
 /* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(47);
-	    var SpecParser = __webpack_require__(137);
-
-	    /**
-	     * A wrapper for inserting a renderable component (like a Modifer or
-	     *   Surface) into the render tree.
-	     *
-	     * @class RenderNode
-	     * @constructor
-	     *
-	     * @param {Object} object Target renderable component
-	     */
-	    function RenderNode(object) {
-	        this._object = null;
-	        this._child = null;
-	        this._hasMultipleChildren = false;
-	        this._isRenderable = false;
-	        this._isModifier = false;
-
-	        this._resultCache = {};
-	        this._prevResults = {};
-
-	        this._childResult = null;
-
-	        if (object) this.set(object);
-	    }
-
-	    /**
-	     * Append a renderable to the list of this node's children.
-	     *   This produces a new RenderNode in the tree.
-	     *   Note: Does not double-wrap if child is a RenderNode already.
-	     *
-	     * @method add
-	     * @param {Object} child renderable object
-	     * @return {RenderNode} new render node wrapping child
-	     */
-	    RenderNode.prototype.add = function add(child) {
-	        var childNode = (child instanceof RenderNode) ? child : new RenderNode(child);
-	        if (this._child instanceof Array) this._child.push(childNode);
-	        else if (this._child) {
-	            this._child = [this._child, childNode];
-	            this._hasMultipleChildren = true;
-	            this._childResult = []; // to be used later
-	        }
-	        else this._child = childNode;
-
-	        return childNode;
-	    };
-
-	    /**
-	     * Return the single wrapped object.  Returns null if this node has multiple child nodes.
-	     *
-	     * @method get
-	     *
-	     * @return {Ojbect} contained renderable object
-	     */
-	    RenderNode.prototype.get = function get() {
-	        return this._object || (this._hasMultipleChildren ? null : (this._child ? this._child.get() : null));
-	    };
-
-	    /**
-	     * Overwrite the list of children to contain the single provided object
-	     *
-	     * @method set
-	     * @param {Object} child renderable object
-	     * @return {RenderNode} this render node, or child if it is a RenderNode
-	     */
-	    RenderNode.prototype.set = function set(child) {
-	        this._childResult = null;
-	        this._hasMultipleChildren = false;
-	        this._isRenderable = child.render ? true : false;
-	        this._isModifier = child.modify ? true : false;
-	        this._object = child;
-	        this._child = null;
-	        if (child instanceof RenderNode) return child;
-	        else return this;
-	    };
-
-	    /**
-	     * Get render size of contained object.
-	     *
-	     * @method getSize
-	     * @return {Array.Number} size of this or size of single child.
-	     */
-	    RenderNode.prototype.getSize = function getSize() {
-	        var result = null;
-	        var target = this.get();
-	        if (target && target.getSize) result = target.getSize();
-	        if (!result && this._child && this._child.getSize) result = this._child.getSize();
-	        return result;
-	    };
-
-	    // apply results of rendering this subtree to the document
-	    function _applyCommit(spec, context, cacheStorage) {
-	        var result = SpecParser.parse(spec, context);
-	        var keys = Object.keys(result);
-	        for (var i = 0; i < keys.length; i++) {
-	            var id = keys[i];
-	            var childNode = Entity.get(id);
-	            var commitParams = result[id];
-	            commitParams.allocator = context.allocator;
-	            var commitResult = childNode.commit(commitParams);
-	            if (commitResult) _applyCommit(commitResult, context, cacheStorage);
-	            else cacheStorage[id] = commitParams;
-	        }
-	    }
-
-	    /**
-	     * Commit the content change from this node to the document.
-	     *
-	     * @private
-	     * @method commit
-	     * @param {Context} context render context
-	     */
-	    RenderNode.prototype.commit = function commit(context) {
-	        // free up some divs from the last loop
-	        var prevKeys = Object.keys(this._prevResults);
-	        for (var i = 0; i < prevKeys.length; i++) {
-	            var id = prevKeys[i];
-	            if (this._resultCache[id] === undefined) {
-	                var object = Entity.get(id);
-	                if (object.cleanup) object.cleanup(context.allocator);
-	            }
-	        }
-
-	        this._prevResults = this._resultCache;
-	        this._resultCache = {};
-	        _applyCommit(this.render(), context, this._resultCache);
-	    };
-
-	    /**
-	     * Generate a render spec from the contents of the wrapped component.
-	     *
-	     * @private
-	     * @method render
-	     *
-	     * @return {Object} render specification for the component subtree
-	     *    only under this node.
-	     */
-	    RenderNode.prototype.render = function render() {
-	        if (this._isRenderable) return this._object.render();
-
-	        var result = null;
-	        if (this._hasMultipleChildren) {
-	            result = this._childResult;
-	            var children = this._child;
-	            for (var i = 0; i < children.length; i++) {
-	                result[i] = children[i].render();
-	            }
-	        }
-	        else if (this._child) result = this._child.render();
-
-	        return this._isModifier ? this._object.modify(result) : result;
-	    };
-
-	    module.exports = RenderNode;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 47 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    /**
-	     * A singleton that maintains a global registry of Surfaces.
-	     *   Private.
-	     *
-	     * @private
-	     * @static
-	     * @class Entity
-	     */
-
-	    var entities = [];
-
-	    /**
-	     * Get entity from global index.
-	     *
-	     * @private
-	     * @method get
-	     * @param {Number} id entity registration id
-	     * @return {Surface} entity in the global index
-	     */
-	    function get(id) {
-	        return entities[id];
-	    }
-
-	    /**
-	     * Overwrite entity in the global index
-	     *
-	     * @private
-	     * @method set
-	     * @param {Number} id entity registration id
-	     * @param {Surface} entity to add to the global index
-	     */
-	    function set(id, entity) {
-	        entities[id] = entity;
-	    }
-
-	    /**
-	     * Add entity to global index
-	     *
-	     * @private
-	     * @method register
-	     * @param {Surface} entity to add to global index
-	     * @return {Number} new id
-	     */
-	    function register(entity) {
-	        var id = entities.length;
-	        set(id, entity);
-	        return id;
-	    }
-
-	    /**
-	     * Remove entity from global index
-	     *
-	     * @private
-	     * @method unregister
-	     * @param {Number} id entity registration id
-	     */
-	    function unregister(id) {
-	        set(id, null);
-	    }
-
-	    module.exports = {
-	        register: register,
-	        unregister: unregister,
-	        get: get,
-	        set: set
-	    };
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 48 */
-/***/ function(module, exports, __webpack_require__) {
-
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
 	 * This Source Code is licensed under the MIT license. If a copy of the
 	 * MIT-license was not distributed with this file, You can obtain one at:
@@ -15322,7 +15112,7 @@
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
 	    // import dependencies
-	    var LayoutUtility = __webpack_require__(35);
+	    var LayoutUtility = __webpack_require__(36);
 
 	    /**
 	     * @class
@@ -15537,7 +15327,134 @@
 
 
 /***/ },
-/* 49 */
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    /**
+	     * This namespace holds standalone functionality.
+	     *  Currently includes name mapping for transition curves,
+	     *  name mapping for origin pairs, and the after() function.
+	     *
+	     * @class Utility
+	     * @static
+	     */
+	    var Utility = {};
+
+	    /**
+	     * Table of direction array positions
+	     *
+	     * @property {object} Direction
+	     * @final
+	     */
+	    Utility.Direction = {
+	        X: 0,
+	        Y: 1,
+	        Z: 2
+	    };
+
+	    /**
+	     * Return wrapper around callback function. Once the wrapper is called N
+	     *   times, invoke the callback function. Arguments and scope preserved.
+	     *
+	     * @method after
+	     *
+	     * @param {number} count number of calls before callback function invoked
+	     * @param {Function} callback wrapped callback function
+	     *
+	     * @return {function} wrapped callback with coundown feature
+	     */
+	    Utility.after = function after(count, callback) {
+	        var counter = count;
+	        return function() {
+	            counter--;
+	            if (counter === 0) callback.apply(this, arguments);
+	        };
+	    };
+
+	    /**
+	     * Load a URL and return its contents in a callback
+	     *
+	     * @method loadURL
+	     *
+	     * @param {string} url URL of object
+	     * @param {function} callback callback to dispatch with content
+	     */
+	    Utility.loadURL = function loadURL(url, callback) {
+	        var xhr = new XMLHttpRequest();
+	        xhr.onreadystatechange = function onreadystatechange() {
+	            if (this.readyState === 4) {
+	                if (callback) callback(this.responseText);
+	            }
+	        };
+	        xhr.open('GET', url);
+	        xhr.send();
+	    };
+
+	    /**
+	     * Create a document fragment from a string of HTML
+	     *
+	     * @method createDocumentFragmentFromHTML
+	     *
+	     * @param {string} html HTML to convert to DocumentFragment
+	     *
+	     * @return {DocumentFragment} DocumentFragment representing input HTML
+	     */
+	    Utility.createDocumentFragmentFromHTML = function createDocumentFragmentFromHTML(html) {
+	        var element = document.createElement('div');
+	        element.innerHTML = html;
+	        var result = document.createDocumentFragment();
+	        while (element.hasChildNodes()) result.appendChild(element.firstChild);
+	        return result;
+	    };
+
+	    /*
+	     *  Deep clone an object.
+	     *  @param b {Object} Object to clone
+	     *  @return a {Object} Cloned object.
+	     */
+	    Utility.clone = function clone(b) {
+	        var a;
+	        if (typeof b === 'object') {
+	            a = (b instanceof Array) ? [] : {};
+	            for (var key in b) {
+	                if (typeof b[key] === 'object' && b[key] !== null) {
+	                    if (b[key] instanceof Array) {
+	                        a[key] = new Array(b[key].length);
+	                        for (var i = 0; i < b[key].length; i++) {
+	                            a[key][i] = Utility.clone(b[key][i]);
+	                        }
+	                    }
+	                    else {
+	                      a[key] = Utility.clone(b[key]);
+	                    }
+	                }
+	                else {
+	                    a[key] = b[key];
+	                }
+	            }
+	        }
+	        else {
+	            a = b;
+	        }
+	        return a;
+	    };
+
+	    module.exports = Utility;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15550,8 +15467,8 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var MultipleTransition = __webpack_require__(144);
-	    var TweenTransition = __webpack_require__(145);
+	    var MultipleTransition = __webpack_require__(142);
+	    var TweenTransition = __webpack_require__(143);
 
 	    /**
 	     * A state maintainer for a smooth transition between
@@ -15765,7 +15682,7 @@
 
 
 /***/ },
-/* 50 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -15778,9 +15695,9 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transitionable = __webpack_require__(49);
+	    var Transitionable = __webpack_require__(48);
 	    var Transform = __webpack_require__(25);
-	    var Utility = __webpack_require__(38);
+	    var Utility = __webpack_require__(47);
 
 	    /**
 	     * A class for transitioning the state of a Transform by transitioning
@@ -16001,7 +15918,7 @@
 
 
 /***/ },
-/* 51 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16072,7 +15989,7 @@
 
 
 /***/ },
-/* 52 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16134,7 +16051,7 @@
 
 
 /***/ },
-/* 53 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16236,7 +16153,7 @@
 
 
 /***/ },
-/* 54 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16371,7 +16288,7 @@
 
 
 /***/ },
-/* 55 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16478,7 +16395,7 @@
 
 
 /***/ },
-/* 56 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16634,7 +16551,7 @@
 
 
 /***/ },
-/* 57 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16726,7 +16643,7 @@
 
 
 /***/ },
-/* 58 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16838,7 +16755,7 @@
 
 
 /***/ },
-/* 59 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -16947,7 +16864,7 @@
 
 
 /***/ },
-/* 60 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17060,7 +16977,7 @@
 
 
 /***/ },
-/* 61 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17204,7 +17121,7 @@
 
 
 /***/ },
-/* 62 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17276,7 +17193,7 @@
 
 
 /***/ },
-/* 63 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17437,7 +17354,7 @@
 
 
 /***/ },
-/* 64 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17502,7 +17419,7 @@
 
 
 /***/ },
-/* 65 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17585,7 +17502,7 @@
 
 
 /***/ },
-/* 66 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17647,7 +17564,7 @@
 
 
 /***/ },
-/* 67 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17725,7 +17642,7 @@
 
 
 /***/ },
-/* 68 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17802,7 +17719,7 @@
 
 
 /***/ },
-/* 69 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17902,7 +17819,7 @@
 
 
 /***/ },
-/* 70 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -17970,7 +17887,7 @@
 
 
 /***/ },
-/* 71 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18035,7 +17952,7 @@
 
 
 /***/ },
-/* 72 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18104,7 +18021,7 @@
 
 
 /***/ },
-/* 73 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18175,7 +18092,7 @@
 
 
 /***/ },
-/* 74 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18256,7 +18173,7 @@
 
 
 /***/ },
-/* 75 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18338,7 +18255,7 @@
 
 
 /***/ },
-/* 76 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18404,7 +18321,7 @@
 
 
 /***/ },
-/* 77 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18507,7 +18424,7 @@
 
 
 /***/ },
-/* 78 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18618,7 +18535,7 @@
 
 
 /***/ },
-/* 79 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18680,7 +18597,7 @@
 
 
 /***/ },
-/* 80 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18740,7 +18657,7 @@
 
 
 /***/ },
-/* 81 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18804,7 +18721,7 @@
 
 
 /***/ },
-/* 82 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18881,7 +18798,7 @@
 
 
 /***/ },
-/* 83 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -18964,7 +18881,7 @@
 
 
 /***/ },
-/* 84 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19075,7 +18992,7 @@
 
 
 /***/ },
-/* 85 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19220,7 +19137,7 @@
 
 
 /***/ },
-/* 86 */
+/* 85 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19331,7 +19248,7 @@
 
 
 /***/ },
-/* 87 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19449,7 +19366,7 @@
 
 
 /***/ },
-/* 88 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19522,7 +19439,7 @@
 
 
 /***/ },
-/* 89 */
+/* 88 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19652,7 +19569,7 @@
 
 
 /***/ },
-/* 90 */
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19717,7 +19634,7 @@
 
 
 /***/ },
-/* 91 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19781,7 +19698,7 @@
 
 
 /***/ },
-/* 92 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19894,7 +19811,7 @@
 
 
 /***/ },
-/* 93 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -19955,7 +19872,7 @@
 
 
 /***/ },
-/* 94 */
+/* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20024,7 +19941,7 @@
 
 
 /***/ },
-/* 95 */
+/* 94 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20167,7 +20084,7 @@
 
 
 /***/ },
-/* 96 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20291,7 +20208,7 @@
 
 
 /***/ },
-/* 97 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20374,7 +20291,7 @@
 
 
 /***/ },
-/* 98 */
+/* 97 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20466,7 +20383,7 @@
 
 
 /***/ },
-/* 99 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20536,7 +20453,7 @@
 
 
 /***/ },
-/* 100 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20646,7 +20563,7 @@
 
 
 /***/ },
-/* 101 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20718,7 +20635,7 @@
 
 
 /***/ },
-/* 102 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20812,7 +20729,7 @@
 
 
 /***/ },
-/* 103 */
+/* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20875,7 +20792,7 @@
 
 
 /***/ },
-/* 104 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -20986,7 +20903,7 @@
 
 
 /***/ },
-/* 105 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21059,7 +20976,7 @@
 
 
 /***/ },
-/* 106 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21121,7 +21038,7 @@
 
 
 /***/ },
-/* 107 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21225,7 +21142,7 @@
 
 
 /***/ },
-/* 108 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21287,7 +21204,7 @@
 
 
 /***/ },
-/* 109 */
+/* 108 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21353,7 +21270,7 @@
 
 
 /***/ },
-/* 110 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21431,7 +21348,7 @@
 
 
 /***/ },
-/* 111 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21603,7 +21520,7 @@
 
 
 /***/ },
-/* 112 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21765,7 +21682,7 @@
 
 
 /***/ },
-/* 113 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21915,7 +21832,7 @@
 
 
 /***/ },
-/* 114 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -21982,7 +21899,7 @@
 
 
 /***/ },
-/* 115 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22093,7 +22010,7 @@
 
 
 /***/ },
-/* 116 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22204,7 +22121,7 @@
 
 
 /***/ },
-/* 117 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22273,7 +22190,7 @@
 
 
 /***/ },
-/* 118 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22391,7 +22308,7 @@
 
 
 /***/ },
-/* 119 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22455,7 +22372,7 @@
 
 
 /***/ },
-/* 120 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22519,7 +22436,7 @@
 
 
 /***/ },
-/* 121 */
+/* 120 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22617,7 +22534,7 @@
 
 
 /***/ },
-/* 122 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22678,7 +22595,7 @@
 
 
 /***/ },
-/* 123 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22739,7 +22656,7 @@
 
 
 /***/ },
-/* 124 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22902,7 +22819,7 @@
 
 
 /***/ },
-/* 125 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -22963,7 +22880,7 @@
 
 
 /***/ },
-/* 126 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23031,7 +22948,7 @@
 
 
 /***/ },
-/* 127 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23145,7 +23062,7 @@
 
 
 /***/ },
-/* 128 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// moment.js locale configuration
@@ -23235,22 +23152,189 @@
 
 
 /***/ },
-/* 129 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__.p + "reload.gif"
-
-/***/ },
-/* 130 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Create a simple path alias to allow browserify to resolve
 	// the runtime on a supported path.
-	module.exports = __webpack_require__(146);
+	module.exports = __webpack_require__(145);
 
 
 /***/ },
-/* 131 */
+/* 129 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Entity = __webpack_require__(34);
+	    var SpecParser = __webpack_require__(144);
+
+	    /**
+	     * A wrapper for inserting a renderable component (like a Modifer or
+	     *   Surface) into the render tree.
+	     *
+	     * @class RenderNode
+	     * @constructor
+	     *
+	     * @param {Object} object Target renderable component
+	     */
+	    function RenderNode(object) {
+	        this._object = null;
+	        this._child = null;
+	        this._hasMultipleChildren = false;
+	        this._isRenderable = false;
+	        this._isModifier = false;
+
+	        this._resultCache = {};
+	        this._prevResults = {};
+
+	        this._childResult = null;
+
+	        if (object) this.set(object);
+	    }
+
+	    /**
+	     * Append a renderable to the list of this node's children.
+	     *   This produces a new RenderNode in the tree.
+	     *   Note: Does not double-wrap if child is a RenderNode already.
+	     *
+	     * @method add
+	     * @param {Object} child renderable object
+	     * @return {RenderNode} new render node wrapping child
+	     */
+	    RenderNode.prototype.add = function add(child) {
+	        var childNode = (child instanceof RenderNode) ? child : new RenderNode(child);
+	        if (this._child instanceof Array) this._child.push(childNode);
+	        else if (this._child) {
+	            this._child = [this._child, childNode];
+	            this._hasMultipleChildren = true;
+	            this._childResult = []; // to be used later
+	        }
+	        else this._child = childNode;
+
+	        return childNode;
+	    };
+
+	    /**
+	     * Return the single wrapped object.  Returns null if this node has multiple child nodes.
+	     *
+	     * @method get
+	     *
+	     * @return {Ojbect} contained renderable object
+	     */
+	    RenderNode.prototype.get = function get() {
+	        return this._object || (this._hasMultipleChildren ? null : (this._child ? this._child.get() : null));
+	    };
+
+	    /**
+	     * Overwrite the list of children to contain the single provided object
+	     *
+	     * @method set
+	     * @param {Object} child renderable object
+	     * @return {RenderNode} this render node, or child if it is a RenderNode
+	     */
+	    RenderNode.prototype.set = function set(child) {
+	        this._childResult = null;
+	        this._hasMultipleChildren = false;
+	        this._isRenderable = child.render ? true : false;
+	        this._isModifier = child.modify ? true : false;
+	        this._object = child;
+	        this._child = null;
+	        if (child instanceof RenderNode) return child;
+	        else return this;
+	    };
+
+	    /**
+	     * Get render size of contained object.
+	     *
+	     * @method getSize
+	     * @return {Array.Number} size of this or size of single child.
+	     */
+	    RenderNode.prototype.getSize = function getSize() {
+	        var result = null;
+	        var target = this.get();
+	        if (target && target.getSize) result = target.getSize();
+	        if (!result && this._child && this._child.getSize) result = this._child.getSize();
+	        return result;
+	    };
+
+	    // apply results of rendering this subtree to the document
+	    function _applyCommit(spec, context, cacheStorage) {
+	        var result = SpecParser.parse(spec, context);
+	        var keys = Object.keys(result);
+	        for (var i = 0; i < keys.length; i++) {
+	            var id = keys[i];
+	            var childNode = Entity.get(id);
+	            var commitParams = result[id];
+	            commitParams.allocator = context.allocator;
+	            var commitResult = childNode.commit(commitParams);
+	            if (commitResult) _applyCommit(commitResult, context, cacheStorage);
+	            else cacheStorage[id] = commitParams;
+	        }
+	    }
+
+	    /**
+	     * Commit the content change from this node to the document.
+	     *
+	     * @private
+	     * @method commit
+	     * @param {Context} context render context
+	     */
+	    RenderNode.prototype.commit = function commit(context) {
+	        // free up some divs from the last loop
+	        var prevKeys = Object.keys(this._prevResults);
+	        for (var i = 0; i < prevKeys.length; i++) {
+	            var id = prevKeys[i];
+	            if (this._resultCache[id] === undefined) {
+	                var object = Entity.get(id);
+	                if (object.cleanup) object.cleanup(context.allocator);
+	            }
+	        }
+
+	        this._prevResults = this._resultCache;
+	        this._resultCache = {};
+	        _applyCommit(this.render(), context, this._resultCache);
+	    };
+
+	    /**
+	     * Generate a render spec from the contents of the wrapped component.
+	     *
+	     * @private
+	     * @method render
+	     *
+	     * @return {Object} render specification for the component subtree
+	     *    only under this node.
+	     */
+	    RenderNode.prototype.render = function render() {
+	        if (this._isRenderable) return this._object.render();
+
+	        var result = null;
+	        if (this._hasMultipleChildren) {
+	            result = this._childResult;
+	            var children = this._child;
+	            for (var i = 0; i < children.length; i++) {
+	                result[i] = children[i].render();
+	            }
+	        }
+	        else if (this._child) result = this._child.render();
+
+	        return this._isModifier ? this._object.modify(result) : result;
+	    };
+
+	    module.exports = RenderNode;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -23266,7 +23350,7 @@
 
 
 /***/ },
-/* 132 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;
@@ -23387,7 +23471,7 @@
 
 
 /***/ },
-/* 133 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -23517,7 +23601,7 @@
 
 
 /***/ },
-/* 134 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -23618,7 +23702,7 @@
 
 
 /***/ },
-/* 135 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -23888,7 +23972,7 @@
 
 
 /***/ },
-/* 136 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -24000,189 +24084,7 @@
 
 
 /***/ },
-/* 137 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Transform = __webpack_require__(25);
-
-	    /**
-	     *
-	     * This object translates the rendering instructions ("render specs")
-	     *   that renderable components generate into document update
-	     *   instructions ("update specs").  Private.
-	     *
-	     * @private
-	     * @class SpecParser
-	     * @constructor
-	     */
-	    function SpecParser() {
-	        this.result = {};
-	    }
-	    SpecParser._instance = new SpecParser();
-
-	    /**
-	     * Convert a render spec coming from the context's render chain to an
-	     *    update spec for the update chain. This is the only major entry point
-	     *    for a consumer of this class.
-	     *
-	     * @method parse
-	     * @static
-	     * @private
-	     *
-	     * @param {renderSpec} spec input render spec
-	     * @param {Object} context context to do the parse in
-	     * @return {Object} the resulting update spec (if no callback
-	     *   specified, else none)
-	     */
-	    SpecParser.parse = function parse(spec, context) {
-	        return SpecParser._instance.parse(spec, context);
-	    };
-
-	    /**
-	     * Convert a renderSpec coming from the context's render chain to an update
-	     *    spec for the update chain. This is the only major entrypoint for a
-	     *    consumer of this class.
-	     *
-	     * @method parse
-	     *
-	     * @private
-	     * @param {renderSpec} spec input render spec
-	     * @param {Context} context
-	     * @return {updateSpec} the resulting update spec
-	     */
-	    SpecParser.prototype.parse = function parse(spec, context) {
-	        this.reset();
-	        this._parseSpec(spec, context, Transform.identity);
-	        return this.result;
-	    };
-
-	    /**
-	     * Prepare SpecParser for re-use (or first use) by setting internal state
-	     *  to blank.
-	     *
-	     * @private
-	     * @method reset
-	     */
-	    SpecParser.prototype.reset = function reset() {
-	        this.result = {};
-	    };
-
-	    // Multiply matrix M by vector v
-	    function _vecInContext(v, m) {
-	        return [
-	            v[0] * m[0] + v[1] * m[4] + v[2] * m[8],
-	            v[0] * m[1] + v[1] * m[5] + v[2] * m[9],
-	            v[0] * m[2] + v[1] * m[6] + v[2] * m[10]
-	        ];
-	    }
-
-	    var _zeroZero = [0, 0];
-
-	    // From the provided renderSpec tree, recursively compose opacities,
-	    //    origins, transforms, and sizes corresponding to each surface id from
-	    //    the provided renderSpec tree structure. On completion, those
-	    //    properties of 'this' object should be ready to use to build an
-	    //    updateSpec.
-	    SpecParser.prototype._parseSpec = function _parseSpec(spec, parentContext, sizeContext) {
-	        var id;
-	        var target;
-	        var transform;
-	        var opacity;
-	        var origin;
-	        var align;
-	        var size;
-
-	        if (typeof spec === 'number') {
-	            id = spec;
-	            transform = parentContext.transform;
-	            align = parentContext.align || _zeroZero;
-	            if (parentContext.size && align && (align[0] || align[1])) {
-	                var alignAdjust = [align[0] * parentContext.size[0], align[1] * parentContext.size[1], 0];
-	                transform = Transform.thenMove(transform, _vecInContext(alignAdjust, sizeContext));
-	            }
-	            this.result[id] = {
-	                transform: transform,
-	                opacity: parentContext.opacity,
-	                origin: parentContext.origin || _zeroZero,
-	                align: parentContext.align || _zeroZero,
-	                size: parentContext.size
-	            };
-	        }
-	        else if (!spec) { // placed here so 0 will be cached earlier
-	            return;
-	        }
-	        else if (spec instanceof Array) {
-	            for (var i = 0; i < spec.length; i++) {
-	                this._parseSpec(spec[i], parentContext, sizeContext);
-	            }
-	        }
-	        else {
-	            target = spec.target;
-	            transform = parentContext.transform;
-	            opacity = parentContext.opacity;
-	            origin = parentContext.origin;
-	            align = parentContext.align;
-	            size = parentContext.size;
-	            var nextSizeContext = sizeContext;
-
-	            if (spec.opacity !== undefined) opacity = parentContext.opacity * spec.opacity;
-	            if (spec.transform) transform = Transform.multiply(parentContext.transform, spec.transform);
-	            if (spec.origin) {
-	                origin = spec.origin;
-	                nextSizeContext = parentContext.transform;
-	            }
-	            if (spec.align) align = spec.align;
-
-	            if (spec.size || spec.proportions) {
-	                var parentSize = size;
-	                size = [size[0], size[1]];
-
-	                if (spec.size) {
-	                    if (spec.size[0] !== undefined) size[0] = spec.size[0];
-	                    if (spec.size[1] !== undefined) size[1] = spec.size[1];
-	                }
-
-	                if (spec.proportions) {
-	                    if (spec.proportions[0] !== undefined) size[0] = size[0] * spec.proportions[0];
-	                    if (spec.proportions[1] !== undefined) size[1] = size[1] * spec.proportions[1];
-	                }
-
-	                if (parentSize) {
-	                    if (align && (align[0] || align[1])) transform = Transform.thenMove(transform, _vecInContext([align[0] * parentSize[0], align[1] * parentSize[1], 0], sizeContext));
-	                    if (origin && (origin[0] || origin[1])) transform = Transform.moveThen([-origin[0] * size[0], -origin[1] * size[1], 0], transform);
-	                }
-
-	                nextSizeContext = parentContext.transform;
-	                origin = null;
-	                align = null;
-	            }
-
-	            this._parseSpec(target, {
-	                transform: transform,
-	                opacity: opacity,
-	                origin: origin,
-	                align: align,
-	                size: size
-	            }, nextSizeContext);
-	        }
-	    };
-
-	    module.exports = SpecParser;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 138 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -24568,7 +24470,7 @@
 
 
 /***/ },
-/* 139 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25097,7 +24999,7 @@
 
 
 /***/ },
-/* 140 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25110,10 +25012,10 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(138);
+	    var Vector = __webpack_require__(136);
 	    var Transform = __webpack_require__(25);
 	    var EventHandler = __webpack_require__(40);
-	    var Integrator = __webpack_require__(148);
+	    var Integrator = __webpack_require__(147);
 
 	    /**
 	     * A point body that is controlled by the Physics Engine. A particle has
@@ -25490,7 +25392,7 @@
 
 
 /***/ },
-/* 141 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25503,7 +25405,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(147);
+	    var Force = __webpack_require__(146);
 
 	    /**
 	     * Drag is a force that opposes velocity. Attach it to the physics engine
@@ -25615,7 +25517,7 @@
 
 
 /***/ },
-/* 142 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -25630,8 +25532,8 @@
 	/*global console */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Force = __webpack_require__(147);
-	    var Vector = __webpack_require__(138);
+	    var Force = __webpack_require__(146);
+	    var Vector = __webpack_require__(136);
 
 	    /**
 	     *  A force that moves a physics body to a location with a spring motion.
@@ -25888,7 +25790,7 @@
 
 
 /***/ },
-/* 143 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26091,7 +25993,7 @@
 
 
 /***/ },
-/* 144 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26104,7 +26006,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Utility = __webpack_require__(38);
+	    var Utility = __webpack_require__(47);
 
 	    /**
 	     * Transition meta-method to support transitioning multiple
@@ -26174,7 +26076,7 @@
 
 
 /***/ },
-/* 145 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26606,19 +26508,201 @@
 
 
 /***/ },
-/* 146 */
+/* 144 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Transform = __webpack_require__(25);
+
+	    /**
+	     *
+	     * This object translates the rendering instructions ("render specs")
+	     *   that renderable components generate into document update
+	     *   instructions ("update specs").  Private.
+	     *
+	     * @private
+	     * @class SpecParser
+	     * @constructor
+	     */
+	    function SpecParser() {
+	        this.result = {};
+	    }
+	    SpecParser._instance = new SpecParser();
+
+	    /**
+	     * Convert a render spec coming from the context's render chain to an
+	     *    update spec for the update chain. This is the only major entry point
+	     *    for a consumer of this class.
+	     *
+	     * @method parse
+	     * @static
+	     * @private
+	     *
+	     * @param {renderSpec} spec input render spec
+	     * @param {Object} context context to do the parse in
+	     * @return {Object} the resulting update spec (if no callback
+	     *   specified, else none)
+	     */
+	    SpecParser.parse = function parse(spec, context) {
+	        return SpecParser._instance.parse(spec, context);
+	    };
+
+	    /**
+	     * Convert a renderSpec coming from the context's render chain to an update
+	     *    spec for the update chain. This is the only major entrypoint for a
+	     *    consumer of this class.
+	     *
+	     * @method parse
+	     *
+	     * @private
+	     * @param {renderSpec} spec input render spec
+	     * @param {Context} context
+	     * @return {updateSpec} the resulting update spec
+	     */
+	    SpecParser.prototype.parse = function parse(spec, context) {
+	        this.reset();
+	        this._parseSpec(spec, context, Transform.identity);
+	        return this.result;
+	    };
+
+	    /**
+	     * Prepare SpecParser for re-use (or first use) by setting internal state
+	     *  to blank.
+	     *
+	     * @private
+	     * @method reset
+	     */
+	    SpecParser.prototype.reset = function reset() {
+	        this.result = {};
+	    };
+
+	    // Multiply matrix M by vector v
+	    function _vecInContext(v, m) {
+	        return [
+	            v[0] * m[0] + v[1] * m[4] + v[2] * m[8],
+	            v[0] * m[1] + v[1] * m[5] + v[2] * m[9],
+	            v[0] * m[2] + v[1] * m[6] + v[2] * m[10]
+	        ];
+	    }
+
+	    var _zeroZero = [0, 0];
+
+	    // From the provided renderSpec tree, recursively compose opacities,
+	    //    origins, transforms, and sizes corresponding to each surface id from
+	    //    the provided renderSpec tree structure. On completion, those
+	    //    properties of 'this' object should be ready to use to build an
+	    //    updateSpec.
+	    SpecParser.prototype._parseSpec = function _parseSpec(spec, parentContext, sizeContext) {
+	        var id;
+	        var target;
+	        var transform;
+	        var opacity;
+	        var origin;
+	        var align;
+	        var size;
+
+	        if (typeof spec === 'number') {
+	            id = spec;
+	            transform = parentContext.transform;
+	            align = parentContext.align || _zeroZero;
+	            if (parentContext.size && align && (align[0] || align[1])) {
+	                var alignAdjust = [align[0] * parentContext.size[0], align[1] * parentContext.size[1], 0];
+	                transform = Transform.thenMove(transform, _vecInContext(alignAdjust, sizeContext));
+	            }
+	            this.result[id] = {
+	                transform: transform,
+	                opacity: parentContext.opacity,
+	                origin: parentContext.origin || _zeroZero,
+	                align: parentContext.align || _zeroZero,
+	                size: parentContext.size
+	            };
+	        }
+	        else if (!spec) { // placed here so 0 will be cached earlier
+	            return;
+	        }
+	        else if (spec instanceof Array) {
+	            for (var i = 0; i < spec.length; i++) {
+	                this._parseSpec(spec[i], parentContext, sizeContext);
+	            }
+	        }
+	        else {
+	            target = spec.target;
+	            transform = parentContext.transform;
+	            opacity = parentContext.opacity;
+	            origin = parentContext.origin;
+	            align = parentContext.align;
+	            size = parentContext.size;
+	            var nextSizeContext = sizeContext;
+
+	            if (spec.opacity !== undefined) opacity = parentContext.opacity * spec.opacity;
+	            if (spec.transform) transform = Transform.multiply(parentContext.transform, spec.transform);
+	            if (spec.origin) {
+	                origin = spec.origin;
+	                nextSizeContext = parentContext.transform;
+	            }
+	            if (spec.align) align = spec.align;
+
+	            if (spec.size || spec.proportions) {
+	                var parentSize = size;
+	                size = [size[0], size[1]];
+
+	                if (spec.size) {
+	                    if (spec.size[0] !== undefined) size[0] = spec.size[0];
+	                    if (spec.size[1] !== undefined) size[1] = spec.size[1];
+	                }
+
+	                if (spec.proportions) {
+	                    if (spec.proportions[0] !== undefined) size[0] = size[0] * spec.proportions[0];
+	                    if (spec.proportions[1] !== undefined) size[1] = size[1] * spec.proportions[1];
+	                }
+
+	                if (parentSize) {
+	                    if (align && (align[0] || align[1])) transform = Transform.thenMove(transform, _vecInContext([align[0] * parentSize[0], align[1] * parentSize[1], 0], sizeContext));
+	                    if (origin && (origin[0] || origin[1])) transform = Transform.moveThen([-origin[0] * size[0], -origin[1] * size[1], 0], transform);
+	                }
+
+	                nextSizeContext = parentContext.transform;
+	                origin = null;
+	                align = null;
+	            }
+
+	            this._parseSpec(target, {
+	                transform: transform,
+	                opacity: opacity,
+	                origin: origin,
+	                align: align,
+	                size: size
+	            }, nextSizeContext);
+	        }
+	    };
+
+	    module.exports = SpecParser;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*globals Handlebars: true */
-	var base = __webpack_require__(149);
+	var base = __webpack_require__(148);
 
 	// Each of these augment the Handlebars object. No need to setup here.
 	// (This is done to easily share code between commonjs and browse envs)
-	var SafeString = __webpack_require__(150)["default"];
-	var Exception = __webpack_require__(151)["default"];
-	var Utils = __webpack_require__(152);
-	var runtime = __webpack_require__(153);
+	var SafeString = __webpack_require__(149)["default"];
+	var Exception = __webpack_require__(150)["default"];
+	var Utils = __webpack_require__(151);
+	var runtime = __webpack_require__(152);
 
 	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
 	var create = function() {
@@ -26643,7 +26727,7 @@
 	exports["default"] = Handlebars;
 
 /***/ },
-/* 147 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26656,7 +26740,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Vector = __webpack_require__(138);
+	    var Vector = __webpack_require__(136);
 	    var EventHandler = __webpack_require__(40);
 
 	    /**
@@ -26710,7 +26794,7 @@
 
 
 /***/ },
-/* 148 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -26818,12 +26902,12 @@
 
 
 /***/ },
-/* 149 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(152);
-	var Exception = __webpack_require__(151)["default"];
+	var Utils = __webpack_require__(151);
+	var Exception = __webpack_require__(150)["default"];
 
 	var VERSION = "1.3.0";
 	exports.VERSION = VERSION;var COMPILER_REVISION = 4;
@@ -27003,7 +27087,7 @@
 	exports.createFrame = createFrame;
 
 /***/ },
-/* 150 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27019,7 +27103,7 @@
 	exports["default"] = SafeString;
 
 /***/ },
-/* 151 */
+/* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -27052,12 +27136,12 @@
 	exports["default"] = Exception;
 
 /***/ },
-/* 152 */
+/* 151 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	/*jshint -W004 */
-	var SafeString = __webpack_require__(150)["default"];
+	var SafeString = __webpack_require__(149)["default"];
 
 	var escape = {
 	  "&": "&amp;",
@@ -27133,14 +27217,14 @@
 	exports.isEmpty = isEmpty;
 
 /***/ },
-/* 153 */
+/* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Utils = __webpack_require__(152);
-	var Exception = __webpack_require__(151)["default"];
-	var COMPILER_REVISION = __webpack_require__(149).COMPILER_REVISION;
-	var REVISION_CHANGES = __webpack_require__(149).REVISION_CHANGES;
+	var Utils = __webpack_require__(151);
+	var Exception = __webpack_require__(150)["default"];
+	var COMPILER_REVISION = __webpack_require__(148).COMPILER_REVISION;
+	var REVISION_CHANGES = __webpack_require__(148).REVISION_CHANGES;
 
 	function checkRevision(compilerInfo) {
 	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
