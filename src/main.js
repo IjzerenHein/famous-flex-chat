@@ -38,7 +38,7 @@ define(function(require) {
     var AutosizeTextareaSurface = require('famous-autosizetextarea/AutosizeTextareaSurface');
     var Timer = require('famous/utilities/Timer');
     var InputSurface = require('famous/surfaces/InputSurface');
-    var Spinner = require('./Spinner');
+    var RefreshLoader = require('famous-refresh-loader/RefreshLoader');
     var moment = require('moment/moment');
     var cuid = require('cuid');
     // templates
@@ -183,9 +183,6 @@ define(function(require) {
             },
             dataSource: viewSequence,
             flow: true,
-            insertSpec: {
-                opacity: 0
-            },
             alignment: 1,
             mouseMove: true,
             debug: false,
@@ -342,8 +339,10 @@ define(function(require) {
      */
     var pullToRefreshHeader;
     function _createPullToRefreshCell() {
-        pullToRefreshHeader = new Spinner({
-            size: [undefined, 100]
+        pullToRefreshHeader = new RefreshLoader({
+            size: [undefined, 60],
+            pullToRefresh: true,
+            pullToRefreshBackgroundColor: 'white'
         });
     }
     scrollView.on('refresh', function(event) {
@@ -355,21 +354,12 @@ define(function(require) {
                     _addMessage(val[key], true, key);
                 }
             }
-            scrollView.hidePullToRefresh(event.footer);
+            Timer.setTimeout(function() {
+                scrollView.hidePullToRefresh(event.footer);
+            }, 200);
         });
 
     });
-
-    //
-    // Loads the chat messages from demoMessages.json
-    //
-    /*var demoData = require('./demoMessages.json');
-    function _loadDemoData() {
-        var data = require('./demoMessages.json');
-        _addMessage(data[0]);
-        _addMessage(data[1]);
-        _addMessage(data[2]);
-    }*/
 
     //
     // Shows the lagometer

@@ -39,6 +39,7 @@
     "famous": "^0.3.1",
     "famous-autosizetextarea": "latest",
     "famous-flex": "latest",
+    "famous-refresh-loader": "latest",
     "famous-lagometer": "latest",
     "famous-polyfills": "^0.2.2",
     "fastclick": "^1.0.3",
