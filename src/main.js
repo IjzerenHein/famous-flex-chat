@@ -183,6 +183,9 @@ define(function(require) {
             },
             dataSource: viewSequence,
             flow: true,
+            insertSpec: {
+                opacity: 0
+            },
             alignment: 1,
             mouseMove: true,
             debug: false,
@@ -239,10 +242,8 @@ define(function(require) {
 
             // Scroll the latest (newest) chat message
             if (afterInitialRefresh) {
-                if (top === undefined) {
-                    scrollView.goToLastPage();
-                    scrollView.reflowLayout();
-                }
+                scrollView.goToLastPage();
+                scrollView.reflowLayout();
             }
             else {
 
