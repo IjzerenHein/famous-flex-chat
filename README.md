@@ -1,15 +1,16 @@
 famous-flex-chat
 ==========
 
-Chat-demo for famo.us using the [famous-flex](https://github.com/IjzerenHein/famous-flex) ScrollController and TableLayout. This project shows how to create a native feeling cross-platform chat application using famo.us.
+Chat-demo for famo.us using the [famous-flex](https://github.com/IjzerenHein/famous-flex) ScrollView. This project shows how to create a native feeling cross-platform chat application using famo.us.
 
 ![Screenshot](screenshot.gif)
 
 The following features are demonstrated:
 
--	True-size chat-bubbles using [famous-flex/ScrollController](https://github.com/IjzerenHein/famous-flex/blob/master/docs/ScrollController.md)
--	Sticky headers using [famous-flex/layouts/TableLayout](https://github.com/IjzerenHein/famous-flex/blob/master/docs/layouts/TableLayout.md)
+-	True-size chat-bubbles using [famous-flex/ScrollView](https://github.com/IjzerenHein/famous-flex/blob/master/docs/ScrollView.md)
+-	Sticky headers using [famous-flex/layouts/ListLayout](https://github.com/IjzerenHein/famous-flex/blob/master/docs/layouts/ListLayout.md)
 -	Resizable text-area input [famous-autosizetextarea](https://github.com/IjzerenHein/famous-autosizetextarea)
+-	Pull to refresh spinner [famous-refresh-loader](https://github.com/IjzerenHein/famous-refresh-loader)
 -	Responsive design principles using famous-flex
 
 [View the live demo here](https://rawgit.com/IjzerenHein/famous-flex-chat/master/dist/index.html)
