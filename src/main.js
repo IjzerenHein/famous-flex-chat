@@ -31,7 +31,7 @@ define(function(require) {
     var Surface = require('famous/core/Surface');
     var Modifier = require('famous/core/Modifier');
     var Transform = require('famous/core/Transform');
-    var FlexScrollView = require('famous-flex/ScrollView');
+    var FlexScrollView = require('famous-flex/FlexScrollView');
     var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
@@ -182,6 +182,7 @@ define(function(require) {
                 margins: [5, 0, 0, 0]
             },
             dataSource: viewSequence,
+            autoPipeEvents: true,
             flow: true,
             alignment: 1,
             mouseMove: true,
@@ -212,23 +213,17 @@ define(function(require) {
 
         // Insert section
         var day = time.format('LL');
-        var daySection;
         if (!top && (day !== lastSectionDay)) {
             lastSectionDay = day;
             firstSectionDay = firstSectionDay || day;
-            daySection = _createDaySection(day);
-            daySection.pipe(scrollView);
-            scrollView.push(daySection);
+            scrollView.push(_createDaySection(day));
         } else if (top && (day !== firstSectionDay)) {
             firstSectionDay = day;
-            daySection = _createDaySection(day);
-            daySection.pipe(scrollView);
-            scrollView.insert(0, daySection);
+            scrollView.insert(0, _createDaySection(day));
         }
 
         //console.log('adding message: ' + JSON.stringify(data));
         var chatBubble = _createChatBubble(data);
-        chatBubble.pipe(scrollView);
         if (top) {
             scrollView.insert(1, chatBubble);
         }
