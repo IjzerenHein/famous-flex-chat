@@ -235,6 +235,7 @@
 	                margins: [5, 0, 0, 0]
 	            },
 	            dataSource: viewSequence,
+	            autoPipeEvents: true,
 	            flow: true,
 	            alignment: 1,
 	            mouseMove: true,
@@ -265,23 +266,17 @@
 
 	        // Insert section
 	        var day = time.format('LL');
-	        var daySection;
 	        if (!top && (day !== lastSectionDay)) {
 	            lastSectionDay = day;
 	            firstSectionDay = firstSectionDay || day;
-	            daySection = _createDaySection(day);
-	            daySection.pipe(scrollView);
-	            scrollView.push(daySection);
+	            scrollView.push(_createDaySection(day));
 	        } else if (top && (day !== firstSectionDay)) {
 	            firstSectionDay = day;
-	            daySection = _createDaySection(day);
-	            daySection.pipe(scrollView);
-	            scrollView.insert(0, daySection);
+	            scrollView.insert(0, _createDaySection(day));
 	        }
 
 	        //console.log('adding message: ' + JSON.stringify(data));
 	        var chatBubble = _createChatBubble(data);
-	        chatBubble.pipe(scrollView);
 	        if (top) {
 	            scrollView.insert(1, chatBubble);
 	        }
@@ -533,8 +528,8 @@
 
 	    // import dependencies
 	    var Engine = __webpack_require__(21);
-	    var CanvasSurface = __webpack_require__(31);
-	    var View = __webpack_require__(32);
+	    var CanvasSurface = __webpack_require__(34);
+	    var View = __webpack_require__(33);
 
 	    /**
 	     * @class Lagometer
@@ -830,7 +825,7 @@
 	    'use strict';
 
 	    // import dependencies
-	    var TextareaSurface = __webpack_require__(33);
+	    var TextareaSurface = __webpack_require__(31);
 
 	    /**
 	     * @class
@@ -1065,11 +1060,11 @@
 	    'use strict';
 
 	    // import dependencies
-	    var Entity = __webpack_require__(34);
+	    var Entity = __webpack_require__(32);
 	    var Surface = __webpack_require__(23);
 	    var Transform = __webpack_require__(25);
 	    var Modifier = __webpack_require__(24);
-	    var View = __webpack_require__(32);
+	    var View = __webpack_require__(33);
 
 	    /**
 	     * @class
@@ -1102,7 +1097,8 @@
 	        pullToRefresh: false,
 	        pullToRefreshBackgroundColor: 'white',
 	        pullToRefreshDirection: 1,
-	        pullToRefreshFooter: false
+	        pullToRefreshFooter: false,
+	        pullToRefreshFactor: 1.5 // pull 1.5x the size to activate refresh
 	    };
 
 	    /**
@@ -1252,6 +1248,21 @@
 	     */
 	    RefreshLoader.prototype.setPullToRefreshStatus = function(status) {
 	        this._pullToRefreshStatus = status;
+	    };
+
+	    /**
+	     * Called by the flex ScrollView to get the size on how far to pull before the
+	     * refresh is activated.
+	     *
+	     * @return {Size} Pull to refresh size
+	     */
+	    RefreshLoader.prototype.getPullToRefreshSize = function() {
+	        if (this.options.pullToRefreshDirection) {
+	            return [this.options.size[0], this.options.size[1] * this.options.pullToRefreshFactor];
+	        }
+	        else {
+	            return [this.options.size[1] * this.options.pullToRefreshFactor, this.options.size[1]];
+	        }
 	    };
 
 	    module.exports = RefreshLoader;
@@ -5247,7 +5258,7 @@
 	/*eslint no-use-before-define:0, no-console:0 */
 
 	/**
-	 * Flexible ScrollView drop-in replacement for famo.us.
+	 * Flexible FlexScrollView for famo.us.
 	 *
 	 * Key features:
 	 * -    Customizable layout (uses ListLayout by default)
@@ -5258,7 +5269,7 @@
 	 * -    Top/left or bottom/right alignment
 	 * -    Pagination
 	 * -    Option to embed in a ContainerSurface
-	 * -    ScrollView linking
+	 * -    FlexScrollView linking
 	 *
 	 * Inherited from: [ScrollController](./ScrollController.md)
 	 * @module
@@ -5287,19 +5298,21 @@
 	     * @param {Object} options Configurable options (see ScrollController for all inherited options).
 	     * @param {Renderable} [options.pullToRefreshHeader] Pull to refresh renderable that is displayed when pulling down from the top.
 	     * @param {Renderable} [options.pullToRefreshFooter] Pull to refresh renderable that is displayed when pulling up from the bottom.
-	     * @alias module:ScrollView
+	     * @param {FlexScrollView} [options.leadingScrollView] Leading scrollview into which input events are piped (see Tutorial)
+	     * @param {FlexScrollView} [options.trailingScrollView] Trailing scrollview into which input events are piped (see Tutorial)
+	     * @alias module:FlexScrollView
 	     */
-	    function ScrollView(options) {
-	        ScrollController.call(this, LayoutUtility.combineOptions(ScrollView.DEFAULT_OPTIONS, options));
+	    function FlexScrollView(options) {
+	        ScrollController.call(this, LayoutUtility.combineOptions(FlexScrollView.DEFAULT_OPTIONS, options));
 	        this._thisScrollViewDelta = 0;
 	        this._leadingScrollViewDelta = 0;
 	        this._trailingScrollViewDelta = 0;
 	    }
-	    ScrollView.prototype = Object.create(ScrollController.prototype);
-	    ScrollView.prototype.constructor = ScrollView;
-	    ScrollView.PullToRefrehState = PullToRefreshState;
+	    FlexScrollView.prototype = Object.create(ScrollController.prototype);
+	    FlexScrollView.prototype.constructor = FlexScrollView;
+	    FlexScrollView.PullToRefrehState = PullToRefreshState;
 
-	    ScrollView.DEFAULT_OPTIONS = {
+	    FlexScrollView.DEFAULT_OPTIONS = {
 	        layout: ListLayout,         // sequential layout, uses width/height from renderable
 	        direction: undefined,       // 0 = X, 1 = Y, undefined = use default from layout
 	        paginated: false,           // pagination on/off
@@ -5316,14 +5329,16 @@
 	    };
 
 	    /**
-	     * Patches the ScrollView instance's options with the passed-in ones.
+	     * Patches the FlexScrollView instance's options with the passed-in ones.
 	     *
 	     * @param {Object} options Configurable options (see ScrollController for all inherited options).
 	     * @param {Renderable} [options.pullToRefreshHeader] Pull to refresh renderable that is displayed when pulling down from the top.
 	     * @param {Renderable} [options.pullToRefreshFooter] Pull to refresh renderable that is displayed when pulling up from the bottom.
-	     * @return {ScrollView} this
+	     * @param {FlexScrollView} [options.leadingScrollView] Leading scrollview into which input events are piped (see Tutorial).
+	     * @param {FlexScrollView} [options.trailingScrollView] Trailing scrollview into which input events are piped (see Tutorial).
+	     * @return {FlexScrollView} this
 	     */
-	    ScrollView.prototype.setOptions = function(options) {
+	    FlexScrollView.prototype.setOptions = function(options) {
 	        ScrollController.prototype.setOptions.call(this, options);
 
 	        // Update pull to refresh renderables
@@ -5366,35 +5381,35 @@
 	    /**
 	     * Sets the data-source (alias for setDataSource).
 	     *
-	     * This function is a shim provided for compatibility with the stock famo.us ScrollView.
+	     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
 	     *
 	     * @param {Array|ViewSequence} node Either an array of renderables or a Famous viewSequence.
-	     * @return {ScrollView} this
+	     * @return {FlexScrollView} this
 	     */
-	    ScrollView.prototype.sequenceFrom = function(node) {
+	    FlexScrollView.prototype.sequenceFrom = function(node) {
 	        return this.setDataSource(node);
 	    };
 
 	    /**
 	     * Returns the index of the first visible renderable.
 	     *
-	     * This function is a shim provided for compatibility with the stock famo.us ScrollView.
+	     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
 	     *
 	     * @return {Number} The current index of the ViewSequence
 	     */
-	    ScrollView.prototype.getCurrentIndex = function getCurrentIndex() {
+	    FlexScrollView.prototype.getCurrentIndex = function getCurrentIndex() {
 	        var item = this.getFirstVisibleItem();
 	        return item ? item.viewSequence.getIndex() : -1;
 	    };
 
 	    /**
 	     * Paginates the Scrollview to an absolute page index. This function is a shim provided
-	     * for compatibility with the stock famo.us ScrollView.
+	     * for compatibility with the stock famo.us Scrollview.
 	     *
 	     * @param {Number} index view-sequence index to go to.
-	     * @return {ScrollView} this
+	     * @return {FlexScrollView} this
 	     */
-	    ScrollView.prototype.goToPage = function goToPage(index) {
+	    FlexScrollView.prototype.goToPage = function goToPage(index) {
 	        var viewSequence = this._viewSequence;
 	        if (!viewSequence) {
 	            return this;
@@ -5419,12 +5434,12 @@
 	     * Returns the offset associated with the Scrollview instance's current node
 	     * (generally the node currently at the top).
 	     *
-	     * This function is a shim provided for compatibility with the stock famo.us ScrollView.
+	     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
 	     *
 	     * @return {number} The position of either the specified node, or the Scrollview's current Node,
 	     * in pixels translated.
 	     */
-	    ScrollView.prototype.getOffset = function() {
+	    FlexScrollView.prototype.getOffset = function() {
 	        return this._scrollOffsetCache;
 	    };
 
@@ -5432,16 +5447,15 @@
 	     * Returns the position associated with the Scrollview instance's current node
 	     * (generally the node currently at the top).
 	     *
-	     * This function is a shim provided for compatibility with the stock famo.us ScrollView.
+	     * This function is a shim provided for compatibility with the stock famo.us Scrollview.
 	     *
 	     * @deprecated
-	     * @method getPosition
 	     * @param {number} [node] If specified, returns the position of the node at that index in the
 	     * Scrollview instance's currently managed collection.
 	     * @return {number} The position of either the specified node, or the Scrollview's current Node,
 	     * in pixels translated.
 	     */
-	    ScrollView.prototype.getPosition = ScrollView.prototype.getOffset;
+	    FlexScrollView.prototype.getPosition = FlexScrollView.prototype.getOffset;
 
 	    /**
 	     * Helper function for setting the pull-to-refresh status.
@@ -5466,7 +5480,7 @@
 	     * Post-layout function that adds the pull-to-refresh renderables.
 	     * @private
 	     */
-	    ScrollView.prototype._postLayout = function(size, scrollOffset) {
+	    FlexScrollView.prototype._postLayout = function(size, scrollOffset) {
 
 	        // Exit immediately when pull to refresh is not configured
 	        if (!this._pullToRefresh) {
@@ -5490,7 +5504,7 @@
 
 	                // Calculate offset
 	                var length = pullToRefresh.node.getSize()[this._direction];
-	                var pullLength = length * 2;
+	                var pullLength = pullToRefresh.node.getPullToRefreshSize ? pullToRefresh.node.getPullToRefreshSize()[this._direction] : length;
 	                var offset;
 	                if (!pullToRefresh.footer) {
 	                    // header
@@ -5571,7 +5585,12 @@
 	                        next: pullToRefresh.footer,
 	                        index: !pullToRefresh.footer ? --this._nodes._contextState.prevGetIndex : ++this._nodes._contextState.nextGetIndex
 	                    };
-	                    var scrollLength = (this._scroll.scrollForceCount || (pullToRefresh.state === PullToRefreshState.ACTIVE)) ? length : undefined;
+	                    var scrollLength;
+	                    if (pullToRefresh.state === PullToRefreshState.ACTIVE) {
+	                        scrollLength = length;
+	                    } else if (this._scroll.scrollForceCount) {
+	                        scrollLength = Math.min(offset, length);
+	                    }
 	                    var set = {
 	                        size: [size[0], size[1]],
 	                        translate: [0, 0, -1e-3], // transform.behind
@@ -5588,9 +5607,10 @@
 	    /**
 	     * Shows the pulls-to-refresh renderable indicating that a refresh is in progress.
 	     *
-	     * @param {Bool} [footer] set to true to show pull-to-refresh at the end (default: false).
+	     * @param {Bool} [footer] set to true to show pull-to-refresh at the footer (default: false).
+	     * @return {FlexScrollView} this
 	     */
-	    ScrollView.prototype.showPullToRefresh = function(footer) {
+	    FlexScrollView.prototype.showPullToRefresh = function(footer) {
 	        var pullToRefresh = _getPullToRefresh.call(this, footer);
 	        if (pullToRefresh) {
 	            _setPullToRefreshState(PullToRefreshState.SHOWN, pullToRefresh);
@@ -5600,8 +5620,11 @@
 
 	    /**
 	     * Hides the pull-to-refresh renderable in case it was visible.
+	     *
+	     * @param {Bool} [footer] set to true to hide the pull-to-refresh at the footer (default: false).
+	     * @return {FlexScrollView} this
 	     */
-	    ScrollView.prototype.hidePullToRefresh = function(footer) {
+	    FlexScrollView.prototype.hidePullToRefresh = function(footer) {
 	        var pullToRefresh = _getPullToRefresh.call(this, footer);
 	        if (pullToRefresh && (pullToRefresh.state === PullToRefreshState.ACTIVE)) {
 	            _setPullToRefreshState(pullToRefresh, PullToRefreshState.COMPLETED);
@@ -5612,16 +5635,19 @@
 
 	    /**
 	     * Get the visible state of the pull-to-refresh renderable.
+	     *
+	     * @param {Bool} [footer] set to true to get the state of the pull-to-refresh footer (default: false).
 	     */
-	    ScrollView.prototype.isPullToRefreshVisible = function(footer) {
+	    FlexScrollView.prototype.isPullToRefreshVisible = function(footer) {
 	        var pullToRefresh = _getPullToRefresh.call(this, footer);
 	        return pullToRefresh ? (pullToRefresh.state === PullToRefreshState.ACTIVE) : false;
 	    };
 
 	    /**
 	     * Delegates any scroll force to leading/trailing scrollviews.
+	     * @private
 	     */
-	    ScrollView.prototype.applyScrollForce = function(delta) {
+	    FlexScrollView.prototype.applyScrollForce = function(delta) {
 	        var leadingScrollView = this.options.leadingScrollView;
 	        var trailingScrollView = this.options.trailingScrollView;
 	        if (!leadingScrollView && !trailingScrollView) {
@@ -5673,8 +5699,9 @@
 
 	    /**
 	     * Delegates any scroll force to leading/trailing scrollviews.
+	     * @private
 	     */
-	    ScrollView.prototype.updateScrollForce = function(prevDelta, newDelta) {
+	    FlexScrollView.prototype.updateScrollForce = function(prevDelta, newDelta) {
 	        var leadingScrollView = this.options.leadingScrollView;
 	        var trailingScrollView = this.options.trailingScrollView;
 	        if (!leadingScrollView && !trailingScrollView) {
@@ -5727,8 +5754,9 @@
 
 	    /**
 	     * Delegates any scroll force to leading/trailing scrollviews.
+	     * @private
 	     */
-	    ScrollView.prototype.releaseScrollForce = function(delta, velocity) {
+	    FlexScrollView.prototype.releaseScrollForce = function(delta, velocity) {
 	        var leadingScrollView = this.options.leadingScrollView;
 	        var trailingScrollView = this.options.trailingScrollView;
 	        if (!leadingScrollView && !trailingScrollView) {
@@ -5783,13 +5811,13 @@
 	     * all the rendering has been done.
 	     * @private
 	     */
-	    ScrollView.prototype.commit = function(context) {
+	    FlexScrollView.prototype.commit = function(context) {
 
 	        // Call base class
 	        var result = ScrollController.prototype.commit.call(this, context);
 
 	        // Emit pull to refresh events after the whole commit call has been executed
-	        // so that when the refresh event is received, the ScrollView is in a valid state
+	        // so that when the refresh event is received, the FlexScrollView is in a valid state
 	        // and can be queried.
 	        if (this._pullToRefresh) {
 	            for (var i = 0; i < 2; i++) {
@@ -5809,7 +5837,7 @@
 	        return result;
 	    };
 
-	    module.exports = ScrollView;
+	    module.exports = FlexScrollView;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -5840,7 +5868,7 @@
 
 	    // import dependencies
 	    var Utility = __webpack_require__(47);
-	    var Entity = __webpack_require__(34);
+	    var Entity = __webpack_require__(32);
 	    var ViewSequence = __webpack_require__(22);
 	    var OptionsManager = __webpack_require__(39);
 	    var EventHandler = __webpack_require__(40);
@@ -5862,6 +5890,7 @@
 	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
 	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
 	     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
+	     * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
 	     * @alias module:LayoutController
 	     */
 	    function LayoutController(options, nodeManager) {
@@ -5962,6 +5991,7 @@
 	     * @param {Spec} [options.insertSpec] Size, transform, opacity... to use when inserting new renderables into the scene (default: `{}`).
 	     * @param {Spec} [options.removeSpec] Size, transform, opacity... to use when removing renderables from the scene (default: `{}`).
 	     * @param {Bool} [options.alwaysLayout] When set to true, always calls the layout function on every render-cycle (default: `false`).
+	     * @param {Bool} [options.autoPipeEvents] When set to true, automatically calls .pipe on all renderables when inserted (default: `false`).
 	     * @return {LayoutController} this
 	     */
 	    LayoutController.prototype.setOptions = function setOptions(options) {
@@ -5984,6 +6014,33 @@
 	    };
 
 	    /**
+	     * Helper function to enumerate all the renderables in the datasource
+	     */
+	    function _forEachRenderable(callback) {
+	        var dataSource = this._dataSource;
+	        if (dataSource instanceof Array) {
+	            for (var i = 0, j = dataSource.length; i < j; i++) {
+	                callback(dataSource[i]);
+	            }
+	        } else if (dataSource instanceof ViewSequence) {
+	            var renderable;
+	            while (dataSource) {
+	                renderable = dataSource.get();
+	                if (!renderable) {
+	                    break;
+	                }
+	                callback(renderable);
+	                dataSource = dataSource.getNext();
+	            }
+	        }
+	        else {
+	            for (var key in dataSource) {
+	                callback(dataSource[key]);
+	            }
+	        }
+	    }
+
+	    /**
 	     * Sets the collection of renderables which are layed out according to
 	     * the layout-function.
 	     *
@@ -6002,6 +6059,11 @@
 	            this._viewSequence = dataSource;
 	        } else if (dataSource instanceof Object){
 	            this._nodesById = dataSource;
+	        }
+	        if (this.options.autoPipeEvents) {
+	            _forEachRenderable.call(this, function(renderable) {
+	                renderable.pipe(this);
+	            }.bind(this));
 	        }
 	        this._isDirty = true;
 	        return this;
@@ -6249,6 +6311,11 @@
 	            this._nodes.insertNode(this._nodes.createNode(renderable, insertSpec));
 	        }
 
+	        // Auto pipe events
+	        if (this.options.autoPipeEvents) {
+	            renderable.pipe(this);
+	        }
+
 	        // Force a reflow
 	        this._isDirty = true;
 
@@ -6477,14 +6544,14 @@
 	 * |---|---|---|
 	 * |`[headerSize]`|Number|Height of the header|
 	 * |`[footerSize]`|Number|Height of the footer|
-	 * |`[margins]`|Number/Array|Margins|
+	 * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
 	 *
 	 * Example:
 	 *
 	 * ```javascript
 	 * var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
 	 *
-	 * new LayoutController({
+	 * var layout = new LayoutController({
 	 *   layout: HeaderFooterLayout,
 	 *   layoutOptions: {
 	 *     headerSize: 60,    // header has height of 60 pixels
@@ -6495,7 +6562,7 @@
 	 *	   content: new Surface({content: 'This is the content surface'}),
 	 *	   footer: new Surface({content: 'This is the footer surface'})
 	 *   }
-	 * })
+	 * });
 	 * ```
 	 * @module
 	 */
@@ -9595,245 +9662,6 @@
 	    var Surface = __webpack_require__(23);
 
 	    /**
-	     * A surface containing an HTML5 Canvas element.
-	     *   This extends the Surface class.
-	     *
-	     * @class CanvasSurface
-	     * @extends Surface
-	     * @constructor
-	     * @param {Object} [options] overrides of default options
-	     * @param {Array.Number} [options.canvasSize] [width, height] for document element
-	     */
-	    function CanvasSurface(options) {
-	        if (options && options.canvasSize) this._canvasSize = options.canvasSize;
-	        Surface.apply(this, arguments);
-	        if (!this._canvasSize) this._canvasSize = this.getSize();
-	        this._backBuffer = document.createElement('canvas');
-	        if (this._canvasSize) {
-	            this._backBuffer.width = this._canvasSize[0];
-	            this._backBuffer.height = this._canvasSize[1];
-	        }
-	        this._contextId = undefined;
-	    }
-
-	    CanvasSurface.prototype = Object.create(Surface.prototype);
-	    CanvasSurface.prototype.constructor = CanvasSurface;
-	    CanvasSurface.prototype.elementType = 'canvas';
-	    CanvasSurface.prototype.elementClass = 'famous-surface';
-
-	    /**
-	     * Set inner document content.  Note that this is a noop for CanvasSurface.
-	     *
-	     * @method setContent
-	     *
-	     */
-	    CanvasSurface.prototype.setContent = function setContent() {};
-
-	    /**
-	     * Place the document element this component manages into the document.
-	     *    This will draw the content to the document.
-	     *
-	     * @private
-	     * @method deploy
-	     * @param {Node} target document parent of this container
-	     */
-	    CanvasSurface.prototype.deploy = function deploy(target) {
-	        if (this._canvasSize) {
-	            target.width = this._canvasSize[0];
-	            target.height = this._canvasSize[1];
-	        }
-	        if (this._contextId === '2d') {
-	            target.getContext(this._contextId).drawImage(this._backBuffer, 0, 0);
-	            this._backBuffer.width = 0;
-	            this._backBuffer.height = 0;
-	        }
-	    };
-
-	    /**
-	     * Remove this component and contained content from the document
-	     *
-	     * @private
-	     * @method recall
-	     *
-	     * @param {Node} target node to which the component was deployed
-	     */
-	    CanvasSurface.prototype.recall = function recall(target) {
-	        var size = this.getSize();
-
-	        this._backBuffer.width = target.width;
-	        this._backBuffer.height = target.height;
-
-	        if (this._contextId === '2d') {
-	            this._backBuffer.getContext(this._contextId).drawImage(target, 0, 0);
-	            target.width = 0;
-	            target.height = 0;
-	        }
-	    };
-
-	    /**
-	     * Returns the canvas element's context
-	     *
-	     * @method getContext
-	     * @param {string} contextId context identifier
-	     */
-	    CanvasSurface.prototype.getContext = function getContext(contextId) {
-	        this._contextId = contextId;
-	        return this._currentTarget ? this._currentTarget.getContext(contextId) : this._backBuffer.getContext(contextId);
-	    };
-
-	    /**
-	     *  Set the size of the surface and canvas element.
-	     *
-	     *  @method setSize
-	     *  @param {Array.number} size [width, height] of surface
-	     *  @param {Array.number} canvasSize [width, height] of canvas surface
-	     */
-	    CanvasSurface.prototype.setSize = function setSize(size, canvasSize) {
-	        Surface.prototype.setSize.apply(this, arguments);
-	        if (canvasSize) this._canvasSize = [canvasSize[0], canvasSize[1]];
-	        if (this._currentTarget) {
-	            this._currentTarget.width = this._canvasSize[0];
-	            this._currentTarget.height = this._canvasSize[1];
-	        }
-	    };
-
-	    module.exports = CanvasSurface;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var EventHandler = __webpack_require__(40);
-	    var OptionsManager = __webpack_require__(39);
-	    var RenderNode = __webpack_require__(129);
-	    var Utility = __webpack_require__(47);
-
-	    /**
-	     * Useful for quickly creating elements within applications
-	     *   with large event systems.  Consists of a RenderNode paired with
-	     *   an input EventHandler and an output EventHandler.
-	     *   Meant to be extended by the developer.
-	     *
-	     * @class View
-	     * @uses EventHandler
-	     * @uses OptionsManager
-	     * @uses RenderNode
-	     * @constructor
-	     */
-	    function View(options) {
-	        this._node = new RenderNode();
-
-	        this._eventInput = new EventHandler();
-	        this._eventOutput = new EventHandler();
-	        EventHandler.setInputHandler(this, this._eventInput);
-	        EventHandler.setOutputHandler(this, this._eventOutput);
-
-	        this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
-	        this._optionsManager = new OptionsManager(this.options);
-
-	        if (options) this.setOptions(options);
-	    }
-
-	    View.DEFAULT_OPTIONS = {}; // no defaults
-
-	    /**
-	     * Look up options value by key
-	     * @method getOptions
-	     *
-	     * @param {string} key key
-	     * @return {Object} associated object
-	     */
-	    View.prototype.getOptions = function getOptions(key) {
-	        return this._optionsManager.getOptions(key);
-	    };
-
-	    /*
-	     *  Set internal options.
-	     *  No defaults options are set in View.
-	     *
-	     *  @method setOptions
-	     *  @param {Object} options
-	     */
-	    View.prototype.setOptions = function setOptions(options) {
-	        this._optionsManager.patch(options);
-	    };
-
-	    /**
-	     * Add a child renderable to the view.
-	     *   Note: This is meant to be used by an inheriting class
-	     *   rather than from outside the prototype chain.
-	     *
-	     * @method add
-	     * @return {RenderNode}
-	     * @protected
-	     */
-	    View.prototype.add = function add() {
-	        return this._node.add.apply(this._node, arguments);
-	    };
-
-	    /**
-	     * Alias for add
-	     * @method _add
-	     */
-	    View.prototype._add = View.prototype.add;
-
-	    /**
-	     * Generate a render spec from the contents of this component.
-	     *
-	     * @private
-	     * @method render
-	     * @return {number} Render spec for this component
-	     */
-	    View.prototype.render = function render() {
-	        return this._node.render();
-	    };
-
-	    /**
-	     * Return size of contained element.
-	     *
-	     * @method getSize
-	     * @return {Array.Number} [width, height]
-	     */
-	    View.prototype.getSize = function getSize() {
-	        if (this._node && this._node.getSize) {
-	            return this._node.getSize.apply(this._node, arguments) || this.options.size;
-	        }
-	        else return this.options.size;
-	    };
-
-	    module.exports = View;
-	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 33 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-	 *
-	 * Owner: mark@famo.us
-	 * @license MPL 2.0
-	 * @copyright Famous Industries, Inc. 2014
-	 */
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Surface = __webpack_require__(23);
-
-	    /**
 	     * A Famo.us surface in the form of an HTML textarea element.
 	     *   This extends the Surface class.
 	     *
@@ -10018,7 +9846,7 @@
 
 
 /***/ },
-/* 34 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -10097,6 +9925,245 @@
 	        get: get,
 	        set: set
 	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var EventHandler = __webpack_require__(40);
+	    var OptionsManager = __webpack_require__(39);
+	    var RenderNode = __webpack_require__(129);
+	    var Utility = __webpack_require__(47);
+
+	    /**
+	     * Useful for quickly creating elements within applications
+	     *   with large event systems.  Consists of a RenderNode paired with
+	     *   an input EventHandler and an output EventHandler.
+	     *   Meant to be extended by the developer.
+	     *
+	     * @class View
+	     * @uses EventHandler
+	     * @uses OptionsManager
+	     * @uses RenderNode
+	     * @constructor
+	     */
+	    function View(options) {
+	        this._node = new RenderNode();
+
+	        this._eventInput = new EventHandler();
+	        this._eventOutput = new EventHandler();
+	        EventHandler.setInputHandler(this, this._eventInput);
+	        EventHandler.setOutputHandler(this, this._eventOutput);
+
+	        this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
+	        this._optionsManager = new OptionsManager(this.options);
+
+	        if (options) this.setOptions(options);
+	    }
+
+	    View.DEFAULT_OPTIONS = {}; // no defaults
+
+	    /**
+	     * Look up options value by key
+	     * @method getOptions
+	     *
+	     * @param {string} key key
+	     * @return {Object} associated object
+	     */
+	    View.prototype.getOptions = function getOptions(key) {
+	        return this._optionsManager.getOptions(key);
+	    };
+
+	    /*
+	     *  Set internal options.
+	     *  No defaults options are set in View.
+	     *
+	     *  @method setOptions
+	     *  @param {Object} options
+	     */
+	    View.prototype.setOptions = function setOptions(options) {
+	        this._optionsManager.patch(options);
+	    };
+
+	    /**
+	     * Add a child renderable to the view.
+	     *   Note: This is meant to be used by an inheriting class
+	     *   rather than from outside the prototype chain.
+	     *
+	     * @method add
+	     * @return {RenderNode}
+	     * @protected
+	     */
+	    View.prototype.add = function add() {
+	        return this._node.add.apply(this._node, arguments);
+	    };
+
+	    /**
+	     * Alias for add
+	     * @method _add
+	     */
+	    View.prototype._add = View.prototype.add;
+
+	    /**
+	     * Generate a render spec from the contents of this component.
+	     *
+	     * @private
+	     * @method render
+	     * @return {number} Render spec for this component
+	     */
+	    View.prototype.render = function render() {
+	        return this._node.render();
+	    };
+
+	    /**
+	     * Return size of contained element.
+	     *
+	     * @method getSize
+	     * @return {Array.Number} [width, height]
+	     */
+	    View.prototype.getSize = function getSize() {
+	        if (this._node && this._node.getSize) {
+	            return this._node.getSize.apply(this._node, arguments) || this.options.size;
+	        }
+	        else return this.options.size;
+	    };
+
+	    module.exports = View;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+	 *
+	 * Owner: mark@famo.us
+	 * @license MPL 2.0
+	 * @copyright Famous Industries, Inc. 2014
+	 */
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
+	    var Surface = __webpack_require__(23);
+
+	    /**
+	     * A surface containing an HTML5 Canvas element.
+	     *   This extends the Surface class.
+	     *
+	     * @class CanvasSurface
+	     * @extends Surface
+	     * @constructor
+	     * @param {Object} [options] overrides of default options
+	     * @param {Array.Number} [options.canvasSize] [width, height] for document element
+	     */
+	    function CanvasSurface(options) {
+	        if (options && options.canvasSize) this._canvasSize = options.canvasSize;
+	        Surface.apply(this, arguments);
+	        if (!this._canvasSize) this._canvasSize = this.getSize();
+	        this._backBuffer = document.createElement('canvas');
+	        if (this._canvasSize) {
+	            this._backBuffer.width = this._canvasSize[0];
+	            this._backBuffer.height = this._canvasSize[1];
+	        }
+	        this._contextId = undefined;
+	    }
+
+	    CanvasSurface.prototype = Object.create(Surface.prototype);
+	    CanvasSurface.prototype.constructor = CanvasSurface;
+	    CanvasSurface.prototype.elementType = 'canvas';
+	    CanvasSurface.prototype.elementClass = 'famous-surface';
+
+	    /**
+	     * Set inner document content.  Note that this is a noop for CanvasSurface.
+	     *
+	     * @method setContent
+	     *
+	     */
+	    CanvasSurface.prototype.setContent = function setContent() {};
+
+	    /**
+	     * Place the document element this component manages into the document.
+	     *    This will draw the content to the document.
+	     *
+	     * @private
+	     * @method deploy
+	     * @param {Node} target document parent of this container
+	     */
+	    CanvasSurface.prototype.deploy = function deploy(target) {
+	        if (this._canvasSize) {
+	            target.width = this._canvasSize[0];
+	            target.height = this._canvasSize[1];
+	        }
+	        if (this._contextId === '2d') {
+	            target.getContext(this._contextId).drawImage(this._backBuffer, 0, 0);
+	            this._backBuffer.width = 0;
+	            this._backBuffer.height = 0;
+	        }
+	    };
+
+	    /**
+	     * Remove this component and contained content from the document
+	     *
+	     * @private
+	     * @method recall
+	     *
+	     * @param {Node} target node to which the component was deployed
+	     */
+	    CanvasSurface.prototype.recall = function recall(target) {
+	        var size = this.getSize();
+
+	        this._backBuffer.width = target.width;
+	        this._backBuffer.height = target.height;
+
+	        if (this._contextId === '2d') {
+	            this._backBuffer.getContext(this._contextId).drawImage(target, 0, 0);
+	            target.width = 0;
+	            target.height = 0;
+	        }
+	    };
+
+	    /**
+	     * Returns the canvas element's context
+	     *
+	     * @method getContext
+	     * @param {string} contextId context identifier
+	     */
+	    CanvasSurface.prototype.getContext = function getContext(contextId) {
+	        this._contextId = contextId;
+	        return this._currentTarget ? this._currentTarget.getContext(contextId) : this._backBuffer.getContext(contextId);
+	    };
+
+	    /**
+	     *  Set the size of the surface and canvas element.
+	     *
+	     *  @method setSize
+	     *  @param {Array.number} size [width, height] of surface
+	     *  @param {Array.number} canvasSize [width, height] of canvas surface
+	     */
+	    CanvasSurface.prototype.setSize = function setSize(size, canvasSize) {
+	        Surface.prototype.setSize.apply(this, arguments);
+	        if (canvasSize) this._canvasSize = [canvasSize[0], canvasSize[1]];
+	        if (this._currentTarget) {
+	            this._currentTarget.width = this._canvasSize[0];
+	            this._currentTarget.height = this._canvasSize[1];
+	        }
+	    };
+
+	    module.exports = CanvasSurface;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
@@ -12359,19 +12426,23 @@
 	 * |---|---|---|
 	 * |`[itemSize]`|Number/Function|Height or width in pixels of an item (used when renderNode has no size)|
 	 * |`[margins]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
-	 * |`[spacing]`|Number/Array|Margins shorthand (e.g. 5, [10, 20], [2, 5, 2, 10])|
+	 * |`[spacing]`|Number|Spacing between items|
 	 * |`[isSectionCallback]`|Function|Callback that is called in order to check if a render-node is a section rather than a cell.|
 	 *
 	 * Example:
 	 *
 	 * ```javascript
-	 * var ScrollView = require('famous-flex/ScrollView');
+	 * var FlexScrollView = require('famous-flex/FlexScrollView');
 	 * var ListLayout = require('famous-flex/layouts/ListLayout');
 	 *
-	 * var scrollView = new ScrollView({
+	 * var scrollView = new FlexScrollView({
 	 *   layout: ListLayout,
 	 *   layoutOptions: {
-	 *     isSectionCallback: _isSection,
+	 *     margins: [20, 10, 20, 10],
+	 *     spacing: 1,
+	 *     isSectionCallback: function(renderNode) {
+	 *       return renderNode.isSection;
+	 *     },
 	 *   },
 	 *   dataSource: [
 	 *     // first section
@@ -12383,7 +12454,7 @@
 	 *     _createCell(),
 	 *   ]
 	 * });
-	 * this.add(tableView);
+	 * this.add(scrollView);
 	 *
 	 * function _createCell() {
 	 *   return new Surface({
@@ -12399,10 +12470,6 @@
 	 *   });
 	 *   section.isSection = true; // mark renderNode as section
 	 *   return section;
-	 * }
-	 *
-	 * function _isSection(renderNode) {
-	 *   return renderNode.isSection;
 	 * }
 	 * ```
 	 * @module
@@ -14738,7 +14805,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(34);
+	    var Entity = __webpack_require__(32);
 	    var EventHandler = __webpack_require__(40);
 	    var Transform = __webpack_require__(25);
 
@@ -23174,7 +23241,7 @@
 	 */
 
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
-	    var Entity = __webpack_require__(34);
+	    var Entity = __webpack_require__(32);
 	    var SpecParser = __webpack_require__(144);
 
 	    /**
