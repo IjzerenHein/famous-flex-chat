@@ -44,6 +44,7 @@ define(function(require) {
     // templates
     var chatBubbleTemplate = require('./chat-bubble.handlebars');
     var daySectionTemplate = require('./day-section.handlebars');
+    var Bubble = require('./bubble');
 
     // Initialize
     var mainContext = Engine.createContext();
@@ -270,7 +271,7 @@ define(function(require) {
     // Create a chat-bubble
     //
     function _createChatBubble(data) {
-        var surface = new Surface({
+        /*var surface = new Surface({
             size: [undefined, true],
             classes: ['message-bubble', (data.userId === _getUserId()) ? 'send' : 'received'],
             content: chatBubbleTemplate(data),
@@ -278,7 +279,15 @@ define(function(require) {
                 message: data.message
             }
         });
-        return surface;
+        return surface;*/
+        var bubble = new Bubble({
+            size: [undefined, true],
+            user: true,
+            //picture: Meteor.user().picture,
+            message: data.message,
+            timeSent: data.time
+        });
+        return bubble;
     }
 
     //
