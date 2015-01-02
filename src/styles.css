@@ -4,7 +4,7 @@ body, div {
 }
 body {
   background: white;
-  position: absolute;
+  -position: absolute;
 }
 
 /**

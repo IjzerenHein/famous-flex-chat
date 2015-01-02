@@ -34,9 +34,9 @@ define(function(require) {
 		var widthScreen = window.innerWidth;
 		var heightScreen = window.innerHeight;
 
-		var renderNode = new RenderNode({
+		/*var renderNode = new RenderNode({
 			size: [undefined, 0.1*heightScreen]
-		});
+		});*/
 
 		if (this.options.user){
 			content = '<div style="max-width:'+ widthScreen*0.6 + 'px; margin-right: 10px; margin-left: 10px; margin-bottom: 10px; margin-top: 10px; color: #fff; font-family: Open Sans, sans-serif; font-size:'+ heightScreen / 40 +'px;">'+ this.options.message +'</div>';
@@ -85,10 +85,15 @@ define(function(require) {
 		}.bind(this));
 
 		this.add(bubbleMod).add(this.bubble);
-		this.add(renderNode);
+		//this.add(renderNode);
 	}
 	Bubble.prototype = Object.create(View.prototype);
     Bubble.prototype.constructor = Bubble;
+
+    Bubble.prototype.getSize = function() {
+		var size = View.prototype.getSize.call(this);
+		return size;
+    };
 
 	return Bubble;
 });

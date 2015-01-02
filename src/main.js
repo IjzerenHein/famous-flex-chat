@@ -53,7 +53,18 @@ define(function(require) {
     _setupFirebase();
     mainContext.add(_createMainLayout());
     //_createLagometer();
-    //_loadDemoData();
+
+    // Add chat bubble to view
+    var bubble = new Bubble({
+        size: [undefined, true],
+        user: true,
+        message: 'lorum ipsum test test test'
+        //timeSent: new Date()
+    });
+    var Scrollview = require('famous/views/Scrollview');
+    var scr = new Scrollview();
+    scr.sequenceFrom([bubble]);
+    //mainLayout.getDataSource().content = scr;
 
     //
     // Main layout, bottom text input, top chat messages
@@ -281,14 +292,14 @@ define(function(require) {
             }
         });
         return surface;*/
-        var bubble = new Bubble({
+        return new Bubble({
             size: [undefined, true],
             user: true,
             //picture: Meteor.user().picture,
-            message: data.message,
+            //message: data.message,
+            message: 'lorum ipsum test test test',
             timeSent: data.time
         });
-        return bubble;
     }
 
     //
