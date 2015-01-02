@@ -14,7 +14,7 @@
 define(function(require) {
 
 	// import dependencies
-	var Surface = require('famous/core/Surface');
+	var ImageSurface = require('famous/surfaces/ImageSurface');
 	var Modifier = require('famous/core/Modifier');
 	var View = require('famous/core/View');
 	var RenderNode = require('famous/core/RenderNode');
@@ -57,7 +57,7 @@ define(function(require) {
 				}
 			});
 			var pictureMod = new Modifier({
-				origin: [0.5,0.5],
+				origin: [0.5, 0.5],
 				align: [0.1, 0.8]
 			});
 
@@ -69,7 +69,7 @@ define(function(require) {
 			size: [true, true],
 			content: content,
 			properties: {
-				backgroundColor : backgroundColor,
+				backgroundColor: backgroundColor,
 				borderRadius: '15px'
 			}
 		});
@@ -79,12 +79,14 @@ define(function(require) {
 		});
 
 		this.bubble.on('isDeployed', function() {
-			this.setOptions({size : [undefined, this.bubble.realHeight]});
+			this.setOptions({
+				size: [undefined, this.bubble.realHeight]
+			});
 		}.bind(this));
 
 		this.add(bubbleMod).add(this.bubble);
 		this.add(renderNode);
-	};
+	}
 	Bubble.prototype = Object.create(View.prototype);
     Bubble.prototype.constructor = Bubble;
 

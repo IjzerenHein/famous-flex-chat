@@ -24,12 +24,15 @@ define(function(require) {
 
   ExtendedSurface.prototype.deploy = function deploy(target) {
     this._superDeploy(target);
-    var size = this.getSize();
-    this.setSize([this._currentTarget.clientWidth,this._currentTarget.clientHeight]);
+    //var size = this.getSize();
+    this.setSize([
+      this._currentTarget.clientWidth,
+      this._currentTarget.clientHeight
+    ]);
     this.realHeight = this._currentTarget.clientHeight;
     this.realWidth = this._currentTarget.clientWidth;
     this._eventOutput.emit('isDeployed');
-  }
+  };
 
-  module.exports = ExtendedSurface;
+  return ExtendedSurface;
 });

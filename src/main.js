@@ -178,12 +178,13 @@ define(function(require) {
                 // callback that is called by the layout-function to check
                 // whether a node is a section
                 isSectionCallback: function(renderNode) {
-                    return renderNode.properties.isSection;
+                    return renderNode.properties && renderNode.properties.isSection;
                 },
                 margins: [5, 0, 0, 0]
             },
             dataSource: viewSequence,
-            autoPipeEvents: true,
+            //autoPipeEvents: true,
+            useContainer: true,
             flow: true,
             alignment: 1,
             mouseMove: true,
