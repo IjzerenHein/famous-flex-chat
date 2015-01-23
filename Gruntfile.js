@@ -15,16 +15,6 @@ module.exports = function(grunt) {
             config: '.jscsrc'
         }
     },
-    jsdoc2md: {
-      separateOutputFilePerInput: {
-        options: {
-          index: true
-        },
-        files: [
-            { src: 'src/TableLayout.js', dest: 'docs/TableLayout.md' }
-        ]
-      }
-    },
     'ftp-deploy': {
       build: {
         auth: {
@@ -48,12 +38,11 @@ module.exports = function(grunt) {
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-jscs');
-  grunt.loadNpmTasks('grunt-jsdoc-to-markdown');
   grunt.loadNpmTasks('grunt-ftp-deploy');
   grunt.loadNpmTasks('grunt-exec');
 
   // Default task.
-  grunt.registerTask('default', ['eslint', 'jscs', 'jsdoc2md']);
+  grunt.registerTask('default', ['eslint', 'jscs']);
   grunt.registerTask('clean', ['exec:clean']);
   grunt.registerTask('serve', ['eslint', 'jscs', 'exec:open-dev', 'exec:run-dev']);
   grunt.registerTask('deploy', ['eslint', 'jscs', 'exec:clean', 'exec:build-debug', 'ftp-deploy']);

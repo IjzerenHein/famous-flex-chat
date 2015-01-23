@@ -1,5 +1,6 @@
 {
   "name": "famous-flex-chat",
+  "private": "true",
   "version": "0.0.1",
   "homepage": "https://github.com/IjzerenHein/famous-flex-chat",
   "repository": {
@@ -51,7 +52,6 @@
     "grunt-exec": "latest",
     "grunt-ftp-deploy": "latest",
     "grunt-jscs": "latest",
-    "grunt-jsdoc-to-markdown": "latest",
     "handlebars-loader": "^0.1.7",
     "html-loader": "^0.2.2",
     "json-loader": "^0.5.1",
