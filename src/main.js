@@ -51,6 +51,14 @@ define(function(require) {
     _createPullToRefreshCell();
     _setupFirebase();
     mainContext.add(_createMainLayout());
+
+    // When position:absolute is used, the size of the root context
+    // is not initialized properly until the browser is resized.
+    // Force the context to initialize its size by emulating an initial
+    // resize event.
+    Engine.nextTick(function() {
+        mainContext.emit('resize', {});
+    });
     //_createLagometer();
     //_loadDemoData();
 
@@ -353,7 +361,6 @@ define(function(require) {
                 scrollView.hidePullToRefresh(event.footer);
             }, 200);
         });
-
     });
 
     //
