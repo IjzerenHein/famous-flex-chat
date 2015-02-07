@@ -28,10 +28,10 @@ module.exports = function(grunt) {
     },
     exec: {
       clean: 'rm -rf ./dist',
-      build: 'webpack --minify',
-      'build-debug': 'webpack',
-      'open-dev': 'open http://localhost:8080/webpack-dev-server/',
-      'run-dev': 'webpack-dev-server'
+      build: 'webpack -p',
+      'build-debug': 'webpack -d',
+      'serve': 'webpack-dev-server -d --inline --reload=localhost',
+      'open-serve': 'open http://localhost:8080'
     }
   });
 
@@ -42,8 +42,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-exec');
 
   // Default task.
-  grunt.registerTask('default', ['eslint', 'jscs']);
+  grunt.registerTask('default', ['eslint', 'jscs', 'build']);
   grunt.registerTask('clean', ['exec:clean']);
-  grunt.registerTask('serve', ['eslint', 'jscs', 'exec:open-dev', 'exec:run-dev']);
+  grunt.registerTask('serve', ['eslint', 'jscs', 'exec:open-serve', 'exec:serve']);
   grunt.registerTask('deploy', ['eslint', 'jscs', 'exec:clean', 'exec:build-debug', 'ftp-deploy']);
 };

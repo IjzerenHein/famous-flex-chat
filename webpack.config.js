@@ -9,24 +9,22 @@ var path = require('path');
 var argv = require('optimist')
             //--env=XXX: sets a global ENV variable (i.e. window.ENV='XXX')
             .alias('e','env').default('e','dev')
-            //--minify:  minifies output
-            .alias('m','minify')
             .argv;
 
 var config = {
   context: path.join(__dirname, 'src'),
-  entry: ['./main'],
-  output:{
+  entry: {'bundle': './main'},
+  output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: '[name].js',
     publicPath: isDevServer() ? '/' : ''
   },
   devServer: {
     publicPath: '/'
   },
   reload: isDevServer() ? 'localhost' : null,
-  module:{
-    loaders:[
+  module: {
+    loaders: [
       { test: /\.json$/,            loader: 'json-loader' },
       { test: /\.css$/,             loader: 'style-loader!css-loader' },
       { test: /\.handlebars$/,      loader: 'handlebars-loader' },
@@ -44,17 +42,13 @@ var config = {
       'famous': 'famous/src'
     }
   },
-  plugins:[
+  plugins: [
     new webpack.DefinePlugin({
       VERSION: JSON.stringify(require('./package.json').version),
       ENV: JSON.stringify(argv.env)
     })
   ]
 };
-
-if (argv.minify) {
-  config.plugins.push(new webpack.optimize.UglifyJsPlugin({mangle:false}));
-}
 
 function isDevServer() {
   return process.argv.join('').indexOf('webpack-dev-server') > -1;

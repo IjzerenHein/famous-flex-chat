@@ -63,7 +63,6 @@
     "ua_parser": "^1.0.14",
     "url-loader": "^0.5.5",
     "webpack": "latest",
-    "webpack-cordova-plugin": "latest",
     "webpack-dev-server": "latest"
   },
   "files": [
