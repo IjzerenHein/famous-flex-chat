@@ -26,9 +26,7 @@ The following features are demonstrated:
 To build the demo, make sure grunt, webpack and webpack-dev-server are installed globally:
 
 ```
-npm install -g grunt
-npm install -g webpack
-npm install -g webpack-dev-server
+npm install -g grunt-cli webpack webpack-dev-server
 ```
 
 Run npm to install all dev-dependencies:
@@ -79,4 +77,4 @@ and give it a star.
 - 	http://www.gloey.nl
 - 	hrutjes@gmail.com
 
-© 2014 - Hein Rutjes
+© 2015 - Hein Rutjes
