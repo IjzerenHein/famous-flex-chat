@@ -32,7 +32,7 @@ define(function(require) {
     var Modifier = require('famous/core/Modifier');
     var Transform = require('famous/core/Transform');
     var FlexScrollView = require('famous-flex/FlexScrollView');
-    var HeaderFooterLayout = require('famous-flex/layouts/HeaderFooterLayout');
+    var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
     var LayoutController = require('famous-flex/LayoutController');
     var Lagometer = require('famous-lagometer/Lagometer');
     var AutosizeTextareaSurface = require('famous-autosizetextarea/AutosizeTextareaSurface');
@@ -68,10 +68,15 @@ define(function(require) {
     var mainLayout;
     function _createMainLayout() {
         mainLayout = new LayoutController({
-            layout: HeaderFooterLayout,
+            layout: function(context, options) {
+                var dock = new LayoutDockHelper(context, options);
+                dock.top('header', options.headerSize, 1);
+                dock.bottom('footer', options.footerSize, 1);
+                dock.fill('content', 1);
+            },
             layoutOptions: {
-                headerHeight: 34,
-                footerHeight: 50
+                headerSize: 34,
+                footerSize: 50
             },
             dataSource: {
                 header: _createNameBar(),
@@ -153,9 +158,9 @@ define(function(require) {
     //
     function _updateMessageBarHeight() {
         var height = Math.max(Math.min(messageInputTextArea.getScrollHeight() + 16, 200), 50);
-        if (mainLayout.getLayoutOptions().footerHeight !== height) {
+        if (mainLayout.getLayoutOptions().footerSize !== height) {
             mainLayout.setLayoutOptions({
-                footerHeight: height
+                footerSize: height
             });
             return true;
         }
@@ -194,7 +199,7 @@ define(function(require) {
             flow: true,
             alignment: 1,
             mouseMove: true,
-            debug: false,
+            debug: true,
             pullToRefreshHeader: pullToRefreshHeader
         });
         return scrollView;
@@ -210,7 +215,7 @@ define(function(require) {
         var time = moment(data.timeStamp || new Date());
         data.time = time.format('LT');
         if (!data.author || (data.author === '')) {
-            data.author = 'Anonymous bastard';
+            data.author = 'Anonymous coward';
         }
 
         // Store first key

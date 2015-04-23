@@ -3,8 +3,11 @@ body, div {
     font-weight: normal;
 }
 body {
-  background: white;
+  background-color: white;
   position: absolute;
+}
+body > div {
+  background-color: white;
 }
 
 /**
