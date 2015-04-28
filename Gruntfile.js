@@ -42,7 +42,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-exec');
 
   // Default task.
-  grunt.registerTask('default', ['eslint', 'jscs', 'build']);
+  grunt.registerTask('default', ['eslint', 'jscs', 'exec:build']);
   grunt.registerTask('clean', ['exec:clean']);
   grunt.registerTask('serve', ['eslint', 'jscs', 'exec:open-serve', 'exec:serve']);
   grunt.registerTask('deploy', ['eslint', 'jscs', 'exec:clean', 'exec:build-debug', 'ftp-deploy']);
