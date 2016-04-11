@@ -27,7 +27,7 @@ define(function(require) {
     // import dependencies
     var Firebase = require('firebase/lib/firebase-web');
     var Engine = require('famous/core/Engine');
-    var ViewSequence = require('famous/core/ViewSequence');
+    var LinkedListViewSequence = require('famous-flex/LinkedListViewSequence');
     var Surface = require('famous/core/Surface');
     //var Modifier = require('famous/core/Modifier');
     //var Transform = require('famous/core/Transform');
@@ -47,7 +47,7 @@ define(function(require) {
 
     // Initialize
     var mainContext = Engine.createContext();
-    var viewSequence = new ViewSequence();
+    var viewSequence = new LinkedListViewSequence();
     _createPullToRefreshCell();
     _setupFirebase();
     mainContext.add(_createMainLayout());
