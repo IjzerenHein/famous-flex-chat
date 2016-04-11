@@ -29,12 +29,12 @@ define(function(require) {
     var Engine = require('famous/core/Engine');
     var ViewSequence = require('famous/core/ViewSequence');
     var Surface = require('famous/core/Surface');
-    var Modifier = require('famous/core/Modifier');
-    var Transform = require('famous/core/Transform');
+    //var Modifier = require('famous/core/Modifier');
+    //var Transform = require('famous/core/Transform');
+    //var Lagometer = require('famous-lagometer/Lagometer');
     var FlexScrollView = require('famous-flex/FlexScrollView');
-    var LayoutDockHelper = require('famous-flex/helpers/LayoutDockHelper');
     var LayoutController = require('famous-flex/LayoutController');
-    var Lagometer = require('famous-lagometer/Lagometer');
+    var vflToLayout = require('famous-autolayout/src/vflToLayoutv3');
     var AutosizeTextareaSurface = require('famous-autosizetextarea/AutosizeTextareaSurface');
     var Timer = require('famous/utilities/Timer');
     var InputSurface = require('famous/surfaces/InputSurface');
@@ -60,7 +60,6 @@ define(function(require) {
         mainContext.emit('resize', {});
     });
     //_createLagometer();
-    //_loadDemoData();
 
     //
     // Main layout, bottom text input, top chat messages
@@ -68,15 +67,16 @@ define(function(require) {
     var mainLayout;
     function _createMainLayout() {
         mainLayout = new LayoutController({
-            layout: function(context, options) {
-                var dock = new LayoutDockHelper(context, options);
-                dock.top('header', options.headerSize, 1);
-                dock.bottom('footer', options.footerSize, 1);
-                dock.fill('content', 1);
-            },
+            layout: vflToLayout([
+                '//spacing:100',
+                '//heights footer:50',
+                'V:|[col:[header(34)][content][footer]]|',
+                'H:|[col]|'
+            ]),
             layoutOptions: {
-                headerSize: 34,
-                footerSize: 50
+                heights: {
+                    footer: 50
+                }
             },
             dataSource: {
                 header: _createNameBar(),
@@ -158,9 +158,11 @@ define(function(require) {
     //
     function _updateMessageBarHeight() {
         var height = Math.max(Math.min(messageInputTextArea.getScrollHeight() + 16, 200), 50);
-        if (mainLayout.getLayoutOptions().footerSize !== height) {
+        if (mainLayout.getLayoutOptions().heights.footer !== height) {
             mainLayout.setLayoutOptions({
-                footerSize: height
+                heights: {
+                    footer: height
+                }
             });
             return true;
         }
@@ -230,7 +232,8 @@ define(function(require) {
             lastSectionDay = day;
             firstSectionDay = firstSectionDay || day;
             scrollView.push(_createDaySection(day));
-        } else if (top && (day !== firstSectionDay)) {
+        }
+        else if (top && (day !== firstSectionDay)) {
             firstSectionDay = day;
             scrollView.insert(0, _createDaySection(day));
         }
@@ -371,7 +374,7 @@ define(function(require) {
     //
     // Shows the lagometer
     //
-    function _createLagometer() {
+    /*function _createLagometer() {
         var lagometerMod = new Modifier({
             size: [100, 100],
             align: [1.0, 0.0],
@@ -382,5 +385,5 @@ define(function(require) {
             size: lagometerMod.getSize()
         });
         mainContext.add(lagometerMod).add(lagometer);
-    }
+    }*/
 });

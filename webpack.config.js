@@ -34,6 +34,9 @@ var config = {
       { test: /\.svg$/,             loader: 'file-loader?name=[path][name].[ext]&context=./src' },
       { test: /\.woff$/,            loader: 'file-loader?name=[path][name].[ext]&context=./src' },
       { test: /index\.html$/,       loader: 'file-loader?name=[path][name].[ext]&context=./src' }
+    ],
+    noParse: [
+      /dist\/autolayout\.js$/
     ]
   },
   resolve: {
